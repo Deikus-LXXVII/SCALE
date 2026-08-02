@@ -1,6 +1,6 @@
 # Project Context & Vision
 
-C.E.L.L. for Codex is a Git-versioned knowledge lifecycle, not just a set of custom agents. It preserves the original project's specialization, tagged retrieval, persistent learning, and global library synchronization while using Codex-native configuration.
+S.C.A.L.E. (Self-evolving Codex Agent Library Ecosystem) for Codex is a Git-versioned knowledge lifecycle, not just a set of custom agents. It preserves the original project's specialization, tagged retrieval, persistent learning, and global library synchronization while using Codex-native configuration.
 
 The authoritative operating rules are `AGENTS.md`. Role definitions and fixed model assignments live in `.codex/agents/`. Reusable workflows live under `skills/`.
 

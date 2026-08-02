@@ -1,7 +1,7 @@
-# C.E.L.L. Tag Taxonomy Registry
+# S.C.A.L.E. Tag Taxonomy Registry
 
 Canonical tag list for `library/rules/`, `library/books/`, and `library/agents/`.
-`cell-builder` (rules/agents) and `cell-research` (books) MUST read this file before
+`scale-builder` (rules/agents) and `scale-research` (books) MUST read this file before
 assigning any tag to a new or edited library entry. Reuse an existing canonical tag if a
 semantically equivalent one already exists (e.g. do not invent `swiftlang` or `macos-swift`
 when `swift` + `macos` already exist) rather than inventing a new spelling. Append genuinely
@@ -67,5 +67,5 @@ Format per entry: `tag` — one-line description.
 
 ## Merge log (self-learning, parallel to Known Quirks)
 
-(cell-builder appends here if it later discovers two existing tags are actually the same
-concept, before proposing a merge to the orchestrator/user — see `cell-builder.md` Rules.)
+(scale-builder appends here if it later discovers two existing tags are actually the same
+concept, before proposing a merge to the orchestrator/user — see `scale-builder.md` Rules.)

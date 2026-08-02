@@ -1,5 +1,5 @@
 #!/bin/sh
-# library/find-by-tag.sh — cheap, programmatic tag search over the C.E.L.L. library.
+# library/find-by-tag.sh — cheap, programmatic tag search over the S.C.A.L.E. library.
 # Usage: find-by-tag.sh <tag> [more-tags...]
 # OR-matches across the given tags (any listed tag counts as a match).
 # Prints:  <matched-tag><TAB><file-path>   (one line per match; a file with two matching

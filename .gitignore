@@ -26,7 +26,7 @@ env/
 *.swp
 *.swo
 
-# C.E.L.L. Specific
+# S.C.A.L.E. live-library clones
 playground/
 .agents/
 .scratch/
@@ -39,5 +39,5 @@ dist/
 
 # Local Codex cache (agent profiles and project configuration are tracked)
 .codex/cache/
-.codex/cell-library-src/
-.codex/cell-library
+.codex/scale-library-src/
+.codex/scale-library

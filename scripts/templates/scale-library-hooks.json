@@ -1,5 +1,5 @@
 {
-  "description": "Refresh the S.C.A.L.E. knowledge clone when a trusted Codex session starts.",
+  "description": "Refresh the connected S.C.A.L.E. library at Codex session start.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/scripts/scale-library-refresh.sh\" --hook",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.codex/scale-library-src/scripts/scale-library-refresh.sh\" --hook",
             "timeout": 15,
             "statusMessage": "Refreshing S.C.A.L.E. knowledge",
             "additionalContextLimit": 800

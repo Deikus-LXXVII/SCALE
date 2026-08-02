@@ -1,4 +1,4 @@
-# C.E.L.L. Library
+# S.C.A.L.E. Library
 
 The library is a flat, tag-classified collection of reusable material.
 

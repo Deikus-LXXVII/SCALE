@@ -12,9 +12,9 @@ multi_agent = true
 hooks = true
 
 [[skills.config]]
-path = "./skills/cell-orchestrator"
+path = "./skills/scale-orchestrator"
 enabled = true
 
 [[skills.config]]
-path = "./skills/cell-genesis"
+path = "./skills/scale-genesis"
 enabled = true

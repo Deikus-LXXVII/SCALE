@@ -2,7 +2,7 @@
 
 The project has no application build step. Configuration is validated with:
 
-- `scripts/validate-codex-cells.sh` — confirms the 16 core profiles, required fields, and DeepSeek medium-reasoning policy.
+- `scripts/validate-scale-agents.sh` — confirms the 16 core profiles, required fields, and DeepSeek medium-reasoning policy.
 - Python's `tomllib` — parses each custom-agent profile and `.codex/config.toml`.
 - The plugin manifest is JSON and is checked with the local JSON parser.
 

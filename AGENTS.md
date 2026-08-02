@@ -1,6 +1,8 @@
-# C.E.L.L. for Codex
+# S.C.A.L.E. for Codex
 
-C.E.L.L. is a Git-versioned, self-evolving library of agents, rules, research, documentation, and role-local operational memory. The custom-agent profiles in `.codex/agents/` are authoritative: every profile explicitly fixes its `model` and `model_reasoning_effort`.
+**S**elf-evolving **C**odex **A**gent **L**ibrary **E**cosystem.
+
+S.C.A.L.E. is a Git-versioned, self-evolving library of agents, rules, research, documentation, and role-local operational memory. The custom-agent profiles in `.codex/agents/` are authoritative: every profile explicitly fixes its `model` and `model_reasoning_effort`.
 
 ## Knowledge lifecycle
 
@@ -24,16 +26,16 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 
 | Work | Agent |
 | --- | --- |
-| Architecture, scope critique, stack decisions | `cell_architect` |
-| Differentiate or change agents, skills, rules, taxonomy, or library records | `cell_builder` |
-| Primary-source research to become reusable knowledge | `cell_research` |
-| Independent profile and library validation | `cell_qa` |
-| Canonical Git promotion and global synchronization | `cell_git` |
-| Security audit | `cell_security` |
-| Backend implementation | `cell_backend` |
-| Swift/macOS, OpenWrt, or audio domain work | `cell_swift`, `cell_openwrt`, `cell_audio` |
-| Prompt/instruction design | `cell_prompt` |
-| Environment, documentation, cleanup, library lookup, or integrity scan | `cell_environment`, `cell_docs`, `cell_cleaner`, `cell_library`, `cell_indexer` |
+| Architecture, scope critique, stack decisions | `scale_architect` |
+| Differentiate or change agents, skills, rules, taxonomy, or library records | `scale_builder` |
+| Primary-source research to become reusable knowledge | `scale_research` |
+| Independent profile and library validation | `scale_qa` |
+| Canonical Git promotion and global synchronization | `scale_git` |
+| Security audit | `scale_security` |
+| Backend implementation | `scale_backend` |
+| Swift/macOS, OpenWrt, or audio domain work | `scale_swift`, `scale_openwrt`, `scale_audio` |
+| Prompt/instruction design | `scale_prompt` |
+| Environment, documentation, cleanup, library lookup, or integrity scan | `scale_environment`, `scale_docs`, `scale_cleaner`, `scale_library`, `scale_indexer` |
 
 ## Differentiation and promotion
 

@@ -1,10 +1,10 @@
 ---
-description: "Protocol for retrieving, evolving, validating, and globally synchronizing C.E.L.L. knowledge in Codex."
+description: "Protocol for retrieving, evolving, validating, and globally synchronizing S.C.A.L.E. knowledge in Codex."
 tags: [codex, ai-agents, agent-design, verification, git]
 ---
-# C.E.L.L. Knowledge Protocol
+# S.C.A.L.E. Knowledge Protocol
 
-1. Resolve the active library: a connected project uses `.codex/cell-library/`; the canonical C.E.L.L. repository uses its local `library/` directory.
+1. Resolve the active library: a connected project uses `.codex/scale-library/`; the canonical S.C.A.L.E. repository uses its local `library/` directory.
 2. Refresh a connected clone with a fast-forward-only pull before retrieval. If it has local changes or refresh fails, keep working from the last valid snapshot and report the state.
 3. Retrieve applicable knowledge only through `find-by-tag.sh <tag...>`. Do not scan the complete library.
 4. Reuse canonical tags. Before creating a rule, book, or catalog entry, compare its concepts semantically with `tag-taxonomy.md`; register a genuinely new tag in the same change.
