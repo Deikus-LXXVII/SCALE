@@ -1,0 +1,25 @@
+{
+  "name": "cell-codex",
+  "version": "0.1.0",
+  "description": "Self-evolving C.E.L.L. knowledge library for Codex with model-routed custom agents.",
+  "author": {
+    "name": "Deikus-LXXVII"
+  },
+  "license": "MIT",
+  "keywords": ["codex", "orchestration", "subagents", "agent-routing"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "C.E.L.L. for Codex",
+    "shortDescription": "Model-routed multi-agent orchestration for Codex.",
+    "longDescription": "A Codex-native, Git-synchronized C.E.L.L. workflow with specialized agents, tagged knowledge, persistent quirks, and DeepSeek V4 Flash for routine work.",
+    "developerName": "Deikus-LXXVII",
+    "category": "Productivity",
+    "capabilities": ["Multi-agent orchestration", "Project workflows"],
+    "defaultPrompt": [
+      "Initialize this project with the C.E.L.L. Codex workflow.",
+      "Route this task to the appropriate C.E.L.L. agents.",
+      "Review the project using the C.E.L.L. quality pipeline."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

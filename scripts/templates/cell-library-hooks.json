@@ -1,0 +1,19 @@
+{
+  "description": "Refresh the connected C.E.L.L. library at Codex session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.codex/cell-library-src/scripts/cell-library-refresh.sh\" --hook",
+            "timeout": 15,
+            "statusMessage": "Refreshing C.E.L.L. knowledge",
+            "additionalContextLimit": 800
+          }
+        ]
+      }
+    ]
+  }
+}

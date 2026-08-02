@@ -1,0 +1,43 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+setup.log
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# C.E.L.L. Specific
+playground/
+.agents/
+.scratch/
+*.bak*
+
+# Node
+node_modules/
+dist/
+*.vsix
+
+# Local Codex cache (agent profiles and project configuration are tracked)
+.codex/cache/
+.codex/cell-library-src/
+.codex/cell-library

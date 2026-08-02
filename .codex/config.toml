@@ -1,0 +1,20 @@
+# Project-scoped Codex runtime settings. Each custom agent below supplies its
+# own model and reasoning effort; these defaults only protect ad-hoc spawns.
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 4
+default_subagent_model = "gpt-5.6-terra"
+default_subagent_reasoning_effort = "medium"
+interrupt_message = true
+
+[features]
+multi_agent = true
+hooks = true
+
+[[skills.config]]
+path = "./skills/cell-orchestrator"
+enabled = true
+
+[[skills.config]]
+path = "./skills/cell-genesis"
+enabled = true

@@ -1,0 +1,19 @@
+{
+  "description": "Refresh the C.E.L.L. knowledge clone when a trusted Codex session starts.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/scripts/cell-library-refresh.sh\" --hook",
+            "timeout": 15,
+            "statusMessage": "Refreshing C.E.L.L. knowledge",
+            "additionalContextLimit": 800
+          }
+        ]
+      }
+    ]
+  }
+}
