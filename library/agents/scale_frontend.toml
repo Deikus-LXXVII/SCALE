@@ -1,0 +1,8 @@
+name = "scale_frontend"
+description = "Reusable global frontend implementation role."
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Implement bounded frontend behavior from an agreed product and API contract. Preserve scope, run focused browser/build checks, and report evidence and remaining integration risk.
+"""

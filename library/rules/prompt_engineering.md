@@ -8,5 +8,5 @@ tags: [prompt-engineering, codex, agent-design]
 2. Put durable repository rules in `AGENTS.md`, role-specific behavior in `.codex/agents/*.toml`, and reusable workflows in `skills/*/SKILL.md`.
 3. Every custom agent must explicitly configure both `model` and `model_reasoning_effort`; model selection is configuration, not prompt prose.
 4. Match `sandbox_mode` to the role. Reviewers and auditors should be `read-only`; implementation roles should use `workspace-write` only when editing is required.
-5. For DeepSeek V4 Flash work, supply a single bounded objective, exact paths or commands when known, acceptance criteria, an output format, and an explicit stop condition. Keep its effort at `medium`.
+5. For DeepSeek V4 Flash work, supply a single bounded objective, exact paths or commands when known, acceptance criteria, an output format, and an explicit stop condition. Use `medium` only for passive bounded observation; use `high` for implementation or non-trivial diagnosis.
 6. Avoid references to unavailable tools or another product's agent manifest syntax. Validate the profile after editing it.

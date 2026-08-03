@@ -27,7 +27,13 @@ if [[ "$deepseek_count" -lt 6 ]]; then
 fi
 
 while IFS= read -r profile; do
-  if ! rg -q '^model_reasoning_effort = "high"$' "$profile"; then
+  profile_name="$(basename "$profile" .toml)"
+  if [[ "$profile_name" == "scale_test_observer" ]]; then
+    if ! rg -q '^model_reasoning_effort = "medium"$' "$profile" || ! rg -q '^sandbox_mode = "read-only"$' "$profile"; then
+      echo "scale_test_observer must use DeepSeek V4 Flash/medium/read-only: $profile" >&2
+      exit 1
+    fi
+  elif ! rg -q '^model_reasoning_effort = "high"$' "$profile"; then
     echo "DeepSeek V4 Flash profile must use high reasoning: $profile" >&2
     exit 1
   fi
