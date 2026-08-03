@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "description": "Canonical S.C.A.L.E. model and provider policy. This file contains no credentials and never replaces a user's Codex catalog or provider configuration.",
   "providers": [
     {
@@ -14,6 +14,14 @@
       "codex_provider": "deepseek",
       "catalog_owner": "user-configured Codex provider",
       "update_policy": "Configure the provider and credential locally, then add the exact exposed ID here and validate it before routing work."
+    },
+    {
+      "id": "opencode-go",
+      "kind": "external-cli",
+      "runtime_command": "opencode",
+      "runtime_provider": "opencode-go",
+      "catalog_owner": "user's OpenCode Go subscription",
+      "update_policy": "Keep the Go API key in OpenCode's credential store. Discover the live model list with `opencode models opencode-go`; route only the explicitly approved, externally executed work orders below. Do not add this provider to Codex's model catalog."
     }
   ],
   "models": [
@@ -51,6 +59,20 @@
       "active": true,
       "approved_reasoning_efforts": ["medium", "high"],
       "use": "narrow prompt and instruction editing"
+    },
+    {
+      "id": "opencode-go/deepseek-v4-flash",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": ["high"],
+      "use": "external read-only exploration, documentation, and isolated low-risk work through OpenCode Go; never an authority for critical decisions or global promotion"
+    },
+    {
+      "id": "opencode-go/deepseek-v4-pro",
+      "provider": "opencode-go",
+      "active": false,
+      "approved_reasoning_efforts": ["high"],
+      "use": "candidate external standard-code backend; keep disabled until a focused OpenCode Go benchmark passes"
     }
   ],
   "routes": [
@@ -74,12 +96,28 @@
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
       "boundary": "Cross-cutting, security-sensitive, concurrent, or otherwise high-impact work."
+    },
+    {
+      "id": "go-exploration",
+      "execution": "external-cli",
+      "agent": "scale-go-explorer",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "boundary": "Read-only repository mapping, bounded diagnosis, retrieval, and documentation. Produce evidence and a compact handoff; do not modify files or decide critical design."
+    },
+    {
+      "id": "go-simple-code-candidate",
+      "execution": "external-cli",
+      "agent": "scale-go-simple-code",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "boundary": "An explicitly approved, isolated low-risk patch with focused tests. Interactive permission approval is required; benchmark the Go path before making it a default code lane."
     }
   ],
   "change_protocol": [
     "Add or update a provider/model here without credentials.",
-    "Configure external provider access only in the user's Codex configuration and credential store.",
-    "Run the registry validator against the local Codex catalog and provider configuration.",
+    "Configure a Codex external provider only in the user's Codex configuration and credential store; configure an external CLI provider in that tool's credential store.",
+    "Run the registry validator against the local Codex catalog and provider configuration, plus `--opencode` for an OpenCode Go runtime check when installed.",
     "Benchmark a candidate before making it a route default.",
     "Update the exact routed profiles, validate, QA, and promote through Git."
   ]

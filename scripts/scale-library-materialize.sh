@@ -33,7 +33,8 @@ fi
 
 agents_root="$target_root/.codex/agents"
 skills_root="$target_root/.agents/skills"
-mkdir -p "$agents_root" "$skills_root"
+opencode_agents_root="$target_root/.opencode/agents"
+mkdir -p "$agents_root" "$skills_root" "$opencode_agents_root"
 
 is_scale_link() {
   local path="$1"
@@ -65,13 +66,25 @@ link_managed() {
 
 linked_agents=0
 linked_skills=0
+linked_opencode_agents=0
 preserved=0
+removed=0
 
 for profile in "$clone_root"/.codex/agents/scale_*.toml; do
   [[ -f "$profile" ]] || continue
   profile_name="$(basename "$profile")"
   if link_managed "$profile" "$agents_root/$profile_name" "../scale-library-src/.codex/agents/$profile_name"; then
     linked_agents=$((linked_agents + 1))
+  else
+    preserved=$((preserved + 1))
+  fi
+done
+
+for profile in "$clone_root"/opencode/agents/scale-go-*.md; do
+  [[ -f "$profile" ]] || continue
+  profile_name="$(basename "$profile")"
+  if link_managed "$profile" "$opencode_agents_root/$profile_name" "../../.codex/scale-library-src/opencode/agents/$profile_name"; then
+    linked_opencode_agents=$((linked_opencode_agents + 1))
   else
     preserved=$((preserved + 1))
   fi
@@ -87,7 +100,16 @@ for skill in "$clone_root"/skills/*; do
   fi
 done
 
-removed=0
+for target in "$opencode_agents_root"/scale-go-*.md; do
+  [[ -L "$target" ]] || continue
+  is_scale_link "$target" || continue
+  profile_name="$(basename "$target")"
+  if [[ ! -f "$clone_root/opencode/agents/$profile_name" ]]; then
+    rm "$target"
+    removed=$((removed + 1))
+  fi
+done
+
 for target in "$agents_root"/scale_*.toml; do
   [[ -L "$target" ]] || continue
   is_scale_link "$target" || continue
@@ -123,7 +145,7 @@ else
   ln -s 'scale-library-src/library' "$library_link"
 fi
 
-printf 'S.C.A.L.E.: materialized %s agent profiles and %s skills' "$linked_agents" "$linked_skills"
+printf 'S.C.A.L.E.: materialized %s Codex profiles, %s skills, and %s OpenCode agents' "$linked_agents" "$linked_skills" "$linked_opencode_agents"
 if [[ "$removed" -gt 0 ]]; then
   printf '; removed %s retired managed links' "$removed"
 fi

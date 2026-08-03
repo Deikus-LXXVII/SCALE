@@ -51,7 +51,7 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 - Use the explicit code lanes in `library/model-registry.json`: `scale_code_simple` → `deepseek-v4-flash` with `high`; `scale_code_standard` → `gpt-5.6-terra` with `high`; `scale_code_critical` → `gpt-5.6-sol` with `high`.
 - Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
 - DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. Its work order must state one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition. Independently validate global promotion and high-impact decisions.
-- `library/model-registry.json` is the provider-neutral source of truth for approved providers, model IDs, efforts, and routes. It contains no credentials. New external providers are configured locally, while new native or external models are admitted only after catalog validation and a focused benchmark.
+- `library/model-registry.json` is the provider-neutral source of truth for approved providers, model IDs, efforts, and routes. It contains no credentials. Codex-native and Codex-external models are validated against the local Codex catalog; external CLI providers such as OpenCode Go are validated by their own executable and must never be represented as a fake Codex provider. New native or external code-default models are admitted only after catalog validation and a focused benchmark.
 
 ## Collaboration rules
 

@@ -14,6 +14,7 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 ## Architecture
 
 - `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort, including three explicit code-complexity lanes.
+- `opencode/agents/` — managed OpenCode Go external agents, also with explicit model and reasoning effort; they are materialized safely into connected projects without changing Codex's catalog.
 - `library/rules/` — reusable domain rules.
 - `library/books/` — cited research reports.
 - `library/agents/` — catalogued, differentiated role profiles and tagged design notes.
@@ -74,8 +75,9 @@ Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) fo
 
 ```bash
 ./scripts/validate-scale-agents.sh
+./scripts/validate-scale-opencode-agents.sh
 ./scripts/validate-scale-library.sh
 ./scripts/validate-scale-install.sh
 ```
 
-Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new model route. The configured DeepSeek identifier is `deepseek-v4-flash`; its simple-code lane uses High reasoning, and QA still gates global promotion. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.
+Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new Codex model route. The configured DeepSeek identifier is `deepseek-v4-flash`; its simple-code lane uses High reasoning, and QA still gates global promotion. OpenCode Go is integrated as a separate CLI backend, never a fake Codex provider; after it is installed and authenticated, add `--opencode` to validate its live model catalog. See [OpenCode Go integration](docs/opencode-go.md) for its cost-saving routing and privacy boundary. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.

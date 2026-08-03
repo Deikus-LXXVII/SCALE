@@ -15,7 +15,7 @@ const option = (name, fallback) => {
 };
 
 if (args.includes("--help") || args.includes("-h")) {
-  console.log("Usage: validate-scale-model-registry.mjs [--registry <file>] [--agents-dir <dir>] [--catalog <models.json>] [--config <config.toml>]");
+  console.log("Usage: validate-scale-model-registry.mjs [--registry <file>] [--agents-dir <dir>] [--catalog <models.json>] [--config <config.toml>] [--opencode]");
   process.exit(0);
 }
 
@@ -34,7 +34,7 @@ try {
   process.exit(1);
 }
 
-requireValue(registry.schema_version === 1, "model registry must declare schema_version 1");
+requireValue([1, 2].includes(registry.schema_version), "model registry must declare schema_version 1 or 2");
 requireValue(Array.isArray(registry.providers) && registry.providers.length > 0, "model registry has no providers");
 requireValue(Array.isArray(registry.models) && registry.models.length > 0, "model registry has no models");
 requireValue(Array.isArray(registry.routes) && registry.routes.length > 0, "model registry has no routes");
@@ -44,8 +44,12 @@ for (const provider of registry.providers ?? []) {
   requireValue(typeof provider.id === "string" && provider.id.length > 0, "provider is missing id");
   requireValue(!providers.has(provider.id), `duplicate provider: ${provider.id}`);
   providers.set(provider.id, provider);
-  requireValue(["native", "external"].includes(provider.kind), `provider ${provider.id} has invalid kind`);
+  requireValue(["native", "external", "external-cli"].includes(provider.kind), `provider ${provider.id} has invalid kind`);
   if (provider.kind === "external") requireValue(typeof provider.codex_provider === "string" && provider.codex_provider.length > 0, `external provider ${provider.id} needs codex_provider`);
+  if (provider.kind === "external-cli") {
+    requireValue(typeof provider.runtime_command === "string" && provider.runtime_command.length > 0, `external CLI provider ${provider.id} needs runtime_command`);
+    requireValue(typeof provider.runtime_provider === "string" && provider.runtime_provider.length > 0, `external CLI provider ${provider.id} needs runtime_provider`);
+  }
 }
 
 const models = new Map();
@@ -56,6 +60,8 @@ for (const model of registry.models ?? []) {
   requireValue(providers.has(model.provider), `model ${model.id} references unknown provider ${model.provider}`);
   requireValue(model.active === true || model.active === false, `model ${model.id} needs explicit active flag`);
   requireValue(Array.isArray(model.approved_reasoning_efforts) && model.approved_reasoning_efforts.length > 0, `model ${model.id} needs approved_reasoning_efforts`);
+  const provider = providers.get(model.provider);
+  if (provider?.kind === "external-cli") requireValue(model.id.startsWith(`${provider.runtime_provider}/`), `external CLI model ${model.id} must use ${provider.runtime_provider}/ prefix`);
 }
 
 const expectedRoutes = new Map([
@@ -71,6 +77,7 @@ for (const route of registry.routes ?? []) {
   const model = models.get(route.model);
   requireValue(Boolean(model?.active), `route ${route.id} references an inactive or unknown model ${route.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
+  if (route.execution === "external-cli") requireValue(typeof route.agent === "string" && route.agent.length > 0, `external CLI route ${route.id} needs an agent`);
 }
 for (const [id, [profile, model, effort]] of expectedRoutes) {
   const route = routes.get(id);
@@ -109,6 +116,7 @@ if (catalogPath) {
     const bySlug = new Map(entries.map((entry) => [entry.slug ?? entry.id ?? entry.model, entry]));
     for (const model of models.values()) {
       if (!model.active) continue;
+      if (providers.get(model.provider)?.kind === "external-cli") continue;
       const entry = bySlug.get(model.id);
       requireValue(Boolean(entry), `active model ${model.id} is absent from ${catalogPath}`);
       const efforts = (entry?.supported_reasoning_levels ?? entry?.reasoning_levels ?? []).map((level) => typeof level === "string" ? level : level.effort);
@@ -130,6 +138,24 @@ if (configPath) {
     if (provider.kind !== "external") continue;
     const heading = `[model_providers.${provider.codex_provider}]`;
     requireValue(config.includes(heading), `external provider ${provider.id} is not configured as ${heading} in ${configPath}`);
+  }
+}
+
+if (args.includes("--opencode")) {
+  const { spawnSync } = await import("node:child_process");
+  for (const provider of providers.values()) {
+    if (provider.kind !== "external-cli") continue;
+    const result = spawnSync(provider.runtime_command, ["models", provider.runtime_provider], { encoding: "utf8" });
+    if (result.error || result.status !== 0) {
+      const detail = (result.error?.message || result.stderr || "unknown error").trim();
+      failures.push(`cannot discover ${provider.id} with ${provider.runtime_command} models ${provider.runtime_provider}: ${detail}`);
+      continue;
+    }
+    const discovered = `${result.stdout}\n${result.stderr}`;
+    for (const model of models.values()) {
+      if (!model.active || model.provider !== provider.id) continue;
+      requireValue(discovered.includes(model.id), `${provider.id} runtime does not expose active model ${model.id}`);
+    }
   }
 }
 

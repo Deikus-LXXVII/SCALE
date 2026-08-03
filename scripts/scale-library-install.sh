@@ -59,7 +59,7 @@ fi
 
 if [[ ! -d "$clone_root/.git" ]]; then
   git clone --depth 1 --filter=blob:none --sparse --branch "$branch" "$remote_url" "$clone_root"
-  git -C "$clone_root" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/AGENTS.md'
+  git -C "$clone_root" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/opencode/' '/AGENTS.md'
 else
   git -C "$clone_root" pull --ff-only
 fi
@@ -82,7 +82,7 @@ if [[ "$local_ignore" == true ]]; then
 else
   gitignore_file="$target_root/.gitignore"
 fi
-for ignored_path in '.codex/scale-library-src/' '.codex/scale-library' '.agents/skills/scale-*'; do
+for ignored_path in '.codex/scale-library-src/' '.codex/scale-library' '.agents/skills/scale-*' '.opencode/agents/scale-go-*'; do
   if [[ -f "$gitignore_file" ]]; then
     rg -qxF "$ignored_path" "$gitignore_file" || printf '%s\n' "$ignored_path" >> "$gitignore_file"
   else

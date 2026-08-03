@@ -40,6 +40,7 @@ while IFS= read -r profile; do
 done < <(rg -l '^model = "deepseek-v4-flash"$' "$agents_dir")
 
 node "$root/scripts/validate-scale-model-registry.mjs"
+bash "$root/scripts/validate-scale-opencode-agents.sh"
 
 for profile in scale_cleaner scale_environment scale_indexer scale_library; do
   if ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/$profile.toml"; then

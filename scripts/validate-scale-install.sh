@@ -37,6 +37,7 @@ bash "$root/scripts/scale-library-install.sh" --target "$target_repo" --remote "
 [[ ! -L "$target_repo/.codex/agents/scale_docs.toml" ]]
 [[ -L "$target_repo/.agents/skills/scale-orchestrator" ]]
 [[ -f "$target_repo/.agents/skills/scale-orchestrator/SKILL.md" ]]
+[[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
 rg -q 'project-owned hooks' "$target_repo/.codex/hooks.json"
 
 cat > "$source_repo/.codex/agents/scale_fixture.toml" <<'EOF'
@@ -62,6 +63,12 @@ git -C "$source_repo" commit --quiet -m 'fixture: add dynamic SCALE entries'
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
 [[ -L "$target_repo/.codex/agents/scale_fixture.toml" ]]
 [[ -f "$target_repo/.agents/skills/scale-fixture/SKILL.md" ]]
+
+rm "$source_repo/opencode/agents/scale-go-standard-candidate.md"
+git -C "$source_repo" add -u opencode/agents/scale-go-standard-candidate.md
+git -C "$source_repo" commit --quiet -m 'fixture: retire managed OpenCode agent'
+(cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
+[[ ! -e "$target_repo/.opencode/agents/scale-go-standard-candidate.md" ]]
 
 cat > "$source_repo/.codex/agents/scale_unavailable_fixture.toml" <<'EOF'
 name = "scale_unavailable_fixture"
@@ -98,5 +105,6 @@ git -C "$global_target" commit --quiet -m 'fixture: global target'
 [[ ! -e "$global_target/.codex/hooks.json" ]]
 [[ ! -e "$global_target/.gitignore" ]]
 rg -qxF '.codex/scale-library-src/' "$global_target/.git/info/exclude"
+rg -qxF '.opencode/agents/scale-go-*' "$global_target/.git/info/exclude"
 
 printf '%s\n' 'Validated S.C.A.L.E. install, local-path preservation, hooks preservation, and dynamic profile/skill materialization.'

@@ -35,6 +35,14 @@ for profile in "$root"/.codex/agents/scale_*.toml; do
   fi
 done
 
+for profile in "$root"/opencode/agents/scale-go-*.md; do
+  [[ -f "$profile" ]] || continue
+  if ! rg -q '^model: opencode-go/' "$profile" || ! rg -q '^reasoningEffort: high$' "$profile"; then
+    printf 'Invalid OpenCode Go model policy: %s\n' "$profile" >&2
+    status=1
+  fi
+done
+
 if [[ "$status" -eq 0 ]]; then
   printf '%s\n' 'Validated S.C.A.L.E. library metadata, taxonomy, and persistent quirks.'
 fi
