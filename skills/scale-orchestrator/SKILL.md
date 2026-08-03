@@ -11,11 +11,11 @@ Read `AGENTS.md` and select only the roles relevant to the current request. S.C.
 
 1. Refresh a connected `.codex/scale-library-src` clone before retrieving knowledge; SessionStart normally handles this, but verify its state when the task depends on fresh knowledge.
 2. Break the request into independent, bounded subtasks. Assign every subtask a single owner and avoid overlapping writes.
-3. For code, route by `library/model-registry.json`: `scale_code_simple` for isolated low-risk changes, `scale_code_standard` for ordinary multi-file work, and `scale_code_critical` for high-impact or cross-cutting work. Do not use line count alone as a complexity signal.
-4. Spawn the selected role by its configured name. Do not override its `model` or `model_reasoning_effort` unless the user explicitly changes the routing policy.
-5. For `deepseek-v4-flash` roles, send one concise work order containing: objective, scope/files, acceptance criteria, output format, and an explicit stop condition. Trust DeepSeek with evidence-backed mapping, diagnosis, documentation, and isolated low-risk changes inside its assigned scope; do not bundle unrelated investigation and implementation.
+3. Begin multi-model work with `scale_orchestrator` (Codex DeepSeek V4 Flash High). It selects the exact `agent_bindings` record in `library/model-registry.json`; do not infer a model from the role name or line count.
+4. For an `external-cli` binding, create one concise work order containing objective, scope/files, acceptance criteria, output format, and an explicit stop condition. Invoke `scripts/scale-opencode-dispatch.mjs` with the project root, profile, and work-order file. Do not override the external agent's model or reasoning effort.
+5. A dispatcher exit of 75 is a Go quota/catalog failure. Route the unchanged work order once to the binding's native fallback profile. Do not retry or silently downgrade a critical task. `scale_security` and `scale_git` stay native.
 6. Run read-only mapping, research, security, or QA work in parallel when their outputs do not depend on each other. Run dependent implementation and validation sequentially.
-7. When durable knowledge changes, route it through `scale_builder` or `scale_research`, validate with `scale_qa`, then invoke `scale_git` to promote only the named library files to the canonical remote. A strong DeepSeek result is evidence, not an automatic global promotion.
+7. When durable knowledge changes, route it through `scale_builder` or `scale_research`, validate with `scale_qa`, then invoke `scale_git` to promote only the named library files to the canonical remote. A strong external result is evidence, not an automatic global promotion.
 
 ## Escalation
 

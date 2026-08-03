@@ -1,7 +1,7 @@
 {
   "name": "scale",
-  "version": "0.1.1+codex.20260804",
-  "description": "Self-evolving Codex Agent Library Ecosystem with model-routed custom agents and an OpenCode Go external backend.",
+  "version": "0.1.2+codex.20260804",
+  "description": "Self-evolving Codex Agent Library Ecosystem with a DeepSeek Codex control plane, OpenCode Go execution, and deterministic fallbacks.",
   "author": {
     "name": "Deikus-LXXVII"
   },
@@ -16,7 +16,7 @@
   "interface": {
     "displayName": "S.C.A.L.E. for Codex",
     "shortDescription": "Model-routed multi-agent orchestration for Codex.",
-    "longDescription": "A Codex-native, Git-synchronized Self-evolving Codex Agent Library Ecosystem with specialized agents, tagged knowledge, persistent quirks, DeepSeek V4 Flash for routine work, and a safe OpenCode Go external backend.",
+    "longDescription": "A Git-synchronized Self-evolving Codex Agent Library Ecosystem: DeepSeek V4 Flash orchestrates in Codex, OpenCode Go agents execute bounded non-sensitive work, and native Codex fallbacks preserve continuity when Go is unavailable.",
     "developerName": "Deikus-LXXVII",
     "category": "Productivity",
     "capabilities": [

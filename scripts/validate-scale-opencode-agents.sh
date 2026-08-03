@@ -3,7 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 agents_dir="$root/opencode/agents"
-expected=(scale-go-explorer.md scale-go-simple-code.md scale-go-standard-candidate.md)
+expected=(scale-go-explorer.md scale-go-simple-code.md scale-go-routine.md scale-go-code-standard.md scale-go-interface.md scale-go-architecture.md scale-go-prompt-qa.md)
 
 for profile in "${expected[@]}"; do
   [[ -f "$agents_dir/$profile" ]] || {

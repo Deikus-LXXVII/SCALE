@@ -10,18 +10,19 @@ model catalog, permissions, session history, and limits.
 S.C.A.L.E. therefore uses this split:
 
 ```text
-Codex: route, preserve project context, integrate, validate, and own critical decisions
-OpenCode Go: bounded read-only exploration, documentation, and candidate isolated patches
+Codex DeepSeek V4 Flash: control plane, work-order boundaries, validation, and fallback selection
+OpenCode Go: normal non-sensitive execution through explicitly model-bound agents
+Codex Terra/Sol: one deterministic fallback, security, Git promotion, and final critical authority
 ```
 
-This saves Codex limits by eliminating duplicate repository mapping and routine
-draft work, while retaining Terra/Sol where their quality materially changes the
-outcome.
+This saves Codex limits by making the Codex call small and routing substantial
+non-sensitive work through Go, while retaining native Terra/Sol for an explicit
+fallback and trust-sensitive authority.
 
 ## One-time local setup
 
-OpenCode is not installed on this Mac yet. Install its stable CLI, authenticate
-with the Go subscription, and inspect the live catalog:
+OpenCode Go is authenticated on the Mac. Inspect the live catalog when the
+model policy changes:
 
 ```bash
 brew install anomalyco/tap/opencode
@@ -67,10 +68,13 @@ benchmarked.
 
 | Work | Default owner | Why |
 | --- | --- | --- |
-| Repository map, narrow diagnosis, file/symbol evidence, documentation draft | `scale-go-explorer` | Uses Go's DeepSeek V4 Flash and keeps the Codex context short. |
-| One isolated low-risk patch | `scale-go-simple-code` only after a focused Go benchmark | External write permissions remain interactive; Codex validates the patch. |
-| Multi-file integration | `scale_code_standard` on Terra | Retains stronger native integration and validation. |
-| Security, migrations, public contracts, concurrency, cross-service changes | `scale_code_critical` on Sol | Never trade this quality boundary for quota savings. |
+| Control plane | Codex `scale_orchestrator` / DeepSeek V4 Flash High | Emits bounded work orders and receives Go failures. |
+| Routine evidence, docs, cleanup | Go `scale-go-routine` / DeepSeek V4 Flash High | Lowest steady-state Go cost. |
+| Isolated and standard implementation | Go Flash/Pro High | Flash for simple, Pro for ordinary multi-file work. |
+| Frontend and web design | Go `scale-go-interface` / Qwen3.7 Plus High | Dedicated visual-interface lane. |
+| Prompt or bounded QA | Go `scale-go-prompt-qa` / GPT-5.6 Luna High | Low-cost high-context review lane. |
+| Architecture, research, critical draft | Go `scale-go-architecture` / GLM-5.2 High | Infrequent, bounded decision packet only. |
+| Security and Git promotion | Native Sol/Terra | Never dispatched to Go. |
 
 For an exploration task, open the target project in OpenCode and select
 `scale-go-explorer`, or run:
@@ -90,14 +94,16 @@ intentionally approval-gated.
 
 1. Make one work order one objective, bounded path/scope, acceptance criteria,
    requested output, and stop condition.
-2. Keep Go exploration at ten agent steps and code candidates at sixteen;
+2. Keep Go exploration at ten agent steps, routine tasks at twelve, prompt/QA
+   at fourteen, interface work at twenty, and standard code at twenty-four;
    escalation is an explicit new task, not an open-ended continuation.
 3. Reuse a Go session only for the same bounded problem. Start a fresh session
    for a different subsystem so old context does not consume the five-hour Go
    budget.
-4. Let local tests and deterministic checks reject routine failures. Escalate to
-   Terra only if the Go result is incomplete, the test fails, or the change has
-   non-trivial coupling; escalate to Sol only at the critical boundary above.
+4. Let local tests and deterministic checks reject routine failures. On a Go
+   catalog/quota/rate-limit signal, the dispatcher exits 75 and hands the same
+   task to its one native fallback. Escalate to Sol only at the critical
+   boundary above.
 5. Do not call both DeepSeek providers for the same mapping task. Use the native
    Codex DeepSeek lane where Codex tool access is essential; otherwise prefer
    Go's explorer for that routine discovery.

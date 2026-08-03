@@ -54,12 +54,12 @@ if [[ "$current_revision" == "$remote_revision" ]]; then
   exit 0
 fi
 
-model_paths_changed="$(git -C "$library_repo" diff --name-only "$current_revision" "$remote_revision" -- .codex/agents library/model-registry.json)"
+model_paths_changed="$(git -C "$library_repo" diff --name-only "$current_revision" "$remote_revision" -- .codex/agents opencode/agents library/model-registry.json)"
 if [[ -n "$model_paths_changed" ]]; then
   audit_root="$(mktemp -d "${TMPDIR:-/tmp}/scale-model-audit.XXXXXX")"
   cleanup_audit() { rm -rf "$audit_root"; }
   trap cleanup_audit EXIT
-  if ! git -C "$library_repo" archive "$remote_revision" .codex/agents library/model-registry.json | tar -x -C "$audit_root"; then
+  if ! git -C "$library_repo" archive "$remote_revision" .codex/agents opencode/agents library/model-registry.json | tar -x -C "$audit_root"; then
     printf '%s\n' 'S.C.A.L.E.: could not prepare the incoming model policy for validation; keeping the current snapshot.'
     exit 0
   fi
@@ -67,6 +67,7 @@ if [[ -n "$model_paths_changed" ]]; then
   if ! node "$library_repo/scripts/validate-scale-model-registry.mjs" \
     --registry "$audit_root/library/model-registry.json" \
     --agents-dir "$audit_root/.codex/agents" \
+    --opencode-agents-dir "$audit_root/opencode/agents" \
     --catalog "$codex_home_dir/models.json" \
     --config "$codex_home_dir/config.toml"; then
     printf '%s\n' 'S.C.A.L.E.: incoming model policy is unavailable locally; keeping the current snapshot.'

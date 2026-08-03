@@ -26,6 +26,7 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 
 | Work | Agent |
 | --- | --- |
+| Decompose a task, choose a budget-aware lane, dispatch OpenCode Go, or handle a Go-limit fallback | `scale_orchestrator` |
 | Architecture, scope critique, stack decisions | `scale_architect` |
 | Differentiate or change agents, skills, rules, taxonomy, or library records | `scale_builder` |
 | Primary-source research to become reusable knowledge | `scale_research` |
@@ -48,9 +49,11 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 
 ## Model policy
 
-- Use the explicit code lanes in `library/model-registry.json`: `scale_code_simple` → `deepseek-v4-flash` with `high`; `scale_code_standard` → `gpt-5.6-terra` with `high`; `scale_code_critical` → `gpt-5.6-sol` with `high`.
+- `scale_orchestrator` runs inside Codex on DeepSeek V4 Flash with `high`. It is the only control-plane role: it writes bounded work orders, selects `agent_bindings`, and receives deterministic fallbacks.
+- Most non-sensitive execution uses the explicit OpenCode Go bindings in `library/model-registry.json`: Flash/high for routine work, DeepSeek Pro/high for standard code, Qwen3.7 Plus/high for interfaces, Luna/high for prompt/QA, and GLM-5.2/high for infrequent architecture packets.
+- Security and Git promotion remain native Codex. A Go quota signal is routed once to the exact native fallback in the binding; it is never retried in a loop.
 - Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
-- DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. Its work order must state one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition. Independently validate global promotion and high-impact decisions.
+- DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. As the Codex orchestrator, it must write one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition before dispatching Go. Independently validate global promotion and high-impact decisions.
 - `library/model-registry.json` is the provider-neutral source of truth for approved providers, model IDs, efforts, and routes. It contains no credentials. Codex-native and Codex-external models are validated against the local Codex catalog; external CLI providers such as OpenCode Go are validated by their own executable and must never be represented as a fake Codex provider. New native or external code-default models are admitted only after catalog validation and a focused benchmark.
 
 ## Collaboration rules

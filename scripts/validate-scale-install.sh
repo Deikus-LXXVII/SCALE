@@ -45,14 +45,6 @@ rm "$target_repo/.opencode/agents/scale-go-explorer.md"
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
 [[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
 
-cat > "$source_repo/.codex/agents/scale_fixture.toml" <<'EOF'
-name = "scale_fixture"
-description = "Install-test fixture profile."
-model = "gpt-5.6-terra"
-model_reasoning_effort = "high"
-sandbox_mode = "read-only"
-developer_instructions = "Return a fixture result."
-EOF
 mkdir -p "$source_repo/skills/scale-fixture"
 cat > "$source_repo/skills/scale-fixture/SKILL.md" <<'EOF'
 ---
@@ -62,18 +54,34 @@ description: Install-test fixture skill.
 
 # Fixture
 EOF
-git -C "$source_repo" add .codex/agents/scale_fixture.toml skills/scale-fixture/SKILL.md
-git -C "$source_repo" commit --quiet -m 'fixture: add dynamic SCALE entries'
+git -C "$source_repo" add skills/scale-fixture/SKILL.md
+git -C "$source_repo" commit --quiet -m 'fixture: add dynamic SCALE skill'
 
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
-[[ -L "$target_repo/.codex/agents/scale_fixture.toml" ]]
 [[ -f "$target_repo/.agents/skills/scale-fixture/SKILL.md" ]]
 
-rm "$source_repo/opencode/agents/scale-go-standard-candidate.md"
-git -C "$source_repo" add -u opencode/agents/scale-go-standard-candidate.md
+cat > "$source_repo/opencode/agents/scale-go-fixture.md" <<'EOF'
+---
+description: Install-test OpenCode fixture.
+mode: primary
+model: opencode-go/deepseek-v4-flash
+reasoningEffort: high
+steps: 1
+permission:
+  edit: deny
+---
+Fixture.
+EOF
+git -C "$source_repo" add opencode/agents/scale-go-fixture.md
+git -C "$source_repo" commit --quiet -m 'fixture: add managed OpenCode agent'
+(cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
+[[ -L "$target_repo/.opencode/agents/scale-go-fixture.md" ]]
+
+rm "$source_repo/opencode/agents/scale-go-fixture.md"
+git -C "$source_repo" add -u opencode/agents/scale-go-fixture.md
 git -C "$source_repo" commit --quiet -m 'fixture: retire managed OpenCode agent'
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
-[[ ! -e "$target_repo/.opencode/agents/scale-go-standard-candidate.md" ]]
+[[ ! -e "$target_repo/.opencode/agents/scale-go-fixture.md" ]]
 
 cat > "$source_repo/.codex/agents/scale_unavailable_fixture.toml" <<'EOF'
 name = "scale_unavailable_fixture"

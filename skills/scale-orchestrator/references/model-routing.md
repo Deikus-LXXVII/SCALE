@@ -4,27 +4,28 @@
 This page explains its current S.C.A.L.E. policy; the profiles in
 `.codex/agents/` are the executable bindings.
 
-## Code-complexity lanes
+## Control plane and code lanes
 
 | Lane | Agent | Model | Reasoning | Route when | Do not route when |
 | --- | --- | --- | --- | --- | --- |
-| Simple | `scale_code_simple` | `deepseek-v4-flash` | high | One isolated, low-risk implementation with explicit tests and no sensitive boundary. | The change affects auth, schemas, public contracts, hard concurrency, multiple services, or architecture. |
-| Standard | `scale_code_standard` | `gpt-5.6-terra` | high | Ordinary multi-file feature, bounded integration, or non-critical refactor. | The failure blast radius is high or the work crosses critical boundaries. |
-| Critical | `scale_code_critical` | `gpt-5.6-sol` | high | Cross-cutting systems code, security-sensitive work, hard concurrency, irreversible data behavior, or major interfaces. | Never downgrade merely because the diff is short. |
+| Control plane | `scale_orchestrator` | Codex `deepseek-v4-flash` | high | Decompose, issue bounded work orders, dispatch, and select fallback. | It is not the default implementation worker. |
+| Simple | `scale-go-simple-code` | Go `deepseek-v4-flash` | high | One isolated, low-risk implementation with explicit tests and no sensitive boundary. | Auth, schemas, public contracts, hard concurrency, or cross-service work. |
+| Standard | `scale-go-code-standard` | Go `deepseek-v4-pro` | high | Ordinary bounded multi-file feature or integration. | High-impact/security boundary or failed focused validation. |
+| Critical draft | `scale-go-architecture` | Go `glm-5.2` | high | Non-sensitive architecture or critical-code decision packet. | Security, migrations, irreversible behavior, or final authority. |
 
 ## External OpenCode Go lanes
 
-These routes run outside Codex through the local OpenCode client; they do not
-consume a Codex model slot and do not alter `~/.codex/config.toml`.
+These routes run outside Codex through the authenticated local OpenCode client;
+they do not consume a Codex model slot and do not alter `~/.codex/config.toml`.
+`agent_bindings` is the exact per-role source of truth. In addition to code
+lanes: Flash/high owns routine evidence and docs; Qwen3.7 Plus/high owns
+frontend/web design; Luna/high owns prompt/QA; GLM-5.2/high owns rare
+architecture/research packets. Security and Git remain native.
 
-| Lane | OpenCode agent | Model | Reasoning | Route when | Guardrail |
-| --- | --- | --- | --- | --- | --- |
-| Go exploration | `scale-go-explorer` | `opencode-go/deepseek-v4-flash` | high | Read-only mapping, evidence collection, bounded diagnosis, and documentation. | No edits, no security decisions, no global promotion. |
-| Go simple-code candidate | `scale-go-simple-code` | `opencode-go/deepseek-v4-flash` | high | An approved isolated patch with focused tests. | Interactive permissions only; it is not a default code lane until the OpenCode Go benchmark passes. |
-
-Keep `scale_code_standard` and `scale_code_critical` on Terra and Sol. The
-quality-saving pattern is to use Go for reconnaissance and narrow drafts, then
-send only the compact evidence and diff to Codex for integration or review.
+When Go reports a quota/rate-limit/catalog failure, `scale-opencode-dispatch.mjs`
+exits 75 and prints the binding's native fallback as JSON. Re-submit the same
+bounded work order once to that profile; never spend both Go and Codex on the
+same speculative exploration.
 
 The lane is based on coupling and consequence, not how many lines change. A simple
 patch that changes authorization is critical; a large but isolated mechanical
@@ -46,8 +47,8 @@ refactor can remain standard after validation.
    flow and keep its key in OpenCode's credential store. Keep credentials outside
    S.C.A.L.E. and Git.
 2. Confirm the exact local model ID and supported reasoning levels with `codex debug models`.
-3. Add the provider or model to `library/model-registry.json`; do not change a route
-   default until the candidate has a focused benchmark.
+3. Add the provider or model to `library/model-registry.json`; do not widen a
+   code route's blast radius until the candidate has a focused benchmark.
 4. Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"`; add `--opencode` after OpenCode Go is installed and authenticated.
 5. Update the explicit affected agent profiles, run S.C.A.L.E. validation and QA,
    then promote through `scale_git`.

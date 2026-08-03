@@ -13,7 +13,7 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 
 ## Architecture
 
-- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort, including three explicit code-complexity lanes.
+- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort. `scale_orchestrator` is DeepSeek V4 Flash High and owns the control plane plus fallback decisions.
 - `opencode/agents/` — managed OpenCode Go external agents, also with explicit model and reasoning effort; they are materialized safely into connected projects without changing Codex's catalog.
 - `library/rules/` — reusable domain rules.
 - `library/books/` — cited research reports.
@@ -69,13 +69,14 @@ the global plugin skills but are not materialized as S.C.A.L.E. projects.
 4. `scale_qa` validates profiles and metadata.
 5. `scale_git` pulls, selectively commits, and pushes the validated library changes to the canonical remote.
 
-Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Code routes are explicit: DeepSeek V4 Flash High for simple isolated code, GPT-5.6 Terra High for standard multi-file work, and GPT-5.6 Sol High for critical work. The registry governs exact IDs and provider compatibility.
+Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Codex DeepSeek V4 Flash High now orchestrates; the normal execution lanes run through authenticated OpenCode Go agents and return to explicit native Codex fallbacks only on a Go limit/catalog failure. The registry governs exact IDs, reasoning efforts, and provider compatibility.
 
 ## Validate
 
 ```bash
 ./scripts/validate-scale-agents.sh
 ./scripts/validate-scale-opencode-agents.sh
+./scripts/validate-scale-opencode-dispatch.sh
 ./scripts/validate-scale-library.sh
 ./scripts/validate-scale-install.sh
 ```

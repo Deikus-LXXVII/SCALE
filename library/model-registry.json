@@ -1,6 +1,6 @@
 {
-  "schema_version": 2,
-  "description": "Canonical S.C.A.L.E. model and provider policy. This file contains no credentials and never replaces a user's Codex catalog or provider configuration.",
+  "schema_version": 3,
+  "description": "Canonical S.C.A.L.E. model policy. Codex is the control plane; OpenCode Go is an independently authenticated external execution backend. This file contains no credentials.",
   "providers": [
     {
       "id": "codex",
@@ -13,7 +13,7 @@
       "kind": "external",
       "codex_provider": "deepseek",
       "catalog_owner": "user-configured Codex provider",
-      "update_policy": "Configure the provider and credential locally, then add the exact exposed ID here and validate it before routing work."
+      "update_policy": "Use only for the Codex control plane and native fallback profiles. Keep the credential in its existing local store."
     },
     {
       "id": "opencode-go",
@@ -21,7 +21,7 @@
       "runtime_command": "opencode",
       "runtime_provider": "opencode-go",
       "catalog_owner": "user's OpenCode Go subscription",
-      "update_policy": "Keep the Go API key in OpenCode's credential store. Discover the live model list with `opencode models opencode-go`; route only the explicitly approved, externally executed work orders below. Do not add this provider to Codex's model catalog."
+      "update_policy": "Discover live models with `opencode models opencode-go`. Do not represent Go as a Codex provider: its models use different API protocols and are invoked through the local OpenCode agent runtime."
     }
   ],
   "models": [
@@ -30,95 +30,144 @@
       "provider": "deepseek",
       "active": true,
       "approved_reasoning_efforts": ["medium", "high"],
-      "use": "isolated simple code and routine bounded work"
+      "use": "Codex control plane and low-cost native fallback"
     },
     {
       "id": "gpt-5.6-terra",
       "provider": "codex",
       "active": true,
       "approved_reasoning_efforts": ["medium", "high"],
-      "use": "medium-complexity code and bounded multi-file integration"
+      "use": "native fallback for bounded multi-file implementation"
     },
     {
       "id": "gpt-5.6-sol",
       "provider": "codex",
       "active": true,
       "approved_reasoning_efforts": ["high"],
-      "use": "critical and cross-cutting implementation"
+      "use": "native fallback and authority for security, Git promotion, and critical decisions"
     },
     {
       "id": "codex-auto-review",
       "provider": "codex",
       "active": true,
       "approved_reasoning_efforts": ["high"],
-      "use": "independent read-only QA"
+      "use": "independent native QA fallback"
     },
     {
       "id": "gpt-5.6-luna",
       "provider": "codex",
       "active": true,
       "approved_reasoning_efforts": ["medium", "high"],
-      "use": "narrow prompt and instruction editing"
+      "use": "native prompt/instruction fallback"
     },
     {
       "id": "opencode-go/deepseek-v4-flash",
       "provider": "opencode-go",
       "active": true,
-      "approved_reasoning_efforts": ["high"],
-      "use": "external read-only exploration, documentation, and isolated low-risk work through OpenCode Go; never an authority for critical decisions or global promotion"
+      "approved_reasoning_efforts": ["high", "max"],
+      "use": "default low-cost Go routine, retrieval, documentation, and isolated code"
     },
     {
       "id": "opencode-go/deepseek-v4-pro",
       "provider": "opencode-go",
-      "active": false,
-      "approved_reasoning_efforts": ["high"],
-      "use": "candidate external standard-code backend; keep disabled until a focused OpenCode Go benchmark passes"
+      "active": true,
+      "approved_reasoning_efforts": ["high", "max"],
+      "use": "default Go standard implementation and specialist code"
+    },
+    {
+      "id": "opencode-go/gpt-5.6-luna",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
+      "use": "low-cost Go prompt, instruction, and bounded QA work"
+    },
+    {
+      "id": "opencode-go/glm-5.2",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": ["high", "max"],
+      "use": "infrequent high-context Go architecture, research synthesis, and critical drafts"
+    },
+    {
+      "id": "opencode-go/qwen3.7-plus",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": ["high", "max"],
+      "use": "Go frontend, web design, and visual-interface work"
     }
   ],
   "routes": [
     {
-      "id": "simple-code",
-      "profile": "scale_code_simple",
+      "id": "orchestration",
+      "profile": "scale_orchestrator",
+      "execution": "codex-native",
       "model": "deepseek-v4-flash",
       "reasoning_effort": "high",
+      "boundary": "Control plane only: decompose, emit bounded work orders, invoke Go, validate handoffs, and route fallbacks."
+    },
+    {
+      "id": "simple-code",
+      "profile": "scale_code_simple",
+      "execution": "external-cli",
+      "agent": "scale-go-simple-code",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "fallback": {"profile": "scale_code_simple", "model": "deepseek-v4-flash", "reasoning_effort": "high"},
       "boundary": "One isolated, low-risk change with explicit acceptance tests."
     },
     {
       "id": "standard-code",
       "profile": "scale_code_standard",
-      "model": "gpt-5.6-terra",
+      "execution": "external-cli",
+      "agent": "scale-go-code-standard",
+      "model": "opencode-go/deepseek-v4-pro",
       "reasoning_effort": "high",
-      "boundary": "Ordinary multi-file implementation or bounded integration."
+      "fallback": {"profile": "scale_code_standard", "model": "gpt-5.6-terra", "reasoning_effort": "high"},
+      "boundary": "Ordinary bounded multi-file implementation or integration."
     },
     {
       "id": "critical-code",
       "profile": "scale_code_critical",
-      "model": "gpt-5.6-sol",
-      "reasoning_effort": "high",
-      "boundary": "Cross-cutting, security-sensitive, concurrent, or otherwise high-impact work."
-    },
-    {
-      "id": "go-exploration",
       "execution": "external-cli",
-      "agent": "scale-go-explorer",
-      "model": "opencode-go/deepseek-v4-flash",
+      "agent": "scale-go-architecture",
+      "model": "opencode-go/glm-5.2",
       "reasoning_effort": "high",
-      "boundary": "Read-only repository mapping, bounded diagnosis, retrieval, and documentation. Produce evidence and a compact handoff; do not modify files or decide critical design."
-    },
-    {
-      "id": "go-simple-code-candidate",
-      "execution": "external-cli",
-      "agent": "scale-go-simple-code",
-      "model": "opencode-go/deepseek-v4-flash",
-      "reasoning_effort": "high",
-      "boundary": "An explicitly approved, isolated low-risk patch with focused tests. Interactive permission approval is required; benchmark the Go path before making it a default code lane."
+      "fallback": {"profile": "scale_code_critical", "model": "gpt-5.6-sol", "reasoning_effort": "high"},
+      "boundary": "Non-sensitive cross-cutting draft only; Sol owns the final security, migration, or irreversible decision."
     }
   ],
+  "agent_bindings": [
+    {"profile": "scale_orchestrator", "primary": {"execution": "codex-native", "model": "deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_code_standard", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_architect", "primary": {"execution": "external-cli", "agent": "scale-go-architecture", "model": "opencode-go/glm-5.2", "reasoning_effort": "high"}, "fallback": {"profile": "scale_architect", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_audio", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_audio", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_backend", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_backend", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_builder", "primary": {"execution": "external-cli", "agent": "scale-go-prompt-qa", "model": "opencode-go/gpt-5.6-luna", "reasoning_effort": "high"}, "fallback": {"profile": "scale_builder", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_cleaner", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_cleaner", "model": "deepseek-v4-flash", "reasoning_effort": "high"}},
+    {"profile": "scale_code_critical", "primary": {"execution": "external-cli", "agent": "scale-go-architecture", "model": "opencode-go/glm-5.2", "reasoning_effort": "high"}, "fallback": {"profile": "scale_code_critical", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_code_simple", "primary": {"execution": "external-cli", "agent": "scale-go-simple-code", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_code_simple", "model": "deepseek-v4-flash", "reasoning_effort": "high"}},
+    {"profile": "scale_code_standard", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_code_standard", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_docs", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_docs", "model": "deepseek-v4-flash", "reasoning_effort": "high"}},
+    {"profile": "scale_environment", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_environment", "model": "deepseek-v4-flash", "reasoning_effort": "high"}},
+    {"profile": "scale_frontend", "primary": {"execution": "external-cli", "agent": "scale-go-interface", "model": "opencode-go/qwen3.7-plus", "reasoning_effort": "high"}, "fallback": {"profile": "scale_frontend", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_git", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "fallback": {"profile": "scale_git", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_indexer", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_indexer", "model": "deepseek-v4-flash", "reasoning_effort": "high"}},
+    {"profile": "scale_library", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_library", "model": "deepseek-v4-flash", "reasoning_effort": "high"}},
+    {"profile": "scale_openwrt", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_openwrt", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_optimizer", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_optimizer", "model": "gpt-5.6-terra", "reasoning_effort": "medium"}},
+    {"profile": "scale_prompt", "primary": {"execution": "external-cli", "agent": "scale-go-prompt-qa", "model": "opencode-go/gpt-5.6-luna", "reasoning_effort": "high"}, "fallback": {"profile": "scale_prompt", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
+    {"profile": "scale_qa", "primary": {"execution": "external-cli", "agent": "scale-go-prompt-qa", "model": "opencode-go/gpt-5.6-luna", "reasoning_effort": "high"}, "fallback": {"profile": "scale_qa", "model": "codex-auto-review", "reasoning_effort": "high"}},
+    {"profile": "scale_research", "primary": {"execution": "external-cli", "agent": "scale-go-architecture", "model": "opencode-go/glm-5.2", "reasoning_effort": "high"}, "fallback": {"profile": "scale_research", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_security", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}, "fallback": {"profile": "scale_security", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_swift", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_swift", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_test_engineer", "primary": {"execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_engineer", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_test_observer", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_observer", "model": "deepseek-v4-flash", "reasoning_effort": "medium"}},
+    {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-interface", "model": "opencode-go/qwen3.7-plus", "reasoning_effort": "high"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "medium"}}
+  ],
   "change_protocol": [
-    "Add or update a provider/model here without credentials.",
-    "Configure a Codex external provider only in the user's Codex configuration and credential store; configure an external CLI provider in that tool's credential store.",
-    "Run the registry validator against the local Codex catalog and provider configuration, plus `--opencode` for an OpenCode Go runtime check when installed.",
-    "Benchmark a candidate before making it a route default.",
-    "Update the exact routed profiles, validate, QA, and promote through Git."
+    "Keep provider credentials outside S.C.A.L.E. and Git.",
+    "Use Codex DeepSeek V4 Flash High only as the orchestration control plane; send substantial non-sensitive work to an explicitly bound OpenCode Go agent.",
+    "Run the registry validator with `--opencode` against the live Go catalog before promotion.",
+    "On a Go quota/rate-limit signal, use exactly one native fallback binding; do not retry Go automatically.",
+    "Benchmark a newly promoted code-default model before raising its blast radius."
   ]
 }

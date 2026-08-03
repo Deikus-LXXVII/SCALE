@@ -15,12 +15,13 @@ const option = (name, fallback) => {
 };
 
 if (args.includes("--help") || args.includes("-h")) {
-  console.log("Usage: validate-scale-model-registry.mjs [--registry <file>] [--agents-dir <dir>] [--catalog <models.json>] [--config <config.toml>] [--opencode]");
+  console.log("Usage: validate-scale-model-registry.mjs [--registry <file>] [--agents-dir <dir>] [--opencode-agents-dir <dir>] [--catalog <models.json>] [--config <config.toml>] [--opencode]");
   process.exit(0);
 }
 
 const registryPath = option("--registry", path.join(scriptRoot, "library", "model-registry.json"));
 const agentsDir = option("--agents-dir", path.join(scriptRoot, ".codex", "agents"));
+const opencodeAgentsDir = option("--opencode-agents-dir", path.join(scriptRoot, "opencode", "agents"));
 const catalogPath = args.includes("--catalog") ? option("--catalog", "") : "";
 const configPath = args.includes("--config") ? option("--config", "") : "";
 const failures = [];
@@ -34,7 +35,7 @@ try {
   process.exit(1);
 }
 
-requireValue([1, 2].includes(registry.schema_version), "model registry must declare schema_version 1 or 2");
+requireValue([1, 2, 3].includes(registry.schema_version), "model registry must declare schema_version 1, 2, or 3");
 requireValue(Array.isArray(registry.providers) && registry.providers.length > 0, "model registry has no providers");
 requireValue(Array.isArray(registry.models) && registry.models.length > 0, "model registry has no models");
 requireValue(Array.isArray(registry.routes) && registry.routes.length > 0, "model registry has no routes");
@@ -65,9 +66,10 @@ for (const model of registry.models ?? []) {
 }
 
 const expectedRoutes = new Map([
-  ["simple-code", ["scale_code_simple", "deepseek-v4-flash", "high"]],
-  ["standard-code", ["scale_code_standard", "gpt-5.6-terra", "high"]],
-  ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high"]]
+  ["orchestration", ["scale_orchestrator", "deepseek-v4-flash", "high", "codex-native"]],
+  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
+  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "external-cli"]],
+  ["critical-code", ["scale_code_critical", "opencode-go/glm-5.2", "high", "external-cli"]]
 ]);
 const routes = new Map();
 for (const route of registry.routes ?? []) {
@@ -79,13 +81,14 @@ for (const route of registry.routes ?? []) {
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
   if (route.execution === "external-cli") requireValue(typeof route.agent === "string" && route.agent.length > 0, `external CLI route ${route.id} needs an agent`);
 }
-for (const [id, [profile, model, effort]] of expectedRoutes) {
+for (const [id, [profile, model, effort, execution]] of expectedRoutes) {
   const route = routes.get(id);
   requireValue(Boolean(route), `missing required route: ${id}`);
-  if (route) requireValue(route.profile === profile && route.model === model && route.reasoning_effort === effort, `required route ${id} must use ${profile} -> ${model} (${effort})`);
+  if (route) requireValue(route.profile === profile && route.model === model && route.reasoning_effort === effort && route.execution === execution, `required route ${id} must use ${profile} -> ${model} (${effort}, ${execution})`);
 }
 
 let agentCount = 0;
+const profileSources = new Map();
 try {
   for (const entry of fs.readdirSync(agentsDir).filter((name) => name.endsWith(".toml")).sort()) {
     agentCount += 1;
@@ -97,10 +100,48 @@ try {
     const model = models.get(modelId);
     requireValue(Boolean(model?.active), `profile ${entry} uses inactive or unregistered model ${modelId}`);
     requireValue(model?.approved_reasoning_efforts?.includes(effort), `profile ${entry} uses unapproved effort ${effort} for ${modelId}`);
+    if (name) profileSources.set(name, { entry, modelId, effort });
   }
 } catch (error) {
   failures.push(`cannot inspect profiles in ${agentsDir}: ${error.message}`);
 }
+
+const validateExternalAgent = (agent, modelId, effort, owner) => {
+  if (typeof agent !== "string" || agent.length === 0) {
+    failures.push(`${owner} needs an OpenCode agent`);
+    return;
+  }
+  const profilePath = path.join(opencodeAgentsDir, `${agent}.md`);
+  let source = "";
+  try {
+    source = fs.readFileSync(profilePath, "utf8");
+  } catch (error) {
+    failures.push(`${owner} references missing OpenCode agent ${profilePath}`);
+    return;
+  }
+  const configuredModel = source.match(/^model: (\S+)$/m)?.[1];
+  const configuredEffort = source.match(/^reasoningEffort: (\S+)$/m)?.[1];
+  requireValue(configuredModel === modelId, `${owner} OpenCode agent ${agent} must use ${modelId}`);
+  requireValue(configuredEffort === effort, `${owner} OpenCode agent ${agent} must use ${effort} reasoning`);
+};
+
+const bindings = new Set();
+for (const binding of registry.agent_bindings ?? []) {
+  const profile = binding?.profile;
+  requireValue(typeof profile === "string" && profile.length > 0, "agent binding is missing profile");
+  requireValue(!bindings.has(profile), `duplicate agent binding: ${profile}`);
+  if (typeof profile === "string") bindings.add(profile);
+  requireValue(profileSources.has(profile), `agent binding references missing Codex profile ${profile}`);
+  for (const [kind, endpoint] of [["primary", binding?.primary], ["fallback", binding?.fallback]]) {
+    const model = models.get(endpoint?.model);
+    requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
+    requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
+  }
+  const primary = binding?.primary;
+  requireValue(["codex-native", "external-cli"].includes(primary?.execution), `${profile} primary needs codex-native or external-cli execution`);
+  if (primary?.execution === "external-cli") validateExternalAgent(primary.agent, primary.model, primary.reasoning_effort, `${profile} primary`);
+}
+for (const profile of profileSources.keys()) requireValue(bindings.has(profile), `Codex profile ${profile} has no agent binding`);
 
 if (catalogPath) {
   let catalog;
