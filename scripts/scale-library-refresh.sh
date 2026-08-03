@@ -25,6 +25,18 @@ if ! git -C "$library_repo" remote get-url origin >/dev/null 2>&1; then
   exit 0
 fi
 
+# Older managed clones predate the OpenCode adapter and omit this path from
+# sparse checkout. Add it without replacing any existing sparse patterns.
+if [[ "$(git -C "$library_repo" config --bool core.sparseCheckout 2>/dev/null || true)" == "true" ]]; then
+  sparse_paths="$(git -C "$library_repo" sparse-checkout list 2>/dev/null || true)"
+  if ! printf '%s\n' "$sparse_paths" | rg -qxF '/opencode/'; then
+    if ! git -C "$library_repo" sparse-checkout add '/opencode/'; then
+      printf '%s\n' 'S.C.A.L.E.: could not extend sparse checkout for OpenCode agents; continuing with the current managed snapshot.'
+      exit 0
+    fi
+  fi
+fi
+
 if ! git -C "$library_repo" fetch --quiet origin; then
   printf '%s\n' 'S.C.A.L.E.: refresh fetch failed; continuing with the last local knowledge snapshot.'
   exit 0
