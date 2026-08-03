@@ -1,0 +1,6 @@
+interface:
+  display_name: "Validate S.C.A.L.E."
+  short_description: "Check SCALE profiles, skills, and sync"
+  default_prompt: "Use $scale-validate to verify this S.C.A.L.E. library change."
+policy:
+  allow_implicit_invocation: true

@@ -6,9 +6,11 @@ canonical_root="$(cd "$script_dir/.." && pwd)"
 target_input=""
 remote_url=""
 branch="main"
+install_hook=true
+local_ignore=false
 
 usage() {
-  printf '%s\n' 'Usage: scale-library-install.sh --target <project-dir> [--remote <git-url>] [--branch <branch>]'
+  printf '%s\n' 'Usage: scale-library-install.sh --target <project-dir> [--remote <git-url>] [--branch <branch>] [--no-hook] [--local-ignore]'
 }
 
 while [[ "$#" -gt 0 ]]; do
@@ -16,6 +18,8 @@ while [[ "$#" -gt 0 ]]; do
     --target) target_input="${2:-}"; shift 2 ;;
     --remote) remote_url="${2:-}"; shift 2 ;;
     --branch) branch="${2:-}"; shift 2 ;;
+    --no-hook) install_hook=false; shift ;;
+    --local-ignore) local_ignore=true; shift ;;
     --help|-h) usage; exit 0 ;;
     *) usage; exit 2 ;;
   esac
@@ -46,8 +50,7 @@ fi
 
 target_codex="$target_root/.codex"
 clone_root="$target_codex/scale-library-src"
-agents_root="$target_codex/agents"
-mkdir -p "$target_codex" "$agents_root"
+mkdir -p "$target_codex"
 
 if [[ -e "$clone_root" && ! -d "$clone_root/.git" ]]; then
   printf 'Refusing to replace non-Git path: %s\n' "$clone_root" >&2
@@ -61,37 +64,25 @@ else
   git -C "$clone_root" pull --ff-only
 fi
 
-library_link="$target_codex/scale-library"
-if [[ -e "$library_link" && ! -L "$library_link" ]]; then
-  printf 'Refusing to replace non-symlink path: %s\n' "$library_link" >&2
-  exit 2
-fi
-ln -sfn 'scale-library-src/library' "$library_link"
+bash "$clone_root/scripts/scale-library-materialize.sh" --target "$target_root"
 
-conflicts=0
-for profile in "$clone_root"/.codex/agents/scale_*.toml; do
-  [[ -f "$profile" ]] || continue
-  profile_name="$(basename "$profile")"
-  target_profile="$agents_root/$profile_name"
-  if [[ -e "$target_profile" && ! -L "$target_profile" ]]; then
-    printf 'Preserved project-specific profile: %s\n' "$target_profile" >&2
-    conflicts=1
-    continue
+if [[ "$install_hook" == true ]]; then
+  hooks_file="$target_codex/hooks.json"
+  if [[ ! -e "$hooks_file" ]]; then
+    cp "$clone_root/scripts/templates/scale-library-hooks.json" "$hooks_file"
+    printf 'Installed SessionStart refresh hook: %s\n' "$hooks_file"
+  else
+    printf 'Existing hook configuration preserved: %s\n' "$hooks_file"
+    printf 'Merge scripts/templates/scale-library-hooks.json to enable automatic refresh in this project.\n' >&2
   fi
-  ln -sfn "../scale-library-src/.codex/agents/$profile_name" "$target_profile"
-done
-
-hooks_file="$target_codex/hooks.json"
-if [[ ! -e "$hooks_file" ]]; then
-  cp "$clone_root/scripts/templates/scale-library-hooks.json" "$hooks_file"
-  printf 'Installed SessionStart refresh hook: %s\n' "$hooks_file"
-else
-  printf 'Existing hook configuration preserved: %s\n' "$hooks_file"
-  printf 'Merge scripts/templates/scale-library-hooks.json to enable automatic refresh in this project.\n' >&2
 fi
 
-gitignore_file="$target_root/.gitignore"
-for ignored_path in '.codex/scale-library-src/' '.codex/scale-library'; do
+if [[ "$local_ignore" == true ]]; then
+  gitignore_file="$(git -C "$target_root" rev-parse --path-format=absolute --git-path info/exclude)"
+else
+  gitignore_file="$target_root/.gitignore"
+fi
+for ignored_path in '.codex/scale-library-src/' '.codex/scale-library' '.agents/skills/scale-*'; do
   if [[ -f "$gitignore_file" ]]; then
     rg -qxF "$ignored_path" "$gitignore_file" || printf '%s\n' "$ignored_path" >> "$gitignore_file"
   else
@@ -100,6 +91,3 @@ for ignored_path in '.codex/scale-library-src/' '.codex/scale-library'; do
 done
 
 printf 'Connected S.C.A.L.E. library at %s\n' "$clone_root"
-if [[ "$conflicts" -ne 0 ]]; then
-  printf '%s\n' 'Some existing agent profiles were preserved; rename or merge them before relying on the global versions.' >&2
-fi

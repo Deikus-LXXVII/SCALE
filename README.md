@@ -13,14 +13,15 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 
 ## Architecture
 
-- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort.
+- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort, including three explicit code-complexity lanes.
 - `library/rules/` — reusable domain rules.
 - `library/books/` — cited research reports.
 - `library/agents/` — catalogued, differentiated role profiles and tagged design notes.
 - `library/quirks/` — persistent operational memory for every role.
 - `library/tag-taxonomy.md` and `find-by-tag.sh` — governed semantic retrieval without broad scans.
-- `scripts/scale-library-*.sh` — safe library refresh, project connection, and role activation.
-- `.codex/hooks.json` — a trusted SessionStart hook that refreshes an attached library clone.
+- `library/model-registry.json` — credential-free provider/model policy and stable code-complexity routes.
+- `scripts/scale-library-*.sh` — safe library refresh, project connection, and role activation; model-policy updates are compatibility-gated before materialization.
+- `.codex/hooks.json` and `hooks/hooks.json` — trusted SessionStart hooks that refresh and materialize an attached library clone.
 
 See [AGENTS.md](AGENTS.md) for the full lifecycle and routing contract.
 
@@ -45,9 +46,19 @@ After the canonical remote exists, run from this repository:
 ./scripts/scale-library-install.sh --target /absolute/path/to/project
 ```
 
-It creates a sparse clone at the target's `.codex/scale-library-src/`, symlinks core agent profiles into `.codex/agents/`, links the library at `.codex/scale-library/`, and installs a SessionStart refresh hook only when the target has no existing hook configuration. It never overwrites a project-owned agent profile or hook file.
+It creates a sparse clone at the target's `.codex/scale-library-src/`, materializes managed agent profiles into `.codex/agents/`, exposes SCALE skills through `.agents/skills/`, and links the library at `.codex/scale-library/`. It installs a SessionStart hook only when the target has no existing hook configuration. It never overwrites a project-owned agent profile, skill, library path, or hook file.
 
-On the first trusted Codex session, review the hook in `/hooks`. Afterwards, every session start runs a `git pull --ff-only`; a dirty clone or network failure preserves the last valid local snapshot.
+On the first trusted Codex session, review the hook in `/hooks`. Afterwards, every session start runs a `git pull --ff-only` followed by safe materialization of newly added SCALE agents and skills; a dirty clone or network failure preserves the last valid local snapshot.
+
+## Enable every Git project
+
+Install the `scale` plugin once from this repository's Git marketplace. Its global
+SessionStart hook connects any Git project opened in Codex to the canonical library
+on first use, then refreshes it on later sessions. The automatic path writes only
+S.C.A.L.E.-managed files under `.codex/` and `.agents/skills/`; its ignores live in
+the repository-local `.git/info/exclude`, so it does not modify a project's tracked
+`.gitignore` or replace a project-owned hook configuration. Non-Git folders retain
+the global plugin skills but are not materialized as S.C.A.L.E. projects.
 
 ## Evolve the library
 
@@ -57,13 +68,14 @@ On the first trusted Codex session, review the hook in `/hooks`. Afterwards, eve
 4. `scale_qa` validates profiles and metadata.
 5. `scale_git` pulls, selectively commits, and pushes the validated library changes to the canonical remote.
 
-Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for model allocation. Strong roles use `medium` reasoning; narrow QA/prompt roles use `high`; five routine roles actively use DeepSeek V4 Flash with `medium` and tightly scoped work orders.
+Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Code routes are explicit: DeepSeek V4 Flash High for simple isolated code, GPT-5.6 Terra High for standard multi-file work, and GPT-5.6 Sol High for critical work. The registry governs exact IDs and provider compatibility.
 
 ## Validate
 
 ```bash
 ./scripts/validate-scale-agents.sh
 ./scripts/validate-scale-library.sh
+./scripts/validate-scale-install.sh
 ```
 
-The configured DeepSeek identifier is `deepseek-v4-flash`. If the connected provider exposes a different exact model identifier, change it only in the five DeepSeek profiles and retain their required `medium` reasoning effort.
+Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new model route. The configured DeepSeek identifier is `deepseek-v4-flash`; its simple-code lane uses High reasoning, and QA still gates global promotion. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.

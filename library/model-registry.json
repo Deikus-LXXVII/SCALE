@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "description": "Canonical S.C.A.L.E. model and provider policy. This file contains no credentials and never replaces a user's Codex catalog or provider configuration.",
+  "providers": [
+    {
+      "id": "codex",
+      "kind": "native",
+      "catalog_owner": "Codex",
+      "update_policy": "Discover the locally installed catalog; update approved IDs only after validation and a focused benchmark."
+    },
+    {
+      "id": "deepseek",
+      "kind": "external",
+      "codex_provider": "deepseek",
+      "catalog_owner": "user-configured Codex provider",
+      "update_policy": "Configure the provider and credential locally, then add the exact exposed ID here and validate it before routing work."
+    }
+  ],
+  "models": [
+    {
+      "id": "deepseek-v4-flash",
+      "provider": "deepseek",
+      "active": true,
+      "approved_reasoning_efforts": ["high"],
+      "use": "isolated simple code and routine bounded work"
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": ["high"],
+      "use": "medium-complexity code and bounded multi-file integration"
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": ["high"],
+      "use": "critical and cross-cutting implementation"
+    },
+    {
+      "id": "codex-auto-review",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": ["high"],
+      "use": "independent read-only QA"
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": ["high"],
+      "use": "narrow prompt and instruction editing"
+    }
+  ],
+  "routes": [
+    {
+      "id": "simple-code",
+      "profile": "scale_code_simple",
+      "model": "deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "boundary": "One isolated, low-risk change with explicit acceptance tests."
+    },
+    {
+      "id": "standard-code",
+      "profile": "scale_code_standard",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "high",
+      "boundary": "Ordinary multi-file implementation or bounded integration."
+    },
+    {
+      "id": "critical-code",
+      "profile": "scale_code_critical",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "boundary": "Cross-cutting, security-sensitive, concurrent, or otherwise high-impact work."
+    }
+  ],
+  "change_protocol": [
+    "Add or update a provider/model here without credentials.",
+    "Configure external provider access only in the user's Codex configuration and credential store.",
+    "Run the registry validator against the local Codex catalog and provider configuration.",
+    "Benchmark a candidate before making it a route default.",
+    "Update the exact routed profiles, validate, QA, and promote through Git."
+  ]
+}

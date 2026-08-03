@@ -12,7 +12,7 @@ if [[ "$actual" -lt "$minimum" ]]; then
 fi
 
 for profile in "$agents_dir"/*.toml; do
-  for key in name description model model_reasoning_effort developer_instructions; do
+  for key in name description model model_reasoning_effort sandbox_mode developer_instructions; do
     if ! rg -q "^${key} =" "$profile"; then
       echo "Missing $key in $profile" >&2
       exit 1
@@ -21,16 +21,25 @@ for profile in "$agents_dir"/*.toml; do
 done
 
 deepseek_count=$(rg -l '^model = "deepseek-v4-flash"$' "$agents_dir" | wc -l | tr -d ' ')
-if [[ "$deepseek_count" -lt 5 ]]; then
-  echo "Expected at least five DeepSeek V4 Flash routine agents; found $deepseek_count." >&2
+if [[ "$deepseek_count" -lt 6 ]]; then
+  echo "Expected at least six DeepSeek V4 Flash agents including the simple-code lane; found $deepseek_count." >&2
   exit 1
 fi
 
 while IFS= read -r profile; do
-  if ! rg -q '^model_reasoning_effort = "medium"$' "$profile"; then
-    echo "DeepSeek V4 Flash profile must use medium reasoning: $profile" >&2
+  if ! rg -q '^model_reasoning_effort = "high"$' "$profile"; then
+    echo "DeepSeek V4 Flash profile must use high reasoning: $profile" >&2
     exit 1
   fi
 done < <(rg -l '^model = "deepseek-v4-flash"$' "$agents_dir")
+
+node "$root/scripts/validate-scale-model-registry.mjs"
+
+for profile in scale_cleaner scale_environment scale_indexer scale_library; do
+  if ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/$profile.toml"; then
+    echo "Evidence-only DeepSeek profile must be read-only: $agents_dir/$profile.toml" >&2
+    exit 1
+  fi
+done
 
 echo "Validated $actual Codex custom-agent profiles ($deepseek_count DeepSeek V4 Flash)."

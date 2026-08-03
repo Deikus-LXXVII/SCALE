@@ -1,22 +1,42 @@
 # Model routing matrix
 
-| Agent | Model | Reasoning | Why |
-| --- | --- | --- | --- |
-| `scale_architect` | `gpt-5.6-sol` | medium | High-consequence systems decisions. |
-| `scale_builder` | `gpt-5.6-sol` | medium | Core Codex workflow and agent design. |
-| `scale_security` | `gpt-5.6-sol` | medium | Release-critical security analysis. |
-| `scale_backend` | `gpt-5.6-sol` | medium | Complex implementation and integration work. |
-| `scale_swift` | `gpt-5.6-terra` | medium | Specialized platform implementation. |
-| `scale_openwrt` | `gpt-5.6-terra` | medium | Specialized embedded systems work. |
-| `scale_audio` | `gpt-5.6-terra` | medium | Real-time, cross-component pipelines. |
-| `scale_research` | `gpt-5.6-terra` | medium | Source evaluation and reusable knowledge synthesis. |
-| `scale_qa` | `codex-auto-review` | high | Narrow independent verification. |
-| `scale_prompt` | `gpt-5.3-codex-spark` | high | Focused instruction editing. |
-| `scale_environment` | `deepseek-v4-flash` | medium | Bounded diagnostics. |
-| `scale_docs` | `deepseek-v4-flash` | medium | Evidence-based documentation upkeep. |
-| `scale_cleaner` | `deepseek-v4-flash` | medium | Read-only hygiene audit. |
-| `scale_git` | `gpt-5.6-terra` | medium | High-consequence global knowledge promotion. |
-| `scale_library` | `deepseek-v4-flash` | medium | Focused taxonomy and reference lookup. |
-| `scale_indexer` | `deepseek-v4-flash` | medium | Routine library-integrity scan. |
+`library/model-registry.json` is the authoritative provider-neutral registry.
+This page explains its current S.C.A.L.E. policy; the profiles in
+`.codex/agents/` are the executable bindings.
 
-`deepseek-v4-flash` must match the model identifier exposed by the connected provider. If the local model catalog spells it differently, replace this exact string in the five DeepSeek profiles, without changing their required `medium` reasoning effort.
+## Code-complexity lanes
+
+| Lane | Agent | Model | Reasoning | Route when | Do not route when |
+| --- | --- | --- | --- | --- | --- |
+| Simple | `scale_code_simple` | `deepseek-v4-flash` | high | One isolated, low-risk implementation with explicit tests and no sensitive boundary. | The change affects auth, schemas, public contracts, hard concurrency, multiple services, or architecture. |
+| Standard | `scale_code_standard` | `gpt-5.6-terra` | high | Ordinary multi-file feature, bounded integration, or non-critical refactor. | The failure blast radius is high or the work crosses critical boundaries. |
+| Critical | `scale_code_critical` | `gpt-5.6-sol` | high | Cross-cutting systems code, security-sensitive work, hard concurrency, irreversible data behavior, or major interfaces. | Never downgrade merely because the diff is short. |
+
+The lane is based on coupling and consequence, not how many lines change. A simple
+patch that changes authorization is critical; a large but isolated mechanical
+refactor can remain standard after validation.
+
+## Specialized roles
+
+| Agent group | Model | Reasoning | Why |
+| --- | --- | --- | --- |
+| `scale_architect`, `scale_builder`, `scale_backend`, `scale_security` | `gpt-5.6-sol` | high | Architecture and release-critical work require the critical lane. |
+| `scale_audio`, `scale_swift`, `scale_openwrt`, `scale_research`, `scale_git` | `gpt-5.6-terra` | high | Specialized, bounded work normally fits the standard lane. |
+| `scale_qa`, `scale_prompt` | `codex-auto-review` / `gpt-5.6-luna` | high | Narrow independent review and instruction work. |
+| `scale_environment`, `scale_docs`, `scale_cleaner`, `scale_library`, `scale_indexer` | `deepseek-v4-flash` | high | Routine evidence-backed work; each remains scope-bounded. |
+
+## Adding or updating a model
+
+1. For an external provider, configure its endpoint and credential in the user's
+   Codex configuration. Keep credentials outside S.C.A.L.E. and Git.
+2. Confirm the exact local model ID and supported reasoning levels with `codex debug models`.
+3. Add the provider or model to `library/model-registry.json`; do not change a route
+   default until the candidate has a focused benchmark.
+4. Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"`.
+5. Update the explicit affected agent profiles, run S.C.A.L.E. validation and QA,
+   then promote through `scale_git`.
+
+At a connected-project SessionStart, S.C.A.L.E. fetches incoming changes and
+validates any changed model registry or profile against the local catalog before
+fast-forwarding and materializing. An unavailable provider or model leaves the
+last known compatible library snapshot active.

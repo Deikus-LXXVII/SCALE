@@ -1,0 +1,19 @@
+{
+  "description": "Connect or refresh S.C.A.L.E. in each trusted Git project at Codex session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${PLUGIN_ROOT}/scripts/scale-plugin-session-start.sh\"",
+            "timeout": 45,
+            "statusMessage": "Connecting S.C.A.L.E. knowledge",
+            "additionalContextLimit": 800
+          }
+        ]
+      }
+    ]
+  }
+}

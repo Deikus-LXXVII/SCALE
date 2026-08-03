@@ -9,7 +9,7 @@ Use this workflow when a project needs its initial Codex operating structure.
 
 1. Inspect the workspace. Do not overwrite existing `AGENTS.md`, `.codex/`, or `docs.llm/` content without preserving and merging the user's rules.
 2. Create or update the minimum project context under `docs.llm/`: `context.md`, `file_map.md`, `guide.md`, `memory_anchor.md`, `quirks.md`, and `roadmap.md`.
-3. Connect the project to the canonical S.C.A.L.E. Git repository with `scripts/scale-library-install.sh`. This installs a sparse library clone, role symlinks, and a SessionStart refresh hook without overwriting project-owned profiles.
-4. Ensure `.codex/config.toml` enables multi-agent work and every active profile explicitly sets both `model` and `model_reasoning_effort`.
+3. Connect the project to the canonical S.C.A.L.E. Git repository with `scripts/scale-library-install.sh`. This installs a sparse library clone, materializes role and `.agents/skills` symlinks, and adds a SessionStart refresh hook only when safe; it never overwrites project-owned paths.
+4. Ensure `.codex/config.toml` enables multi-agent work and every active profile explicitly sets both `model` and `model_reasoning_effort`. Validate the supplied Codex catalog and any external provider configuration against `library/model-registry.json` before enabling a newly synchronized model route.
 5. Invoke `scale_architect` for concept analysis. After the direction is agreed, use `scale_environment`, then `scale_builder`, and validate with `scale_qa`.
 6. Keep the roadmap state truthful: mark a stage complete only after its stated deliverable is verified. Promote reusable rules, research, role designs, and quirks through `scale_git` so other connected projects can receive them.

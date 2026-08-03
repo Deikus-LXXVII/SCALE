@@ -44,18 +44,19 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 3. Research writes a tagged book only when existing library coverage is insufficient.
 4. QA validates profiles, taxonomy, file references, and claimed verification.
 5. Git promotes only validated, explicitly named library files to the canonical remote. It pulls first, never force-pushes, and reports unresolved conflicts.
-6. Connected projects pull fast-forward updates at trusted Codex session start through `.codex/hooks.json`; the refresh never overwrites a dirty library clone or a project-owned custom agent.
+6. Connected projects pull fast-forward updates at trusted Codex session start, then materialize all managed agent profiles and skills. Refresh never overwrites a dirty library clone, project-owned profile, skill, library path, or hook configuration.
 
 ## Model policy
 
-- High-impact decisions and complex implementation use `gpt-5.6-sol` or `gpt-5.6-terra` with `medium` reasoning.
-- Narrow but judgment-sensitive QA and prompt work uses lower-cost specialists with `high` reasoning.
-- Routine, bounded work uses `deepseek-v4-flash` with `medium` reasoning. A DeepSeek delegation must state one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition. Do not combine unrelated tasks.
+- Use the explicit code lanes in `library/model-registry.json`: `scale_code_simple` → `deepseek-v4-flash` with `high`; `scale_code_standard` → `gpt-5.6-terra` with `high`; `scale_code_critical` → `gpt-5.6-sol` with `high`.
+- Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
+- DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. Its work order must state one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition. Independently validate global promotion and high-impact decisions.
+- `library/model-registry.json` is the provider-neutral source of truth for approved providers, model IDs, efforts, and routes. It contains no credentials. New external providers are configured locally, while new native or external models are admitted only after catalog validation and a focused benchmark.
 
 ## Collaboration rules
 
 1. Delegate only independent bounded subtasks and keep write ownership non-overlapping.
 2. Run independent read-only mapping, research, security, or QA in parallel; sequence implementation and validation.
-3. A new durable fact must have a home: project fact → `docs.llm`, domain rule → `library/rules`, researched fact → `library/books`, role design → `library/agents`, operational workaround → `library/quirks`.
+3. A new durable fact must have a home: project fact → `docs.llm`, domain rule → `library/rules`, researched fact → `library/books`, role design → `library/agents`, operational workaround → `library/quirks`, model/provider policy → `library/model-registry.json`.
 4. Preserve user changes. Use `rg` for search, `apply_patch` for edits, and never use destructive Git commands unless explicitly requested.
 5. Project-level rules belong in `AGENTS.md`; Codex runtime defaults in `.codex/config.toml`; role settings in `.codex/agents`; reusable procedures in `skills`.

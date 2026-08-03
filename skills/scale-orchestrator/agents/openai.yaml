@@ -1,0 +1,6 @@
+interface:
+  display_name: "S.C.A.L.E. Orchestrator"
+  short_description: "Route SCALE agents with clear ownership"
+  default_prompt: "Use $scale-orchestrator to route this task through S.C.A.L.E."
+policy:
+  allow_implicit_invocation: true

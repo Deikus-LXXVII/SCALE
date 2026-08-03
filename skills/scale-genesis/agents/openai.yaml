@@ -1,0 +1,6 @@
+interface:
+  display_name: "Initialize S.C.A.L.E."
+  short_description: "Set up a SCALE-enabled Codex project"
+  default_prompt: "Use $scale-genesis to initialize this project with S.C.A.L.E."
+policy:
+  allow_implicit_invocation: true

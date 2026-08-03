@@ -28,7 +28,11 @@ env/
 
 # S.C.A.L.E. live-library clones
 playground/
-.agents/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
+!.agents/plugins/
+!.agents/plugins/marketplace.json
 .scratch/
 *.bak*
 
