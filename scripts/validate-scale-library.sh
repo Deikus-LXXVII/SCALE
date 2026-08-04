@@ -56,6 +56,20 @@ for profile in "$root"/opencode/agents/scale-go-*.md; do
   fi
 done
 
+candidate_fixture="$(mktemp -d "${TMPDIR:-/tmp}/scale-candidate-fixture.XXXXXX")"
+trap 'rm -rf "$candidate_fixture"' EXIT
+mkdir -p "$candidate_fixture/library"/{rules,books,agents}
+cp "$root/library/find-by-tag.sh" "$candidate_fixture/library/find-by-tag.sh"
+printf '%s\n' '---' 'description: "candidate fixture"' 'tags: [fixture]' 'status: candidate' 'provenance:' '  source: "test"' '  evidence: "test"' '  compatibility: "test"' '  validated_on: "2026-08-04"' '  review_after: "2099-01-01"' '---' > "$candidate_fixture/library/agents/candidate.md"
+if "$candidate_fixture/library/find-by-tag.sh" fixture | rg -q 'candidate.md'; then
+  printf '%s\n' 'Candidate knowledge leaked into default retrieval.' >&2
+  status=1
+fi
+if ! "$candidate_fixture/library/find-by-tag.sh" --include-candidates fixture | rg -q 'candidate.md'; then
+  printf '%s\n' 'Candidate knowledge is unavailable to explicit shadow evaluation.' >&2
+  status=1
+fi
+
 if [[ "$status" -eq 0 ]]; then
   printf '%s\n' 'Validated S.C.A.L.E. library metadata, taxonomy, and persistent quirks.'
 fi

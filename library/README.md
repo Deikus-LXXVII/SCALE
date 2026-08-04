@@ -10,9 +10,9 @@ The library is a flat, tag-classified collection of reusable material.
 Do not scan all reference files manually. Use:
 
 ```sh
-library/find-by-tag.sh <tag> [more-tags...]
+library/find-by-tag.sh [--include-candidates] <tag> [more-tags...]
 ```
 
-The command OR-matches requested tags and emits the matching paths. Read only the relevant results. Every new tag must first be registered in `library/tag-taxonomy.md`.
+The command OR-matches requested tags and emits the matching curated paths. Candidate knowledge is excluded from normal retrieval; pass `--include-candidates` only for explicit shadow evaluation. Deprecated entries remain excluded. Read only the relevant results. Every new tag must first be registered in `library/tag-taxonomy.md`.
 
 Model changes follow a separate compatibility protocol because model availability is machine-specific: configure an external provider locally, update the registry, benchmark the candidate, run `scripts/validate-scale-model-registry.mjs` against the local Codex catalog, then update routed profiles and promote the validated change.

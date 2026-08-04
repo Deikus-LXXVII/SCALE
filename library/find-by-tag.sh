@@ -1,8 +1,10 @@
 #!/bin/sh
 # library/find-by-tag.sh — cheap, programmatic tag search over the S.C.A.L.E. library.
-# Usage: find-by-tag.sh <tag> [more-tags...]
+# Usage: find-by-tag.sh [--include-candidates] <tag> [more-tags...]
 # OR-matches across the given tags (any listed tag counts as a match).
-# Prints:  <matched-tag><TAB><file-path>   (one line per match; a file with two matching
+# By default only curated entries are returned; use --include-candidates for shadow
+# evaluation. Deprecated entries are never returned. Prints: <matched-tag><TAB><file-path>
+# (one line per match; a file with two matching
 # tags among the ones queried prints twice — intentional, for search transparency)
 #
 # Zero non-POSIX dependencies: sh + grep/awk only, matching this repo's no-build-step,
@@ -16,8 +18,18 @@
 
 set -eu
 
+include_candidates=0
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --include-candidates) include_candidates=1; shift ;;
+        --) shift; break ;;
+        -*) echo "Unknown option: $1" >&2; exit 1 ;;
+        *) break ;;
+    esac
+done
+
 if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 <tag> [more-tags...]" >&2
+    echo "Usage: $0 [--include-candidates] <tag> [more-tags...]" >&2
     exit 1
 fi
 
@@ -32,11 +44,14 @@ for tag in "$@"; do
     for f in "$LIB_DIR"/rules/*.md "$LIB_DIR"/books/*.md; do
         [ -f "$f" ] || continue
         [ "$(basename "$f")" = "README.md" ] && continue
-        awk -v tag="$tag" -v file="$f" '
+        awk -v tag="$tag" -v file="$f" -v include_candidates="$include_candidates" '
             BEGIN { fmcount = 0 }
             /^---[ \t]*$/ {
                 fmcount++
-                if (fmcount == 2) exit
+                if (fmcount == 2) {
+                    if (matched && (include_candidates == 1 || status == "" || status == "curated")) print tag "\t" file
+                    exit
+                }
                 next
             }
             fmcount == 1 && /^tags:/ {
@@ -47,8 +62,13 @@ for tag in "$@"; do
                 for (i = 1; i <= n; i++) {
                     t = parts[i]
                     gsub(/^[ \t"]+|[ \t"]+$/, "", t)
-                    if (t == tag) print tag "\t" file
+                    if (t == tag) matched = 1
                 }
+            }
+            fmcount == 1 && /^status:/ {
+                status = $0
+                sub(/^status:[ \t]*/, "", status)
+                gsub(/^[ \t"]+|[ \t"]+$/, "", status)
             }
         ' "$f"
     done
@@ -57,10 +77,13 @@ for tag in "$@"; do
     for f in "$LIB_DIR"/agents/*.md; do
         [ -f "$f" ] || continue
         [ "$(basename "$f")" = "README.md" ] && continue
-        awk -v tag="$tag" -v file="$f" '
+        awk -v tag="$tag" -v file="$f" -v include_candidates="$include_candidates" '
             /^---[ \t]*$/ {
                 fmcount++
-                if (fmcount == 2) exit
+                if (fmcount == 2) {
+                    if (matched && (include_candidates == 1 || status == "" || status == "curated")) print tag "\t" file
+                    exit
+                }
                 next
             }
             fmcount == 1 && /^tags:/ {
@@ -71,8 +94,13 @@ for tag in "$@"; do
                 for (i = 1; i <= n; i++) {
                     t = parts[i]
                     gsub(/^[ \t"]+|[ \t"]+$/, "", t)
-                    if (t == tag) print tag "\t" file
+                    if (t == tag) matched = 1
                 }
+            }
+            fmcount == 1 && /^status:/ {
+                status = $0
+                sub(/^status:[ \t]*/, "", status)
+                gsub(/^[ \t"]+|[ \t"]+$/, "", status)
             }
             /^## Tags[ \t]*$/ { armed = 1; next }
             armed && NF == 0 { next }

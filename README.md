@@ -74,6 +74,8 @@ Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) fo
 
 Dispatcher telemetry is project-local JSONL at `.codex/scale-telemetry.jsonl` (ignored by Git). It records completed, rejected, and fallback-required events without prompts or credentials. Inspect it with `node scripts/scale-telemetry-report.mjs --input <project>/.codex/scale-telemetry.jsonl --json`. The dispatcher enforces work-order bytes, optional context-file count/bytes, OpenCode agent steps, timeout, and one fallback escalation per task.
 
+Normal tagged retrieval returns only `curated` knowledge. Use `library/find-by-tag.sh --include-candidates <tag>` only when deliberately shadow-evaluating a candidate; deprecated entries remain excluded.
+
 ## Validate
 
 ```bash
