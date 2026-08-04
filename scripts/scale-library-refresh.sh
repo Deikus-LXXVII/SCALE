@@ -139,7 +139,6 @@ validate_incoming() {
   if ! node "$audit_root/scripts/validate-scale-model-registry.mjs" \
     --registry "$audit_root/library/model-registry.json" \
     --agents-dir "$audit_root/.codex/agents" \
-    --opencode-agents-dir "$audit_root/opencode/agents" \
     --catalog "$codex_home_dir/models.json" \
     --config "$codex_home_dir/config.toml"; then
     rm -rf "$audit_root"

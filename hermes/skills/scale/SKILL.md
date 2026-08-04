@@ -59,8 +59,9 @@ These are prompt contracts, not 32 permanently loaded agents:
 
 Use the current Hermes-configured model by default. Do not change providers,
 credentials, global `base_url`, or model aliases as an implicit part of SCALE.
-External OpenCode/DeepSeek routes from the legacy Codex implementation require
-an explicit user request and a separate privacy/availability check.
+OpenCode Go is a native Hermes worker route through the `opencode-go` provider;
+the legacy Codex dispatcher, gateway, and protocol shims have been removed.
+Named fallbacks always stay on Codex lanes.
 
 ## Budget invariants
 

@@ -48,7 +48,6 @@ bash scripts/validate-scale-agents.sh
 bash scripts/validate-scale-library.sh
 node scripts/test-scale-benchmark.mjs
 node scripts/test-scale-knowledge-shadow.mjs
-bash scripts/validate-scale-opencode-dispatch.sh
 bash scripts/validate-scale-install.sh
 node scripts/validate-scale-release.mjs
 ```

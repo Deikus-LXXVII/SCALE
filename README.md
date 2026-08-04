@@ -13,8 +13,8 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 
 ## Architecture
 
-- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort. OpenCode Go DeepSeek V4 Flash High owns the default control-plane route; Codex Luna xhigh is its native gateway/fallback and high-context advisory lane.
-- `opencode/agents/` — managed OpenCode Go external agents, also with explicit model and reasoning effort; they are materialized safely into connected projects without changing Codex's catalog.
+- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort. OpenCode Go DeepSeek V4 Flash High owns the default control-plane route in Hermes via the native `opencode-go` provider; Codex Luna xhigh is its named native fallback and high-context advisory lane.
+- `opencode/agents/` — canonical OpenCode Go role descriptions (model, reasoning, step budget). Hermes executes these roles natively through the `opencode-go` provider; no dispatcher or gateway is used.
 - `library/rules/` — reusable domain rules.
 - `library/books/` — cited research reports.
 - `library/agents/` — catalogued, differentiated role profiles and tagged design notes.
@@ -47,8 +47,8 @@ S.C.A.L.E. also ships a Hermes-native adapter under `hermes/`. It exposes the
 workflow as four global skills (`scale`, `scale-orchestrator`, `scale-genesis`,
 and `scale-validate`) without importing the Codex TOML catalog or loading the
 whole knowledge library into every prompt. The adapter prefers direct,
-token-bounded execution; delegation and external OpenCode/DeepSeek routing are
-opt-in.
+token-bounded execution; delegation is opt-in, and OpenCode Go worker routing is
+native through the `opencode-go` provider.
 
 Install it for the active Hermes profile with:
 
@@ -90,9 +90,9 @@ the global plugin skills but are not materialized as S.C.A.L.E. projects.
 4. `scale_qa` validates profiles and metadata.
 5. `scale_git` pulls, selectively commits, and pushes the validated library changes to the canonical remote.
 
-Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Every DeepSeek V4 Flash route runs through authenticated OpenCode Go; the native Codex lane is a named fallback, never the DeepSeek API. Bounded standard implementation now prefers OpenCode Go DeepSeek Pro, with Terra reserved for sensitive/complex integration and production frontend. Luna xhigh covers native fallbacks and high-context advisory work. Kimi K3 at max reasoning owns user-directed premium web-design packets. The registry governs exact IDs, reasoning efforts, cost boundaries, provider compatibility, and runtime budgets. An explicit low-risk profile with bounded files uses the direct route and skips an unnecessary orchestration turn.
+Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Every DeepSeek V4 Flash route runs through the native Hermes `opencode-go` provider; the Codex lane is a named fallback, never the DeepSeek API. Bounded standard implementation now prefers OpenCode Go DeepSeek Pro, with Terra reserved for sensitive/complex integration and production frontend. Luna xhigh covers native fallbacks and high-context advisory work. Kimi K3 at max reasoning owns user-directed premium web-design packets. The registry governs exact IDs, reasoning efforts, cost boundaries, provider compatibility, and runtime budgets. An explicit low-risk profile with bounded files uses the direct route and skips an unnecessary orchestration turn.
 
-Dispatcher telemetry is project-local JSONL at `.codex/scale-telemetry.jsonl` (ignored by Git). It records completed, rejected, budget-adjusted, and fallback-required events without prompts or credentials, including hashes, route reason, token/cost usage when the provider reports it, and task/acceptance outcomes. Inspect it with `node scripts/scale-telemetry-report.mjs --input <project>/.codex/scale-telemetry.jsonl --json`. The dispatcher applies cheaper per-profile budgets first, then enforces hard work-order/context/steps/timeout caps and one fallback escalation per task. The orchestrator can request one bounded, evidenced adjustment; leaving the profile budget unchanged is the default.
+Runtime budgets are enforced per profile (work-order bytes, context files/bytes, agent steps, timeout), with one fallback escalation per task and a bounded, evidenced orchestrator adjustment option; leaving the profile budget unchanged is the default. Telemetry is credential-free JSONL at the project-local ignored `.codex/scale-telemetry.jsonl` (written only by legacy Codex tooling).
 
 Use `scripts/scale-benchmark.mjs` for an offline-first direct-vs-SCALE comparison. It accepts the same fixed corpus and acceptance IDs for both lanes, reports success/first-pass/escalation/call/context/token/cost/time metrics, and defaults to practical acceptance thresholds. Recorded traces are preferred; live runner commands require explicit `--allow-run`.
 
@@ -103,10 +103,9 @@ Normal tagged retrieval returns only `curated` knowledge. Use `library/find-by-t
 ```bash
 ./scripts/validate-scale-agents.sh
 ./scripts/validate-scale-opencode-agents.sh
-./scripts/validate-scale-opencode-dispatch.sh
 ./scripts/validate-scale-library.sh
 ./scripts/validate-scale-knowledge.sh
 ./scripts/validate-scale-install.sh
 ```
 
-Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new Codex model route. The configured DeepSeek identifier is `opencode-go/deepseek-v4-flash`; its routes use High reasoning, and QA still gates global promotion. OpenCode Go is integrated as a separate CLI/OpenAPI backend, never a fake Codex provider; after it is installed and authenticated, add `--opencode` to validate its live model catalog or enable the loopback API transport for a health/provider probe. See [OpenCode Go integration](docs/opencode-go.md) for its cost-saving routing and privacy boundary. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.
+Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new Codex model route. The configured DeepSeek identifier is `opencode-go/deepseek-v4-flash`; its routes use High reasoning, and QA still gates global promotion. OpenCode Go is a native Hermes provider (`opencode-go/<model>` slug, `execution: hermes-native`), never a fake Codex provider and never the DeepSeek API; no `base_url` override or loopback service exists. See [OpenCode Go integration](docs/opencode-go.md) for its cost-saving routing and privacy boundary. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.

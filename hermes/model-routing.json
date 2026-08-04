@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "runtime": "hermes",
-  "description": "Hermes-native S.C.A.L.E. routing. Analysis authority stays on OpenAI Codex Terra/Sol; bounded workers use OpenCode Go with Luna xhigh fallback.",
+  "description": "Hermes-native S.C.A.L.E. routing. Analysis authority stays on OpenAI Codex Terra/Sol; bounded workers use OpenCode Go natively through the opencode-go provider, with Codex Luna xhigh fallback.",
   "policy": {
     "analytical": {
       "description": "Reasoning, architecture, research, checks, policy, security, and design.",
@@ -59,8 +59,7 @@
     "scale_indexer": "worker",
     "scale_library": "worker",
     "scale_git": "worker",
-    "scale_sync": "worker",
-    "scale_opencode_native": "worker"
+    "scale_sync": "worker"
   },
   "constraints": {
     "sol_max_reasoning_effort": "high",

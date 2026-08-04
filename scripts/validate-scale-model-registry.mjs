@@ -15,13 +15,13 @@ const option = (name, fallback) => {
 };
 
 if (args.includes("--help") || args.includes("-h")) {
-  console.log("Usage: validate-scale-model-registry.mjs [--registry <file>] [--agents-dir <dir>] [--opencode-agents-dir <dir>] [--catalog <models.json>] [--config <config.toml>] [--opencode]");
+  console.log("Usage: validate-scale-model-registry.mjs [--registry <file>] [--agents-dir <dir>] [--catalog <models.json>] [--config <config.toml>]");
   process.exit(0);
 }
 
 const registryPath = option("--registry", path.join(scriptRoot, "library", "model-registry.json"));
 const agentsDir = option("--agents-dir", path.join(scriptRoot, ".codex", "agents"));
-const opencodeAgentsDir = option("--opencode-agents-dir", path.join(scriptRoot, "opencode", "agents"));
+const opencodeAgentsDir = path.join(scriptRoot, "opencode", "agents");
 const catalogPath = args.includes("--catalog") ? option("--catalog", "") : "";
 const configPath = args.includes("--config") ? option("--config", "") : "";
 const failures = [];
@@ -95,12 +95,8 @@ for (const provider of registry.providers ?? []) {
   requireValue(typeof provider.id === "string" && provider.id.length > 0, "provider is missing id");
   requireValue(!providers.has(provider.id), `duplicate provider: ${provider.id}`);
   providers.set(provider.id, provider);
-  requireValue(["native", "external", "external-cli"].includes(provider.kind), `provider ${provider.id} has invalid kind`);
+  requireValue(["native", "external"].includes(provider.kind), `provider ${provider.id} has invalid kind`);
   if (provider.kind === "external") requireValue(typeof provider.codex_provider === "string" && provider.codex_provider.length > 0, `external provider ${provider.id} needs codex_provider`);
-  if (provider.kind === "external-cli") {
-    requireValue(typeof provider.runtime_command === "string" && provider.runtime_command.length > 0, `external CLI provider ${provider.id} needs runtime_command`);
-    requireValue(typeof provider.runtime_provider === "string" && provider.runtime_provider.length > 0, `external CLI provider ${provider.id} needs runtime_provider`);
-  }
 }
 
 const models = new Map();
@@ -111,8 +107,6 @@ for (const model of registry.models ?? []) {
   requireValue(providers.has(model.provider), `model ${model.id} references unknown provider ${model.provider}`);
   requireValue(model.active === true || model.active === false, `model ${model.id} needs explicit active flag`);
   requireValue(Array.isArray(model.approved_reasoning_efforts) && model.approved_reasoning_efforts.length > 0, `model ${model.id} needs approved_reasoning_efforts`);
-  const provider = providers.get(model.provider);
-  if (provider?.kind === "external-cli") requireValue(model.id.startsWith(`${provider.runtime_provider}/`), `external CLI model ${model.id} must use ${provider.runtime_provider}/ prefix`);
 }
 
 const reasoningRank = new Map([["none", 0], ["low", 1], ["medium", 2], ["high", 3], ["xhigh", 4], ["max", 5]]);
@@ -128,11 +122,11 @@ const validateReasoningLimit = (modelId, effort, owner) => {
 };
 
 const expectedRoutes = new Map([
-  ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
-  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
-  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "external-cli"]],
+  ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "hermes-native"]],
+  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "hermes-native"]],
+  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "hermes-native"]],
   ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high", "codex-native"]],
-  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "external-cli"]]
+  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "hermes-native"]]
 ]);
 const routes = new Map();
 for (const route of registry.routes ?? []) {
@@ -143,9 +137,9 @@ for (const route of registry.routes ?? []) {
   requireValue(Boolean(model?.active), `route ${route.id} references an inactive or unknown model ${route.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
   validateReasoningLimit(route.model, route.reasoning_effort, `route ${route.id}`);
-  requireValue(["codex-native", "external-cli"].includes(route.execution), `route ${route.id} needs codex-native or external-cli execution`);
+  requireValue(["codex-native", "hermes-native"].includes(route.execution), `route ${route.id} needs codex-native or hermes-native execution`);
   if (route.execution === "codex-native") requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `native route ${route.id} must use a native or configured custom Responses model`);
-  if (route.execution === "external-cli") requireValue(providers.get(model?.provider)?.kind === "external-cli", `external CLI route ${route.id} must use an external CLI model`);
+  if (route.execution === "hermes-native") requireValue(providers.get(model?.provider)?.kind === "native", `hermes-native route ${route.id} must use a native provider model`);
 }
 for (const [id, [profile, model, effort, execution]] of expectedRoutes) {
   const route = routes.get(id);
@@ -173,40 +167,14 @@ try {
   failures.push(`cannot inspect profiles in ${agentsDir}: ${error.message}`);
 }
 
-const validateExternalAgent = (agent, modelId, effort, owner) => {
-  if (typeof agent !== "string" || agent.length === 0) {
-    failures.push(`${owner} needs an OpenCode agent`);
-    return;
-  }
-  const profilePath = path.join(opencodeAgentsDir, `${agent}.md`);
-  let source = "";
-  try {
-    source = fs.readFileSync(profilePath, "utf8");
-  } catch (error) {
-    failures.push(`${owner} references missing OpenCode agent ${profilePath}`);
-    return;
-  }
-  const configuredModel = source.match(/^model: (\S+)$/m)?.[1];
-  const configuredEffort = source.match(/^reasoningEffort: (\S+)$/m)?.[1];
-  requireValue(configuredModel === modelId, `${owner} OpenCode agent ${agent} must use ${modelId}`);
-  if (effort === "provider-default") {
-    requireValue(!configuredEffort, `${owner} OpenCode agent ${agent} must not invent a reasoning variant`);
-  } else {
-    requireValue(configuredEffort === effort, `${owner} OpenCode agent ${agent} must use ${effort} reasoning`);
-  }
-};
-
 const validateEndpoint = (profile, kind, endpoint) => {
   const model = models.get(endpoint?.model);
   requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
   validateReasoningLimit(endpoint?.model, endpoint?.reasoning_effort, `${profile} ${kind}`);
-  requireValue(["codex-native", "external-cli"].includes(endpoint?.execution), `${profile} ${kind} needs codex-native or external-cli execution`);
+  requireValue(["codex-native", "hermes-native"].includes(endpoint?.execution), `${profile} ${kind} needs codex-native or hermes-native execution`);
   if (endpoint?.execution === "codex-native") requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `${profile} ${kind} must use a native or configured custom Responses model`);
-  if (endpoint?.execution === "external-cli") {
-    requireValue(providers.get(model?.provider)?.kind === "external-cli", `${profile} ${kind} must use an external CLI model`);
-    validateExternalAgent(endpoint.agent, endpoint.model, endpoint.reasoning_effort, `${profile} ${kind}`);
-  }
+  if (endpoint?.execution === "hermes-native") requireValue(providers.get(model?.provider)?.kind === "native", `${profile} ${kind} must use a native provider model`);
 };
 
 const validateNativeFallback = (owner, fallback) => {
@@ -223,8 +191,7 @@ const validateNativeFallback = (owner, fallback) => {
 
 for (const route of routes.values()) {
   const model = models.get(route.model);
-  if (route.execution === "external-cli") {
-    validateExternalAgent(route.agent, route.model, route.reasoning_effort, `route ${route.id}`);
+  if (route.execution === "hermes-native") {
     validateNativeFallback(`route ${route.id}`, route.fallback);
   }
   const source = profileSources.get(route.profile);
@@ -249,8 +216,8 @@ for (const binding of registry.agent_bindings ?? []) {
     const source = profileSources.get(profile);
     requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
   }
-  if (primary?.execution === "external-cli") validateNativeFallback(profile, binding.fallback);
-  if (binding?.fallback && primary?.execution !== "external-cli") validateNativeFallback(profile, binding.fallback);
+  if (primary?.execution === "hermes-native") validateNativeFallback(profile, binding.fallback);
+  if (binding?.fallback && primary?.execution !== "hermes-native") validateNativeFallback(profile, binding.fallback);
   requireValue(!binding?.specialists || Array.isArray(binding.specialists), `${profile} specialists must be an array`);
   const specialistIds = new Set();
   for (const specialist of binding?.specialists ?? []) {
@@ -263,21 +230,8 @@ for (const binding of registry.agent_bindings ?? []) {
     if (specialist?.fallback) validateNativeFallback(`${profile} specialist ${specialist.id}`, specialist.fallback);
   }
 }
-const overlayBases = new Map();
-for (const overlay of registry.overlay_bindings ?? []) {
-  const profile = overlay?.profile;
-  const baseProfile = overlay?.base_profile;
-  const dispatchMode = overlay?.dispatch_mode;
-  requireValue(typeof profile === "string" && /^scale_telik_[a-z0-9_]+$/.test(profile), `overlay binding has invalid profile ${profile ?? "<missing>"}`);
-  requireValue(typeof baseProfile === "string" && baseProfile.length > 0, `overlay binding ${profile ?? "<missing>"} is missing base_profile`);
-  requireValue(["external-primary", "specialist-only", "native"].includes(dispatchMode), `overlay binding ${profile ?? "<missing>"} has invalid dispatch_mode`);
-  requireValue(!bindings.has(profile), `overlay binding ${profile} duplicates an agent binding`);
-  requireValue(!overlayBases.has(profile), `duplicate overlay binding: ${profile}`);
-  requireValue(bindings.has(baseProfile), `overlay binding ${profile} references missing base profile ${baseProfile}`);
-  if (typeof profile === "string" && typeof baseProfile === "string") overlayBases.set(profile, baseProfile);
-}
 for (const profile of profileSources.keys()) {
-  const effectiveProfile = overlayBases.get(profile) ?? profile;
+  const effectiveProfile = profile;
   requireValue(bindingEntries.has(effectiveProfile), `Codex profile ${profile} has no agent binding`);
 }
 for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_budgets ?? {})) {
@@ -285,28 +239,10 @@ for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_bu
   validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
 }
 for (const profile of profileSources.keys()) {
-  const effectiveProfile = overlayBases.get(profile) ?? profile;
-  const budget = registry.runtime_policy?.agent_budgets?.[profile] ?? registry.runtime_policy?.agent_budgets?.[effectiveProfile];
+  const effectiveProfile = profile;
+  const budget = registry.runtime_policy?.agent_budgets?.[profile];
   requireValue(Boolean(budget), `runtime_policy.agent_budgets is missing profile ${profile}`);
   if (budget) validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
-}
-for (const binding of registry.agent_bindings ?? []) {
-  const externalAgents = [];
-  if (binding.primary?.execution === "external-cli") externalAgents.push(binding.primary.agent);
-  for (const specialist of binding.specialists ?? []) if (specialist.execution === "external-cli") externalAgents.push(specialist.agent);
-  if (externalAgents.length === 0) continue;
-  const budget = registry.runtime_policy?.agent_budgets?.[binding.profile];
-  requireValue(Boolean(budget), `runtime_policy.agent_budgets is missing external profile ${binding.profile}`);
-  for (const agent of externalAgents) {
-    let source = "";
-    try {
-      source = fs.readFileSync(path.join(opencodeAgentsDir, `${agent}.md`), "utf8");
-    } catch {
-      continue;
-    }
-    const steps = Number(source.match(/^steps:\s*(\d+)$/m)?.[1] ?? 0);
-    requireValue(steps >= budget?.max_agent_steps, `${binding.profile} budget steps must not exceed OpenCode agent ${agent} contract (${steps})`);
-  }
 }
 for (const route of routes.values()) {
   const binding = (registry.agent_bindings ?? []).find((entry) => entry?.profile === route.profile);
@@ -314,7 +250,6 @@ for (const route of routes.values()) {
   requireValue(Boolean(primary), `route ${route.id} needs a primary binding for ${route.profile}`);
   if (!primary) continue;
   requireValue(primary.execution === route.execution && primary.model === route.model && primary.reasoning_effort === route.reasoning_effort, `route ${route.id} must match primary binding for ${route.profile}`);
-  if (route.execution === "external-cli") requireValue(primary.agent === route.agent, `route ${route.id} must match OpenCode agent for ${route.profile}`);
 }
 
 if (catalogPath) {
@@ -331,7 +266,7 @@ if (catalogPath) {
     const bySlug = new Map(entries.map((entry) => [entry.slug ?? entry.id ?? entry.model, entry]));
     for (const model of models.values()) {
       if (!model.active) continue;
-      if (providers.get(model.provider)?.kind === "external-cli") continue;
+      if (providers.get(model.provider)?.runtime === "hermes") continue;
       const entry = bySlug.get(model.id);
       requireValue(Boolean(entry), `active model ${model.id} is absent from ${catalogPath}`);
       const efforts = (entry?.supported_reasoning_levels ?? entry?.reasoning_levels ?? []).map((level) => typeof level === "string" ? level : level.effort);
@@ -353,24 +288,6 @@ if (configPath) {
     if (provider.kind !== "external") continue;
     const heading = `[model_providers.${provider.codex_provider}]`;
     requireValue(config.includes(heading), `external provider ${provider.id} is not configured as ${heading} in ${configPath}`);
-  }
-}
-
-if (args.includes("--opencode")) {
-  const { spawnSync } = await import("node:child_process");
-  for (const provider of providers.values()) {
-    if (provider.kind !== "external-cli") continue;
-    const result = spawnSync(provider.runtime_command, ["models", provider.runtime_provider], { encoding: "utf8" });
-    if (result.error || result.status !== 0) {
-      const detail = (result.error?.message || result.stderr || "unknown error").trim();
-      failures.push(`cannot discover ${provider.id} with ${provider.runtime_command} models ${provider.runtime_provider}: ${detail}`);
-      continue;
-    }
-    const discovered = `${result.stdout}\n${result.stderr}`;
-    for (const model of models.values()) {
-      if (!model.active || model.provider !== provider.id) continue;
-      requireValue(discovered.includes(model.id), `${provider.id} runtime does not expose active model ${model.id}`);
-    }
   }
 }
 

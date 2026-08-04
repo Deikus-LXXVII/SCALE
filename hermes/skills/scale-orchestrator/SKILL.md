@@ -36,8 +36,8 @@ classify it as compound, high-impact, ambiguous, or independently splittable.
   and keep final authority in the owning Hermes session;
 - routine isolated code, documentation, lookup: direct route first;
 - independent mapping/research/QA: optional parallel leaf tasks;
-- external OpenCode/DeepSeek: never automatic, never a global provider change,
-  and never a substitute for verification.
+- OpenCode Go: native worker route through the `opencode-go` provider; never
+  a global provider change and never an external dispatcher or gateway.
 
 ## Compact task brief
 

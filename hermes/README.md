@@ -41,7 +41,8 @@ The adapter is intentionally conservative:
 - independent subtasks: at most two leaf children by default;
 - validation: one batched final pass and at most one repair cycle;
 - context: only named files and relevant tagged knowledge;
-- OpenCode/external routing: explicit opt-in only.
+- OpenCode Go worker routing: native through the `opencode-go` provider; no
+  external dispatcher or gateway.
 
 The canonical Codex/OpenCode layer remains available for Codex projects and is
 not automatically imported into Hermes.

@@ -43,8 +43,8 @@ the source for remaining Go entitlement.
 
 ## Fallback contract
 
-`scale-opencode-dispatch.mjs` checks the live Go catalog before a dispatch. A
-catalog error, quota error, rate limit, credit error, or HTTP 429 emits one JSON
-handoff and exits 75. `scale_orchestrator` then routes the unchanged work order
-to the binding's native Codex fallback exactly once. It never retries Go and
-never falls through to an expensive Go model automatically.
+Hermes invokes the `opencode-go/<model>` route natively. A catalog error,
+quota error, rate limit, credit error, or HTTP 429 surfaces as a provider
+failure and `scale_orchestrator` routes the unchanged work order to the
+binding's named Codex fallback exactly once. It never retries Go and never
+falls through to an expensive Go model automatically.

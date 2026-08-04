@@ -1,43 +1,29 @@
 # OpenCode Go in S.C.A.L.E.
 
-OpenCode Go is a separately metered model pool exposed natively in Codex.
-SCALE installs all live Go models as `opencode-go/<model>` catalog entries and
-routes them through the built-in OpenAI provider to the loopback gateway. No
-custom `model_provider`, fake Codex provider, or DeepSeek API is used.
+OpenCode Go is a separately metered model pool invoked **natively from Hermes**
+through the `opencode-go` provider. No dispatcher, loopback gateway, API
+client, protocol shim, or Codex `base_url` change is used: Hermes calls the
+`opencode-go/<model>` slug directly, the same way it calls any other provider.
 
-## Setup
+## Invocation model
 
-Authenticate OpenCode Go once (`/connect -> OpenCode Go`) and keep the key in
-OpenCode's credential store. The gateway reads
-`~/.local/share/opencode/auth.json` at runtime. Never put credentials in
-SCALE, Codex config, work orders, telemetry, or Git.
+- SCALE roles route through `hermes/model-routing.json`: worker roles resolve
+  to `provider: opencode-go`, `model: deepseek-v4-flash` (or the route's
+  approved model), and `reasoning_effort: high`.
+- `hermes/scripts/scale-hermes-route.sh <role> <work-order>` reads that
+  registry and executes the work order as a native Hermes run with the mapped
+  provider/model/effort. Fallback is the named native route (Codex Luna xhigh
+  or Terra high), never a second external model.
+- Model calls are native Hermes calls: tool calling, sandbox, approvals, and
+  output handling stay inside the Hermes runtime. There is no intermediate
+  service between Hermes and OpenCode Go.
 
-Install the native catalog and global route with an explicit confirmation:
+## Authentication
 
-```bash
-node scripts/scale-install-opencode-native.mjs \
-  --codex-home /Users/lxxvii/.codex \
-  --allow-global-openai-proxy
-```
-
-The installer backs up `config.toml` and `models.json`, sets user-level
-`openai_base_url = "http://127.0.0.1:8787/v1"`, removes the incompatible custom
-provider, and adds all 18 current Go aliases. Restart Codex afterward because
-the desktop app caches the catalog. The gateway pass-through preserves ordinary
-Codex model requests; OpenCode slugs are handled locally.
-
-SessionStart starts the gateway automatically. Manual health checks:
-
-```bash
-curl -sS http://127.0.0.1:8787/healthz
-curl -sS http://127.0.0.1:8787/v1/models
-```
-
-The gateway selects protocols from the official Go model matrix: Luna uses
-Responses, most models use Chat Completions, and MiniMax/Qwen entries use
-Anthropic Messages. Standard function tools, tool-call history, and streaming
-Responses events are translated; Codex keeps sandbox, approvals, and tool
-execution.
+Authenticate OpenCode Go once (`opencode auth login` / the Hermes
+`opencode-go` provider setup) and keep the credential in OpenCode's/Hermes'
+credential store. Never put credentials in SCALE, work orders, telemetry, or
+Git.
 
 ## Routing policy
 
@@ -50,21 +36,21 @@ execution.
 | Frontend production | Terra High | Qwen 3.7 Plus is optional prototype input |
 | Routine/docs/research | DeepSeek Flash High or Luna | Bounded, privacy-gated context |
 
-The external dispatcher remains an opt-in legacy fallback. If used, report it
-as external execution and allow only one escalation; do not retry or silently
-switch to another Go model.
+`library/model-registry.json` is the provider-neutral source of truth: routes
+use `execution: hermes-native` for every OpenCode Go assignment. The
+`opencode-go` provider is declared with `kind: native` and `runtime: hermes`.
+Never configure a custom `model_provider`, fake Codex provider, or the
+DeepSeek API.
 
-## Validation and cost controls
+## Validation
 
 ```bash
-node scripts/validate-scale-model-registry.mjs \
-  --catalog /Users/lxxvii/.codex/models.json \
-  --config /Users/lxxvii/.codex/config.toml \
-  --opencode
+node scripts/validate-scale-model-registry.mjs
 bash scripts/validate-scale-agents.sh
 bash scripts/validate-scale-library.sh
 ```
 
-Use the smallest per-profile context/step budget. The orchestrator may request
-one evidence-backed adjustment across at most two dimensions; the registry
-hard caps and one-fallback rule remain authoritative.
+Use the smallest per-profile context/step budget. One fallback escalation per
+task; the registry hard caps remain authoritative. `opencode/agents/*.md` are
+kept as canonical role descriptions for OpenCode Go and are not part of the
+Hermes execution path.

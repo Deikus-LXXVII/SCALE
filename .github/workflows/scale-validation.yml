@@ -23,13 +23,9 @@ jobs:
         run: |
           bash scripts/validate-scale-library.sh
           node scripts/test-scale-knowledge-shadow.mjs
-      - name: Validate dispatch, installation, and benchmark fixtures
+      - name: Validate installation and benchmark fixtures
         run: |
-          bash scripts/validate-scale-opencode-dispatch.sh
           bash scripts/validate-scale-install.sh
           node scripts/test-scale-benchmark.mjs
       - name: Validate release package
         run: node scripts/validate-scale-release.mjs --require-tracked
-      - name: OpenCode live discovery
-        if: ${{ false }}
-        run: node scripts/validate-scale-release.mjs --opencode

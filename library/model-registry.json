@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "description": "Canonical S.C.A.L.E. hybrid model policy. Codex supplies native models and fallback authority; OpenCode Go supplies external specialists, including every DeepSeek V4 Flash route. This file contains no credentials.",
+  "description": "Canonical S.C.A.L.E. hybrid model policy. Codex supplies native models and fallback authority; OpenCode Go is a native Hermes worker provider invoked directly through the opencode-go provider. This file contains no credentials.",
   "runtime_policy": {
     "telemetry_path": ".codex/scale-telemetry.jsonl",
     "max_work_order_bytes": 32000,
@@ -249,13 +249,6 @@
         "max_context_bytes": 100000,
         "max_agent_steps": 24,
         "max_dispatch_ms": 900000
-      },
-      "scale_opencode_native": {
-        "max_work_order_bytes": 20000,
-        "max_context_files": 6,
-        "max_context_bytes": 60000,
-        "max_agent_steps": 12,
-        "max_dispatch_ms": 480000
       }
     },
     "orchestrator_adjustment": {
@@ -285,12 +278,10 @@
     },
     {
       "id": "opencode-go",
-      "kind": "external-cli",
-      "runtime_command": "opencode",
-      "runtime_provider": "opencode-go",
-      "api_transport": "loopback-openapi",
+      "kind": "native",
       "catalog_owner": "user's OpenCode Go subscription",
-      "update_policy": "Discover live models with opencode models opencode-go. Use the isolated dispatcher only; do not set global openai_base_url."
+      "update_policy": "Invoke models directly through the Hermes opencode-go provider. No dispatcher, gateway, shim, or global base_url changes.",
+      "runtime": "hermes"
     }
   ],
   "models": [
@@ -521,7 +512,7 @@
     {
       "id": "orchestration",
       "profile": "scale_orchestrator",
-      "execution": "external-cli",
+      "execution": "hermes-native",
       "model": "opencode-go/deepseek-v4-flash",
       "reasoning_effort": "high",
       "fallback": {
@@ -529,13 +520,12 @@
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
       },
-      "boundary": "OpenCode Go DeepSeek V4 Flash creates the non-sensitive route plan; native Luna xhigh executes the gateway/fallback only when Go is unavailable.",
-      "agent": "scale-go-orchestrator"
+      "boundary": "OpenCode Go DeepSeek V4 Flash creates the non-sensitive route plan; native Luna xhigh executes the gateway/fallback only when Go is unavailable."
     },
     {
       "id": "simple-code",
       "profile": "scale_code_simple",
-      "execution": "external-cli",
+      "execution": "hermes-native",
       "model": "opencode-go/deepseek-v4-flash",
       "reasoning_effort": "high",
       "fallback": {
@@ -543,13 +533,12 @@
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
       },
-      "boundary": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance tests; Luna xhigh is the native fallback.",
-      "agent": "scale-go-simple-code"
+      "boundary": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance tests; Luna xhigh is the native fallback."
     },
     {
       "id": "standard-code",
       "profile": "scale_code_standard",
-      "execution": "external-cli",
+      "execution": "hermes-native",
       "model": "opencode-go/deepseek-v4-pro",
       "reasoning_effort": "high",
       "fallback": {
@@ -557,8 +546,7 @@
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
       },
-      "boundary": "Default for bounded non-sensitive multi-file implementation; Terra remains the native fallback and authority for sensitive or complex integration.",
-      "agent": "scale-go-code-standard"
+      "boundary": "Default for bounded non-sensitive multi-file implementation; Terra remains the native fallback and authority for sensitive or complex integration."
     },
     {
       "id": "critical-code",
@@ -571,7 +559,7 @@
     {
       "id": "web-design",
       "profile": "scale_webdesign",
-      "execution": "external-cli",
+      "execution": "hermes-native",
       "model": "opencode-go/kimi-k3",
       "reasoning_effort": "max",
       "fallback": {
@@ -579,32 +567,16 @@
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
       },
-      "boundary": "Premium visual design brief and review only. It does not implement production web code.",
-      "agent": "scale-go-web-designer"
-    },
-    {
-      "id": "native-opencode-routine",
-      "profile": "scale_opencode_native",
-      "execution": "external-cli",
-      "model": "opencode-go/deepseek-v4-flash",
-      "reasoning_effort": "high",
-      "fallback": {
-        "profile": "scale_optimizer",
-        "model": "gpt-5.6-luna",
-        "reasoning_effort": "xhigh"
-      },
-      "boundary": "Opt-in native Codex subagent route through the loopback Responses shim for one bounded non-sensitive routine task.",
-      "agent": "scale-go-routine"
+      "boundary": "Premium visual design brief and review only. It does not implement production web code."
     }
   ],
   "agent_bindings": [
     {
       "profile": "scale_orchestrator",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-orchestrator"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_orchestrator",
@@ -618,22 +590,7 @@
         "execution": "codex-native",
         "model": "gpt-5.6-sol",
         "reasoning_effort": "high"
-      },
-      "specialists": [
-        {
-          "id": "go-architecture-draft",
-          "execution": "external-cli",
-          "model": "opencode-go/glm-5.2",
-          "reasoning_effort": "high",
-          "use_when": "A non-sensitive high-context comparison or decision packet will improve a native Sol decision.",
-          "fallback": {
-            "profile": "scale_architect",
-            "model": "gpt-5.6-sol",
-            "reasoning_effort": "high"
-          },
-          "agent": "scale-go-architecture"
-        }
-      ]
+      }
     },
     {
       "profile": "scale_audio",
@@ -641,22 +598,7 @@
         "execution": "codex-native",
         "model": "gpt-5.6-terra",
         "reasoning_effort": "high"
-      },
-      "specialists": [
-        {
-          "id": "go-standard-code",
-          "execution": "external-cli",
-          "model": "opencode-go/deepseek-v4-pro",
-          "reasoning_effort": "high",
-          "use_when": "A bounded, non-sensitive implementation is explicitly delegated to OpenCode capacity.",
-          "fallback": {
-            "profile": "scale_audio",
-            "model": "gpt-5.6-terra",
-            "reasoning_effort": "high"
-          },
-          "agent": "scale-go-code-standard"
-        }
-      ]
+      }
     },
     {
       "profile": "scale_backend",
@@ -677,10 +619,9 @@
     {
       "profile": "scale_cleaner",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-routine"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_cleaner",
@@ -699,10 +640,9 @@
     {
       "profile": "scale_code_simple",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-simple-code"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_code_simple",
@@ -713,10 +653,9 @@
     {
       "profile": "scale_code_standard",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-pro",
-        "reasoning_effort": "high",
-        "agent": "scale-go-code-standard"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_code_standard",
@@ -727,10 +666,9 @@
     {
       "profile": "scale_docs",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-routine"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_docs",
@@ -741,10 +679,9 @@
     {
       "profile": "scale_environment",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-explorer"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_environment",
@@ -758,22 +695,7 @@
         "execution": "codex-native",
         "model": "gpt-5.6-terra",
         "reasoning_effort": "high"
-      },
-      "specialists": [
-        {
-          "id": "go-visual-prototype",
-          "execution": "external-cli",
-          "model": "opencode-go/qwen3.7-plus",
-          "reasoning_effort": "high",
-          "use_when": "A non-sensitive visual prototype or component exploration benefits from a second visual model; Terra remains the production implementer.",
-          "fallback": {
-            "profile": "scale_frontend",
-            "model": "gpt-5.6-terra",
-            "reasoning_effort": "high"
-          },
-          "agent": "scale-go-interface"
-        }
-      ]
+      }
     },
     {
       "profile": "scale_git",
@@ -786,10 +708,9 @@
     {
       "profile": "scale_indexer",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-explorer"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_indexer",
@@ -800,10 +721,9 @@
     {
       "profile": "scale_library",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-explorer"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_library",
@@ -833,22 +753,7 @@
         "execution": "codex-native",
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
-      },
-      "specialists": [
-        {
-          "id": "go-prompt-review",
-          "execution": "external-cli",
-          "model": "opencode-go/gpt-5.6-luna",
-          "reasoning_effort": "high",
-          "use_when": "A non-sensitive large-context prompt review is explicitly delegated to OpenCode capacity.",
-          "fallback": {
-            "profile": "scale_prompt",
-            "model": "gpt-5.6-luna",
-            "reasoning_effort": "xhigh"
-          },
-          "agent": "scale-go-prompt-qa"
-        }
-      ]
+      }
     },
     {
       "profile": "scale_qa",
@@ -864,22 +769,7 @@
         "execution": "codex-native",
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
-      },
-      "specialists": [
-        {
-          "id": "go-high-context-research",
-          "execution": "external-cli",
-          "model": "opencode-go/glm-5.2",
-          "reasoning_effort": "high",
-          "use_when": "A non-sensitive high-context synthesis is requested as an input, not final authority.",
-          "fallback": {
-            "profile": "scale_research",
-            "model": "gpt-5.6-luna",
-            "reasoning_effort": "xhigh"
-          },
-          "agent": "scale-go-architecture"
-        }
-      ]
+      }
     },
     {
       "profile": "scale_security",
@@ -908,10 +798,9 @@
     {
       "profile": "scale_test_observer",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-monitor"
+        "reasoning_effort": "high"
       },
       "fallback": {
         "profile": "scale_test_observer",
@@ -922,10 +811,9 @@
     {
       "profile": "scale_webdesign",
       "primary": {
-        "execution": "external-cli",
+        "execution": "hermes-native",
         "model": "opencode-go/kimi-k3",
-        "reasoning_effort": "max",
-        "agent": "scale-go-web-designer"
+        "reasoning_effort": "max"
       },
       "fallback": {
         "profile": "scale_webdesign",
@@ -980,116 +868,18 @@
         "model": "gpt-5.6-luna",
         "reasoning_effort": "xhigh"
       }
-    },
-    {
-      "profile": "scale_opencode_native",
-      "primary": {
-        "execution": "external-cli",
-        "model": "opencode-go/deepseek-v4-flash",
-        "reasoning_effort": "high",
-        "agent": "scale-go-routine"
-      },
-      "fallback": {
-        "profile": "scale_optimizer",
-        "model": "gpt-5.6-luna",
-        "reasoning_effort": "xhigh"
-      }
-    }
-  ],
-  "overlay_bindings": [
-    {
-      "profile": "scale_telik_orchestrator",
-      "base_profile": "scale_orchestrator",
-      "dispatch_mode": "external-primary",
-      "boundary": "Use the OpenCode Go control-plane route for non-sensitive TwitchBot planning; native Luna remains the fallback."
-    },
-    {
-      "profile": "scale_telik_persona",
-      "base_profile": "scale_prompt",
-      "dispatch_mode": "native",
-      "boundary": "Prompt and persona decisions remain native Luna unless an explicitly approved non-sensitive specialist is selected."
-    },
-    {
-      "profile": "scale_telik_identity",
-      "base_profile": "scale_security",
-      "dispatch_mode": "native",
-      "boundary": "Identity and trust decisions remain native Sol; no external write or security investigation is delegated."
-    },
-    {
-      "profile": "scale_telik_status",
-      "base_profile": "scale_test_observer",
-      "dispatch_mode": "external-primary",
-      "boundary": "Read-only status and observation may use OpenCode Go DeepSeek V4 Flash with native Luna xhigh as fallback."
-    },
-    {
-      "profile": "scale_telik_injection_defense",
-      "base_profile": "scale_security",
-      "dispatch_mode": "native",
-      "boundary": "Injection-defense decisions remain native Sol and never use an external final authority."
-    },
-    {
-      "profile": "scale_telik_datacapture",
-      "base_profile": "scale_code_standard",
-      "dispatch_mode": "specialist-only",
-      "boundary": "Capture implementation remains native Terra; OpenCode requires an explicit sanitized specialist request."
-    },
-    {
-      "profile": "scale_telik_extraction",
-      "base_profile": "scale_code_standard",
-      "dispatch_mode": "specialist-only",
-      "boundary": "Extraction implementation remains native Terra; external work requires an explicit non-sensitive specialist request."
-    },
-    {
-      "profile": "scale_telik_framelab",
-      "base_profile": "scale_code_standard",
-      "dispatch_mode": "specialist-only",
-      "boundary": "FrameLab implementation remains native Terra; external work requires an explicit non-sensitive specialist request."
-    },
-    {
-      "profile": "scale_telik_dashboard_backend",
-      "base_profile": "scale_backend",
-      "dispatch_mode": "native",
-      "boundary": "Dashboard backend changes remain native Sol because they cross service and control boundaries."
-    },
-    {
-      "profile": "scale_telik_frontend",
-      "base_profile": "scale_frontend",
-      "dispatch_mode": "native",
-      "boundary": "Terra integrates production frontend changes; an external visual prototype is opt-in only."
-    },
-    {
-      "profile": "scale_telik_webdesign",
-      "base_profile": "scale_webdesign",
-      "dispatch_mode": "external-primary",
-      "boundary": "User-directed visual briefs may use OpenCode Go Kimi K3; native Luna xhigh is the low-cost design fallback and it never writes production UI."
-    },
-    {
-      "profile": "scale_telik_webapp_backend",
-      "base_profile": "scale_backend",
-      "dispatch_mode": "native",
-      "boundary": "OAuth, EventSub, ledger, and bridge changes remain native Sol."
-    },
-    {
-      "profile": "scale_telik_optimizer",
-      "base_profile": "scale_optimizer",
-      "dispatch_mode": "native",
-      "boundary": "Optimization uses native Luna xhigh and remains measurement-led."
     }
   ],
   "native_provider_policy": {
-    "status": "disabled-by-default",
-    "reason": "Codex user-level openai_base_url redirects every native and OpenCode model through one process; a gateway outage becomes a global Codex outage.",
-    "gateway_script": "scripts/scale-opencode-native-gateway.mjs",
-    "recovery_script": "scripts/scale-codex-recover.sh",
-    "safe_default": "No openai_base_url and no opencode-go/* aliases in the Codex catalog. Native Codex profiles use Luna/Terra/Sol; OpenCode Go remains isolated behind the external dispatcher.",
-    "experimental_note": "The gateway retains protocol fixtures and the SSE/non-stream fix for future per-model provider support, but SessionStart does not start it unless the exact loopback route is explicitly configured."
+    "status": "hermes-native",
+    "reason": "OpenCode Go is a native Hermes provider (opencode-go/<model>); no Codex gateway, loopback service, or openai_base_url override exists.",
+    "safe_default": "No openai_base_url and no codex-side aliases. Native Codex profiles use Luna/Terra/Sol; OpenCode Go routes use execution hermes-native through the Hermes runtime."
   },
   "change_protocol": [
     "Keep provider credentials outside S.C.A.L.E. and Git.",
-    "Never set global openai_base_url for normal SCALE operation: it redirects every Codex model and creates a single point of failure.",
-    "DeepSeek means OpenCode Go through the isolated dispatcher; never configure DeepSeek API.",
-    "If Codex loses connectivity after a provider experiment, run scale-codex-recover, restart Codex, and validate the native catalog before retrying any integration.",
-    "Use one privacy-gated external dispatch and one named native fallback at most; do not retry or silently substitute another Go model.",
+    "Never set global openai_base_url for normal SCALE operation.",
+    "DeepSeek means OpenCode Go through the native Hermes opencode-go provider; never configure the DeepSeek API.",
+    "Use one named native Codex fallback at most per task; do not retry or silently substitute another Go model.",
     "Keep Sol at high or lower reasoning and preserve Terra for sensitive integration."
   ]
 }

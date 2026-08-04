@@ -24,7 +24,7 @@ const exists = (relative) => {
   return result;
 };
 if (args.includes("--help") || args.includes("-h")) {
-  console.log("Usage: validate-scale-release.mjs [--root <scale-root>] [--require-tracked] [--opencode] [--json]");
+  console.log("Usage: validate-scale-release.mjs [--root <scale-root>] [--require-tracked] [--json]");
   process.exit(0);
 }
 
@@ -54,7 +54,7 @@ try {
 const requiredPaths = [
   ".codex-plugin/plugin.json", ".github/workflows/scale-validation.yml", "CHANGELOG.md", "library/model-registry.json", "library/find-by-tag.sh",
   "scripts/validate-scale-agents.sh", "scripts/validate-scale-library.sh", "scripts/validate-scale-knowledge.mjs", "scripts/validate-scale-knowledge.sh",
-  "scripts/validate-scale-model-registry.mjs", "scripts/validate-scale-opencode-dispatch.sh", "scripts/validate-scale-install.sh",
+  "scripts/validate-scale-model-registry.mjs", "scripts/validate-scale-install.sh",
   "scripts/scale-library-refresh.sh", "scripts/scale-telemetry-report.mjs", "scripts/scale-benchmark.mjs", "scripts/test-scale-benchmark.mjs", "scripts/scale-knowledge-shadow.mjs", "scripts/test-scale-knowledge-shadow.mjs", "scripts/validate-scale-release.mjs"
 ];
 for (const requiredPath of requiredPaths) exists(requiredPath);
@@ -68,13 +68,6 @@ if (gitAvailable) {
     if (args.includes("--require-tracked")) requireValue(tracked, `required release path is not Git-tracked: ${check.path}`);
   }
 }
-if (args.includes("--opencode")) {
-  const result = spawnSync(process.execPath, [path.join(root, "scripts", "validate-scale-model-registry.mjs"), "--opencode"], { encoding: "utf8" });
-  requireValue(!result.error && result.status === 0, `optional OpenCode discovery failed: ${(result.error?.message || result.stderr || "unknown error").trim()}`);
-  checks.push({ opencode_discovery: result.status === 0 ? "passed" : "failed" });
-} else {
-  checks.push({ opencode_discovery: "skipped (no external runtime or credentials requested)" });
-}
 const report = { schema_version: 1, root, version: version ?? null, checks, failures };
 if (failures.length > 0) {
   if (args.includes("--json")) console.error(JSON.stringify(report, null, 2));
@@ -82,4 +75,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 if (args.includes("--json")) console.log(JSON.stringify(report, null, 2));
-else console.log(`Validated S.C.A.L.E. release metadata (${version}); OpenCode discovery ${args.includes("--opencode") ? "passed" : "skipped"}.`);
+else console.log(`Validated S.C.A.L.E. release metadata (${version}); OpenCode discovery skipped (native Hermes provider).`);
