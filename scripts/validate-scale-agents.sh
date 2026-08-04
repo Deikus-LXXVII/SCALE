@@ -20,24 +20,24 @@ for profile in "$agents_dir"/*.toml; do
   done
 done
 
-deepseek_count=$(rg -l '^model = "deepseek-v4-flash"$' "$agents_dir" | wc -l | tr -d ' ')
-if [[ "$deepseek_count" -lt 6 ]]; then
-  echo "Expected at least six DeepSeek V4 Flash agents including the simple-code lane; found $deepseek_count." >&2
+deepseek_count=$( (rg -l '^model = "deepseek-v4-flash"$' "$agents_dir" || true) | wc -l | tr -d ' ')
+if [[ "$deepseek_count" -ne 0 ]]; then
+  echo "DeepSeek API model must not appear in Codex profiles; found $deepseek_count." >&2
   exit 1
 fi
 
-while IFS= read -r profile; do
-  profile_name="$(basename "$profile" .toml)"
-  if [[ "$profile_name" == "scale_test_observer" ]]; then
-    if ! rg -q '^model_reasoning_effort = "medium"$' "$profile" || ! rg -q '^sandbox_mode = "read-only"$' "$profile"; then
-      echo "scale_test_observer must use DeepSeek V4 Flash/medium/read-only: $profile" >&2
-      exit 1
-    fi
-  elif ! rg -q '^model_reasoning_effort = "high"$' "$profile"; then
-    echo "DeepSeek V4 Flash profile must use high reasoning: $profile" >&2
-    exit 1
-  fi
-done < <(rg -l '^model = "deepseek-v4-flash"$' "$agents_dir")
+if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_orchestrator.toml"; then
+  echo "scale_orchestrator must retain a native Luna fallback profile." >&2
+  exit 1
+fi
+if ! rg -q '^model = "gpt-5.6-terra"$' "$agents_dir/scale_code_simple.toml"; then
+  echo "scale_code_simple must retain a native Terra fallback profile." >&2
+  exit 1
+fi
+if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^model_reasoning_effort = "medium"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/scale_test_observer.toml"; then
+  echo "scale_test_observer must use Luna/medium/read-only as the native fallback." >&2
+  exit 1
+fi
 
 node "$root/scripts/validate-scale-model-registry.mjs"
 bash "$root/scripts/validate-scale-opencode-agents.sh"
@@ -45,9 +45,9 @@ bash "$root/scripts/validate-scale-opencode-dispatch.sh"
 
 for profile in scale_cleaner scale_environment scale_indexer scale_library; do
   if ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/$profile.toml"; then
-    echo "Evidence-only DeepSeek profile must be read-only: $agents_dir/$profile.toml" >&2
+    echo "Evidence-only native fallback profile must be read-only: $agents_dir/$profile.toml" >&2
     exit 1
   fi
 done
 
-echo "Validated $actual Codex custom-agent profiles ($deepseek_count DeepSeek V4 Flash)."
+echo "Validated $actual Codex custom-agent profiles (no DeepSeek API models)."

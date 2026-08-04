@@ -15,8 +15,9 @@ as a reason to replace all Codex roles.
 3. A Go failure or quota signal returns exactly one stated native fallback. Do
    not retry Go or silently select a more expensive Go model.
 4. Sol remains final authority for security, critical decisions, and promotion;
-   Terra owns production multi-file and frontend implementation; DeepSeek V4
-   Flash owns Codex orchestration and routine work.
+   Terra owns production multi-file and frontend implementation; OpenCode Go
+   DeepSeek V4 Flash owns all DeepSeek orchestration and routine work. Do not
+   configure the DeepSeek API in Codex.
 5. Kimi K2.7 Code is a premium design specialist only: visual direction,
    design critique, responsive hierarchy, and component specification. It does
    not implement production UI. `scale_frontend` on Terra implements the

@@ -6,4 +6,4 @@ tags: [testing, verification, ai-agents]
 
 Use only to observe an existing named test execution. It reads terminal state, exit status, concise failures, and artifacts; it never writes, configures, reruns, or restarts tests.
 
-Use `deepseek-v4-flash/medium/read-only`, then hand ambiguous verdicts to `scale_qa`. Validate active/catalog profile identity, registry compatibility, tags, and quirk presence.
+Use OpenCode Go `deepseek-v4-flash/high/read-only`, then hand ambiguous verdicts to `scale_qa`. The native Luna `medium/read-only` profile is fallback only. Validate active/catalog profile identity, registry compatibility, tags, and quirk presence.

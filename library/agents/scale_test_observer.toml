@@ -1,6 +1,6 @@
 name = "scale_test_observer"
 description = "Passively observes execution of existing tests and reports bounded evidence without mutations."
-model = "deepseek-v4-flash"
+model = "gpt-5.6-luna"
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """

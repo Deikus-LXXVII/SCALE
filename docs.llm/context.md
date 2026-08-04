@@ -8,5 +8,5 @@ The routing policy is intentional:
 
 - complex or high-impact work receives a strong model with `medium` reasoning;
 - narrow QA and prompt editing receive a lower-cost model with `high` reasoning;
-- routine, bounded work uses DeepSeek V4 Flash with `medium` reasoning and a tightly scoped work order;
+- routine, bounded work uses OpenCode Go DeepSeek V4 Flash with `high` reasoning and a tightly scoped work order;
 - durable learning is promoted through a canonical Git repository and dynamically pulled by connected projects.

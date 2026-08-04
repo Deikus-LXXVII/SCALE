@@ -1,7 +1,7 @@
 {
   "name": "scale",
-  "version": "0.1.3+codex.20260804",
-  "description": "Self-evolving Codex Agent Library Ecosystem with Codex-primary routing, DeepSeek orchestration, and optional OpenCode Go specialists.",
+  "version": "0.1.4+codex.20260804",
+  "description": "Self-evolving Codex Agent Library Ecosystem with OpenCode Go DeepSeek routing and native Codex fallbacks.",
   "author": {
     "name": "Deikus-LXXVII"
   },
@@ -16,7 +16,7 @@
   "interface": {
     "displayName": "S.C.A.L.E. for Codex",
     "shortDescription": "Model-routed multi-agent orchestration for Codex.",
-    "longDescription": "A Git-synchronized Self-evolving Codex Agent Library Ecosystem: DeepSeek V4 Flash orchestrates in Codex, Codex agents remain primary, and OpenCode Go models are selected as bounded specialists with native fallbacks.",
+    "longDescription": "A Git-synchronized Self-evolving Codex Agent Library Ecosystem: every DeepSeek V4 Flash route runs through OpenCode Go, while native Codex models retain authority and deterministic fallbacks.",
     "developerName": "Deikus-LXXVII",
     "category": "Productivity",
     "capabilities": [

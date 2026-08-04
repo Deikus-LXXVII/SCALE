@@ -49,8 +49,8 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 
 ## Model policy
 
-- `scale_orchestrator` runs inside Codex on DeepSeek V4 Flash with `high`. It is the only control-plane role: it writes bounded work orders, selects `agent_bindings`, and receives deterministic fallbacks.
-- Codex profiles remain primary: DeepSeek for orchestration/routine work, Terra for standard implementation and production frontend work, Sol for critical authority, Luna for prompts, and auto-review for QA. OpenCode Go is an additional specialist pool selected only when the binding's `use_when` rule applies.
+- `scale_orchestrator` dispatches through OpenCode Go DeepSeek V4 Flash with `high`; native Codex Luna is its gateway/fallback only. It writes bounded work orders, selects `agent_bindings`, and receives deterministic fallbacks.
+- Codex profiles remain primary for Terra standard implementation and production frontend work, Sol critical authority, Luna fallback/prompt work, and auto-review QA. Every DeepSeek V4 Flash assignment is an OpenCode Go route; the DeepSeek API is not configured or used.
 - Kimi K2.7 Code is the premium web-design specialist: it creates a design packet, never production UI code. Terra's `scale_frontend` implements the handoff. Security and Git promotion remain native Codex. A Go quota signal is routed once to the exact native fallback in the binding; it is never retried in a loop.
 - Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
 - DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. As the Codex orchestrator, it must write one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition before dispatching Go. Independently validate global promotion and high-impact decisions.

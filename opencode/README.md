@@ -1,10 +1,9 @@
 # OpenCode Go adapter
 
 S.C.A.L.E. treats OpenCode Go as an additional specialist pool, not as a Codex
-model provider or blanket replacement. Codex DeepSeek V4 Flash High is the
-control plane and the native Codex profile remains the default executor unless
-the registry explicitly selects a Go specialist. This preserves Codex's own
-catalog and puts Go usage behind its own subscription limits.
+model provider. Every DeepSeek V4 Flash route, including orchestration, is
+executed through OpenCode Go rather than the DeepSeek API. Codex Luna provides
+the small native gateway/fallback where an external route cannot run.
 
 The materializer exposes the managed agents from this directory to a connected
 project as `.opencode/agents/scale-go-*.md`. Existing project-owned OpenCode

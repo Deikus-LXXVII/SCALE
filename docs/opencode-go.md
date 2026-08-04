@@ -10,9 +10,9 @@ model catalog, permissions, session history, and limits.
 S.C.A.L.E. therefore uses this split:
 
 ```text
-Codex DeepSeek V4 Flash: control plane, work-order boundaries, validation, and fallback selection
-Codex native profiles: default implementation and authority for their role
-OpenCode Go: explicitly eligible non-sensitive specialists, never a blanket replacement
+OpenCode Go DeepSeek V4 Flash: all DeepSeek control-plane and routine work
+Codex native profiles: implementation authority and named fallbacks
+OpenCode Go: explicitly eligible non-sensitive specialists, never a fake Codex provider
 ```
 
 This conserves Codex limits only where a specialist is deliberately justified,
@@ -67,9 +67,10 @@ benchmarked.
 
 | Work | Default owner | Optional Go specialist |
 | --- | --- | --- |
-| Control plane | Codex `scale_orchestrator` / DeepSeek V4 Flash High | Emits bounded work orders and receives Go failures. |
-| Routine evidence, docs, cleanup | Codex DeepSeek V4 Flash High | Go Flash High for an explicit non-sensitive overflow work order. |
-| Isolated and standard implementation | Codex DeepSeek Flash / Terra High | Go Flash/Pro High only for an eligible bounded work order. |
+| Control plane | Go `scale-go-orchestrator` / DeepSeek V4 Flash High | Native Luna gateway/fallback executes the dispatch contract. |
+| Routine evidence, docs, cleanup | Go DeepSeek V4 Flash High | Native Luna fallback after a Go failure. |
+| Isolated simple implementation | Go DeepSeek V4 Flash High | Native Terra fallback after a Go failure. |
+| Standard implementation | Codex Terra High | Go DeepSeek Pro High only for an eligible bounded work order. |
 | Web design | Go `scale-go-web-designer` / Kimi K2.7 Code | Premium visual brief only; no edits or production implementation. |
 | Frontend implementation | Codex `scale_frontend` / Terra High | Go Qwen3.7 Plus High may prototype; Terra integrates. |
 | Prompt or research | Codex Luna/Terra High | Go Luna/GLM High for a non-sensitive advisory packet. |

@@ -1,18 +1,20 @@
 # S.C.A.L.E. hybrid model routing
 
-The registry is authoritative. Codex is the primary execution plane; OpenCode
-Go is a supplemental specialist pool behind a local CLI adapter. Each native
-profile has an explicit model, reasoning effort, and sandbox. Each Go
-specialist has a narrow `use_when` condition and a single native fallback.
+The registry is authoritative. Codex provides native model authority and
+fallbacks; OpenCode Go owns every DeepSeek V4 Flash route behind a local CLI
+adapter. Each native profile has an explicit model, reasoning effort, and
+sandbox. Each Go specialist has a narrow `use_when` condition and a single
+native fallback.
 
 | Work | Default owner | Optional specialist | Boundary |
 | --- | --- | --- | --- |
-| Control plane | Codex DeepSeek V4 Flash High | None | Decompose, select, validate handoffs. |
-| Simple code | Codex DeepSeek V4 Flash High | Go DeepSeek V4 Flash High | Only isolated non-sensitive work with explicit tests. |
+| Control plane | Go DeepSeek V4 Flash High | Codex Luna High fallback | Decompose, select, validate handoffs. |
+| Simple code | Go DeepSeek V4 Flash High | Codex Terra High fallback | Only isolated non-sensitive work with explicit tests. |
 | Standard implementation | Codex Terra High | Go DeepSeek V4 Pro High | Explicit capacity decision for a bounded non-sensitive work order. |
 | Critical/security | Codex Sol High | Read-only evidence only | Sol remains authority; no external final decision. |
 | Web design | Go Kimi K2.7 Code, provider-default | None | Premium design brief only; no production edits. |
 | Frontend implementation | Codex Terra High | Go Qwen3.7 Plus High | Qwen may prototype; Terra integrates and validates production code. |
+| Routine/docs/environment/indexing | Go DeepSeek V4 Flash High | Codex Luna High fallback | Non-sensitive bounded handoff only. |
 | Prompt/research | Codex Luna/Terra High | Go Luna/GLM High | Advisory non-sensitive packet only. |
 
 ## Selecting a Go specialist

@@ -13,7 +13,7 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 
 ## Architecture
 
-- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort. `scale_orchestrator` is DeepSeek V4 Flash High and owns the control plane plus fallback decisions.
+- `.codex/agents/` — active Codex roles, each with an explicit model and reasoning effort. OpenCode Go DeepSeek V4 Flash High owns the default control-plane route; Codex Luna is its native gateway/fallback.
 - `opencode/agents/` — managed OpenCode Go external agents, also with explicit model and reasoning effort; they are materialized safely into connected projects without changing Codex's catalog.
 - `library/rules/` — reusable domain rules.
 - `library/books/` — cited research reports.
@@ -69,7 +69,7 @@ the global plugin skills but are not materialized as S.C.A.L.E. projects.
 4. `scale_qa` validates profiles and metadata.
 5. `scale_git` pulls, selectively commits, and pushes the validated library changes to the canonical remote.
 
-Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Codex DeepSeek V4 Flash High orchestrates and the native Codex lanes remain the default executors; authenticated OpenCode Go agents are selected only as explicitly eligible specialists and always return to a native fallback on a Go limit/catalog failure. Kimi K2.7 Code owns premium web-design packets, while Terra owns production frontend implementation. The registry governs exact IDs, reasoning efforts, cost boundaries, and provider compatibility.
+Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Every DeepSeek V4 Flash route runs through authenticated OpenCode Go; the native Codex lane is a named fallback, never the DeepSeek API. Terra/Sol/Luna retain their Codex roles, Kimi K2.7 Code owns premium web-design packets, and Terra owns production frontend implementation. The registry governs exact IDs, reasoning efforts, cost boundaries, and provider compatibility.
 
 ## Validate
 
@@ -81,4 +81,4 @@ Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) fo
 ./scripts/validate-scale-install.sh
 ```
 
-Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new Codex model route. The configured DeepSeek identifier is `deepseek-v4-flash`; its simple-code lane uses High reasoning, and QA still gates global promotion. OpenCode Go is integrated as a separate CLI backend, never a fake Codex provider; after it is installed and authenticated, add `--opencode` to validate its live model catalog. See [OpenCode Go integration](docs/opencode-go.md) for its cost-saving routing and privacy boundary. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.
+Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new Codex model route. The configured DeepSeek identifier is `opencode-go/deepseek-v4-flash`; its routes use High reasoning, and QA still gates global promotion. OpenCode Go is integrated as a separate CLI backend, never a fake Codex provider; after it is installed and authenticated, add `--opencode` to validate its live model catalog. See [OpenCode Go integration](docs/opencode-go.md) for its cost-saving routing and privacy boundary. Add or update models only in `library/model-registry.json`, benchmark them, then update the exact routed profiles. Never commit provider credentials or overwrite a user's global Codex configuration.

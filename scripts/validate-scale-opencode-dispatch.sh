@@ -27,7 +27,7 @@ EOF
 chmod +x "$fake_bin/opencode"
 
 set +e
-output="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_docs --specialist go-routine --work-order "$workspace/work-order.md" 2>&1)"
+output="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_docs --work-order "$workspace/work-order.md" 2>&1)"
 status=$?
 set -e
 
@@ -35,6 +35,6 @@ set -e
 [[ "$output" == *'"status":"fallback-required"'* ]]
 [[ "$output" == *'"reason":"opencode-go-limit"'* ]]
 [[ "$output" == *'"profile":"scale_docs"'* ]]
-[[ "$output" == *'"model":"deepseek-v4-flash"'* ]]
+[[ "$output" == *'"model":"gpt-5.6-luna"'* ]]
 
 printf '%s\n' 'Validated S.C.A.L.E. OpenCode Go quota fallback handoff.'
