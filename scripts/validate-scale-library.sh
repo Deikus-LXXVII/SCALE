@@ -61,12 +61,17 @@ trap 'rm -rf "$candidate_fixture"' EXIT
 mkdir -p "$candidate_fixture/library"/{rules,books,agents}
 cp "$root/library/find-by-tag.sh" "$candidate_fixture/library/find-by-tag.sh"
 printf '%s\n' '---' 'description: "candidate fixture"' 'tags: [fixture]' 'status: candidate' 'provenance:' '  source: "test"' '  evidence: "test"' '  compatibility: "test"' '  validated_on: "2026-08-04"' '  review_after: "2099-01-01"' '---' > "$candidate_fixture/library/agents/candidate.md"
+printf '%s\n' '---' 'description: "deprecated fixture"' 'tags: [fixture]' 'status: deprecated' 'provenance:' '  source: "test"' '  evidence: "test"' '  compatibility: "test"' '  validated_on: "2026-08-04"' '  review_after: "2026-08-04"' '---' > "$candidate_fixture/library/agents/deprecated.md"
 if "$candidate_fixture/library/find-by-tag.sh" fixture | rg -q 'candidate.md'; then
   printf '%s\n' 'Candidate knowledge leaked into default retrieval.' >&2
   status=1
 fi
 if ! "$candidate_fixture/library/find-by-tag.sh" --include-candidates fixture | rg -q 'candidate.md'; then
   printf '%s\n' 'Candidate knowledge is unavailable to explicit shadow evaluation.' >&2
+  status=1
+fi
+if "$candidate_fixture/library/find-by-tag.sh" --include-candidates fixture | rg -q 'deprecated.md'; then
+  printf '%s\n' 'Deprecated knowledge leaked into retrieval.' >&2
   status=1
 fi
 

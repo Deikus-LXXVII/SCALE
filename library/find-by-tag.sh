@@ -49,7 +49,7 @@ for tag in "$@"; do
             /^---[ \t]*$/ {
                 fmcount++
                 if (fmcount == 2) {
-                    if (matched && (include_candidates == 1 || status == "" || status == "curated")) print tag "\t" file
+                    if (matched && status != "deprecated" && (include_candidates == 1 || status == "" || status == "curated")) print tag "\t" file
                     exit
                 }
                 next
@@ -81,7 +81,7 @@ for tag in "$@"; do
             /^---[ \t]*$/ {
                 fmcount++
                 if (fmcount == 2) {
-                    if (matched && (include_candidates == 1 || status == "" || status == "curated")) print tag "\t" file
+                    if (matched && status != "deprecated" && (include_candidates == 1 || status == "" || status == "curated")) print tag "\t" file
                     exit
                 }
                 next
