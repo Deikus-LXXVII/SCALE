@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "runtime": "hermes",
+  "description": "Hermes-native S.C.A.L.E. routing. Analysis authority stays on OpenAI Codex Terra/Sol; bounded workers use OpenCode Go with Luna xhigh fallback.",
+  "policy": {
+    "analytical": {
+      "description": "Reasoning, architecture, research, checks, policy, security, and design.",
+      "provider": "openai-codex",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "xhigh",
+      "allowed_models": ["gpt-5.6-terra", "gpt-5.6-sol"],
+      "reasoning_range": ["low", "xhigh"],
+      "fallback": {
+        "provider": "openai-codex",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    "worker": {
+      "description": "Code, tests, observation, documentation, cleanup, and routine execution.",
+      "provider": "opencode-go",
+      "model": "deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "fallback": {
+        "provider": "openai-codex",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    }
+  },
+  "roles": {
+    "scale_orchestrator": "analytical",
+    "scale_architect": "analytical",
+    "scale_builder": "analytical",
+    "scale_research": "analytical",
+    "scale_qa": "analytical",
+    "scale_security": "analytical",
+    "scale_prompt": "analytical",
+    "scale_policy_auditor": "analytical",
+    "scale_privacy_gate": "analytical",
+    "scale_model_ops": "analytical",
+    "scale_knowledge_eval": "analytical",
+    "scale_benchmark": "analytical",
+    "scale_optimizer": "analytical",
+    "scale_webdesign": "analytical",
+    "scale_backend": "worker",
+    "scale_code_simple": "worker",
+    "scale_code_standard": "worker",
+    "scale_code_critical": "worker",
+    "scale_frontend": "worker",
+    "scale_audio": "worker",
+    "scale_swift": "worker",
+    "scale_openwrt": "worker",
+    "scale_test_engineer": "worker",
+    "scale_test_observer": "worker",
+    "scale_docs": "worker",
+    "scale_environment": "worker",
+    "scale_cleaner": "worker",
+    "scale_indexer": "worker",
+    "scale_library": "worker",
+    "scale_git": "worker",
+    "scale_sync": "worker",
+    "scale_opencode_native": "worker"
+  },
+  "constraints": {
+    "sol_max_reasoning_effort": "high",
+    "worker_fallbacks": 1,
+    "external_final_authority": false,
+    "global_base_url_change": false,
+    "credentials_in_registry": false
+  }
+}

@@ -1,0 +1,3 @@
+name: scale-hermes
+version: "0.1.0"
+description: Initialize Hermes Git projects and synchronize them with the global S.C.A.L.E. library.
