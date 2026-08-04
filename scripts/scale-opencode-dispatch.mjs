@@ -11,7 +11,7 @@ const value = (name) => {
   if (index === -1 || !args[index + 1] || args[index + 1].startsWith("--")) throw new Error(`Missing ${name}`);
   return args[index + 1];
 };
-const usage = () => console.log("Usage: scale-opencode-dispatch.mjs --target <project-dir> --profile <scale_profile> --work-order <file> [--allow-write]");
+const usage = () => console.log("Usage: scale-opencode-dispatch.mjs --target <project-dir> --profile <scale_profile> --work-order <file> [--specialist <id>] [--allow-write]");
 
 if (args.includes("--help") || args.includes("-h")) {
   usage();
@@ -21,10 +21,12 @@ if (args.includes("--help") || args.includes("-h")) {
 let target;
 let profile;
 let workOrder;
+let specialistId;
 try {
   target = resolve(value("--target"));
   profile = value("--profile");
   workOrder = resolve(value("--work-order"));
+  specialistId = args.includes("--specialist") ? value("--specialist") : undefined;
 } catch (error) {
   console.error(`S.C.A.L.E.: ${error.message}`);
   usage();
@@ -41,12 +43,20 @@ if (!binding) {
   console.error(`S.C.A.L.E.: no agent binding for ${profile}`);
   process.exit(2);
 }
-if (binding.primary?.execution !== "external-cli") {
-  console.error(`S.C.A.L.E.: ${profile} is native Codex work; use ${binding.primary?.model ?? "its configured profile"}.`);
+const selected = specialistId
+  ? (binding.specialists ?? []).find((candidate) => candidate.id === specialistId)
+  : binding.primary;
+if (!selected) {
+  console.error(`S.C.A.L.E.: ${profile} has no OpenCode specialist ${specialistId}.`);
+  process.exit(2);
+}
+if (selected.execution !== "external-cli") {
+  console.error(`S.C.A.L.E.: ${profile} defaults to native Codex ${selected.model ?? "work"}. Use --specialist only for an explicitly eligible Go specialist.`);
   process.exit(2);
 }
 
-const agentPath = resolve(target, ".opencode/agents", `${binding.primary.agent}.md`);
+const fallback = selected.fallback ?? binding.fallback ?? binding.primary;
+const agentPath = resolve(target, ".opencode/agents", `${selected.agent}.md`);
 if (!existsSync(agentPath)) {
   console.error(`S.C.A.L.E.: OpenCode agent is not materialized: ${agentPath}`);
   process.exit(2);
@@ -54,21 +64,23 @@ if (!existsSync(agentPath)) {
 
 const catalog = spawnSync("opencode", ["models", "opencode-go"], { encoding: "utf8" });
 const catalogText = `${catalog.stdout ?? ""}\n${catalog.stderr ?? ""}`;
-if (catalog.error || catalog.status !== 0 || !catalogText.includes(binding.primary.model)) {
+if (catalog.error || catalog.status !== 0 || !catalogText.includes(selected.model)) {
   const detail = (catalog.error?.message || catalog.stderr || "model is unavailable").trim();
-  console.log(JSON.stringify({ status: "fallback-required", reason: "opencode-catalog-unavailable", profile, fallback: binding.fallback, detail }));
+  console.log(JSON.stringify({ status: "fallback-required", reason: "opencode-catalog-unavailable", profile, specialist: specialistId, fallback, detail }));
   process.exit(75);
 }
 
 const prompt = readFileSync(workOrder, "utf8");
-const command = ["run", "--dir", target, "--agent", binding.primary.agent, "--model", binding.primary.model, "--variant", binding.primary.reasoning_effort, "--format", "json"];
+const command = ["run", "--dir", target, "--agent", selected.agent, "--model", selected.model];
+if (selected.reasoning_effort !== "provider-default") command.push("--variant", selected.reasoning_effort);
+command.push("--format", "json");
 if (args.includes("--allow-write")) command.push("--auto");
 command.push(prompt);
 const result = spawnSync("opencode", command, { encoding: "utf8" });
 const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
 const quotaFailure = /(?:quota|rate\s*limit|usage\s*limit|credit|limit\s*reached|status\s*429)/i.test(output);
 if (quotaFailure) {
-  console.log(JSON.stringify({ status: "fallback-required", reason: "opencode-go-limit", profile, fallback: binding.fallback }));
+  console.log(JSON.stringify({ status: "fallback-required", reason: "opencode-go-limit", profile, specialist: specialistId, fallback }));
   process.exit(75);
 }
 process.stdout.write(result.stdout ?? "");

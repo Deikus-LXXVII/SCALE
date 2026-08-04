@@ -35,7 +35,7 @@ try {
   process.exit(1);
 }
 
-requireValue([1, 2, 3].includes(registry.schema_version), "model registry must declare schema_version 1, 2, or 3");
+requireValue([1, 2, 3, 4].includes(registry.schema_version), "model registry must declare schema_version 1, 2, 3, or 4");
 requireValue(Array.isArray(registry.providers) && registry.providers.length > 0, "model registry has no providers");
 requireValue(Array.isArray(registry.models) && registry.models.length > 0, "model registry has no models");
 requireValue(Array.isArray(registry.routes) && registry.routes.length > 0, "model registry has no routes");
@@ -67,9 +67,10 @@ for (const model of registry.models ?? []) {
 
 const expectedRoutes = new Map([
   ["orchestration", ["scale_orchestrator", "deepseek-v4-flash", "high", "codex-native"]],
-  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
-  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "external-cli"]],
-  ["critical-code", ["scale_code_critical", "opencode-go/glm-5.2", "high", "external-cli"]]
+  ["simple-code", ["scale_code_simple", "deepseek-v4-flash", "high", "codex-native"]],
+  ["standard-code", ["scale_code_standard", "gpt-5.6-terra", "high", "codex-native"]],
+  ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high", "codex-native"]],
+  ["web-design", ["scale_webdesign", "opencode-go/kimi-k2.7-code", "provider-default", "external-cli"]]
 ]);
 const routes = new Map();
 for (const route of registry.routes ?? []) {
@@ -122,7 +123,19 @@ const validateExternalAgent = (agent, modelId, effort, owner) => {
   const configuredModel = source.match(/^model: (\S+)$/m)?.[1];
   const configuredEffort = source.match(/^reasoningEffort: (\S+)$/m)?.[1];
   requireValue(configuredModel === modelId, `${owner} OpenCode agent ${agent} must use ${modelId}`);
-  requireValue(configuredEffort === effort, `${owner} OpenCode agent ${agent} must use ${effort} reasoning`);
+  if (effort === "provider-default") {
+    requireValue(!configuredEffort, `${owner} OpenCode agent ${agent} must not invent a reasoning variant`);
+  } else {
+    requireValue(configuredEffort === effort, `${owner} OpenCode agent ${agent} must use ${effort} reasoning`);
+  }
+};
+
+const validateEndpoint = (profile, kind, endpoint) => {
+  const model = models.get(endpoint?.model);
+  requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
+  requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
+  requireValue(["codex-native", "external-cli"].includes(endpoint?.execution), `${profile} ${kind} needs codex-native or external-cli execution`);
+  if (endpoint?.execution === "external-cli") validateExternalAgent(endpoint.agent, endpoint.model, endpoint.reasoning_effort, `${profile} ${kind}`);
 };
 
 const bindings = new Set();
@@ -132,14 +145,24 @@ for (const binding of registry.agent_bindings ?? []) {
   requireValue(!bindings.has(profile), `duplicate agent binding: ${profile}`);
   if (typeof profile === "string") bindings.add(profile);
   requireValue(profileSources.has(profile), `agent binding references missing Codex profile ${profile}`);
-  for (const [kind, endpoint] of [["primary", binding?.primary], ["fallback", binding?.fallback]]) {
-    const model = models.get(endpoint?.model);
-    requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
-    requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
-  }
   const primary = binding?.primary;
-  requireValue(["codex-native", "external-cli"].includes(primary?.execution), `${profile} primary needs codex-native or external-cli execution`);
-  if (primary?.execution === "external-cli") validateExternalAgent(primary.agent, primary.model, primary.reasoning_effort, `${profile} primary`);
+  validateEndpoint(profile, "primary", primary);
+  if (primary?.execution === "codex-native") {
+    const source = profileSources.get(profile);
+    requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
+  }
+  if (binding?.fallback) validateEndpoint(profile, "fallback", { execution: "codex-native", ...binding.fallback });
+  requireValue(!binding?.specialists || Array.isArray(binding.specialists), `${profile} specialists must be an array`);
+  const specialistIds = new Set();
+  for (const specialist of binding?.specialists ?? []) {
+    requireValue(typeof specialist?.id === "string" && specialist.id.length > 0, `${profile} specialist is missing id`);
+    requireValue(!specialistIds.has(specialist?.id), `${profile} has duplicate specialist ${specialist?.id}`);
+    specialistIds.add(specialist?.id);
+    requireValue(typeof specialist?.use_when === "string" && specialist.use_when.length > 0, `${profile} specialist ${specialist?.id} needs use_when`);
+    validateEndpoint(profile, `specialist ${specialist?.id}`, specialist);
+    requireValue(Boolean(specialist?.fallback), `${profile} specialist ${specialist?.id} needs a fallback`);
+    if (specialist?.fallback) validateEndpoint(profile, `specialist ${specialist.id} fallback`, { execution: "codex-native", ...specialist.fallback });
+  }
 }
 for (const profile of profileSources.keys()) requireValue(bindings.has(profile), `Codex profile ${profile} has no agent binding`);
 

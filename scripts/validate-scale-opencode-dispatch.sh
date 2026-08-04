@@ -27,7 +27,7 @@ EOF
 chmod +x "$fake_bin/opencode"
 
 set +e
-output="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_docs --work-order "$workspace/work-order.md" 2>&1)"
+output="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_docs --specialist go-routine --work-order "$workspace/work-order.md" 2>&1)"
 status=$?
 set -e
 

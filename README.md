@@ -69,7 +69,7 @@ the global plugin skills but are not materialized as S.C.A.L.E. projects.
 4. `scale_qa` validates profiles and metadata.
 5. `scale_git` pulls, selectively commits, and pushes the validated library changes to the canonical remote.
 
-Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Codex DeepSeek V4 Flash High now orchestrates; the normal execution lanes run through authenticated OpenCode Go agents and return to explicit native Codex fallbacks only on a Go limit/catalog failure. The registry governs exact IDs, reasoning efforts, and provider compatibility.
+Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Codex DeepSeek V4 Flash High orchestrates and the native Codex lanes remain the default executors; authenticated OpenCode Go agents are selected only as explicitly eligible specialists and always return to a native fallback on a Go limit/catalog failure. Kimi K2.7 Code owns premium web-design packets, while Terra owns production frontend implementation. The registry governs exact IDs, reasoning efforts, cost boundaries, and provider compatibility.
 
 ## Validate
 

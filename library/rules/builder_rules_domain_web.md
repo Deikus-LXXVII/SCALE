@@ -14,3 +14,6 @@ Agents operating in the web domain must be capable of navigating search results 
 3. Verify information against multiple sources.
 4. Avoid executing untrusted JavaScript from random sites.
 5. Handle 404s and timeouts gracefully.
+6. Keep visual design and production implementation separate when using the Kimi
+   specialist: Kimi returns a bounded design packet; Terra's frontend role
+   implements and validates the code.

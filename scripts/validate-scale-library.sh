@@ -37,8 +37,17 @@ done
 
 for profile in "$root"/opencode/agents/scale-go-*.md; do
   [[ -f "$profile" ]] || continue
-  if ! rg -q '^model: opencode-go/' "$profile" || ! rg -q '^reasoningEffort: high$' "$profile"; then
+  if ! rg -q '^model: opencode-go/' "$profile"; then
     printf 'Invalid OpenCode Go model policy: %s\n' "$profile" >&2
+    status=1
+  fi
+  if rg -q '^model: opencode-go/kimi-k2.7-code$' "$profile"; then
+    if rg -q '^reasoningEffort:' "$profile"; then
+      printf 'Kimi K2.7 Code must use provider-default reasoning: %s\n' "$profile" >&2
+      status=1
+    fi
+  elif ! rg -q '^reasoningEffort: high$' "$profile"; then
+    printf 'Invalid OpenCode Go reasoning policy: %s\n' "$profile" >&2
     status=1
   fi
 done
