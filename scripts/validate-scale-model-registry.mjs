@@ -50,6 +50,29 @@ requireValue(Number.isInteger(registry.runtime_policy?.max_agent_steps) && regis
 requireValue(Number.isInteger(registry.runtime_policy?.max_dispatch_ms) && registry.runtime_policy.max_dispatch_ms > 0, "runtime_policy.max_dispatch_ms must be a positive integer");
 requireValue(Number.isInteger(registry.runtime_policy?.max_escalations) && registry.runtime_policy.max_escalations >= 0, "runtime_policy.max_escalations must be a non-negative integer");
 
+const budgetFields = ["max_work_order_bytes", "max_context_files", "max_context_bytes", "max_agent_steps", "max_dispatch_ms"];
+const hardBudget = Object.fromEntries(budgetFields.map((field) => [field, registry.runtime_policy?.[field]]));
+const validateBudget = (budget, owner, allowMissing = false) => {
+  if (!budget || typeof budget !== "object") {
+    if (!allowMissing) requireValue(false, `${owner} is missing`);
+    return;
+  }
+  for (const field of budgetFields) {
+    requireValue(Number.isInteger(budget[field]) && budget[field] > 0, `${owner}.${field} must be a positive integer`);
+    if (Number.isInteger(budget[field])) requireValue(budget[field] <= hardBudget[field], `${owner}.${field} exceeds hard runtime cap ${hardBudget[field]}`);
+  }
+};
+validateBudget(registry.runtime_policy?.defaults, "runtime_policy.defaults");
+const adjustment = registry.runtime_policy?.orchestrator_adjustment;
+requireValue(adjustment && typeof adjustment === "object", "runtime_policy.orchestrator_adjustment is missing");
+requireValue(typeof adjustment?.enabled === "boolean", "orchestrator_adjustment.enabled must be boolean");
+for (const field of ["max_adjustments", "max_adjusted_dimensions", "max_step_increase", "max_timeout_increase_ms", "max_work_order_increase_bytes", "max_context_file_increase", "max_context_byte_increase"]) {
+  requireValue(Number.isInteger(adjustment?.[field]) && adjustment[field] > 0, `orchestrator_adjustment.${field} must be a positive integer`);
+}
+requireValue(Array.isArray(adjustment?.allowed_reasons) && adjustment.allowed_reasons.length > 0, "orchestrator_adjustment.allowed_reasons must be a non-empty array");
+requireValue(typeof adjustment?.require_estimate === "boolean", "orchestrator_adjustment.require_estimate must be boolean");
+requireValue(adjustment?.max_adjusted_dimensions <= budgetFields.length, "orchestrator_adjustment.max_adjusted_dimensions exceeds available dimensions");
+
 const providers = new Map();
 for (const provider of registry.providers ?? []) {
   requireValue(typeof provider.id === "string" && provider.id.length > 0, "provider is missing id");
@@ -205,6 +228,28 @@ for (const binding of registry.agent_bindings ?? []) {
   }
 }
 for (const profile of profileSources.keys()) requireValue(bindings.has(profile), `Codex profile ${profile} has no agent binding`);
+for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_budgets ?? {})) {
+  requireValue(bindings.has(profile), `runtime_policy.agent_budgets references unknown profile ${profile}`);
+  validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
+}
+for (const binding of registry.agent_bindings ?? []) {
+  const externalAgents = [];
+  if (binding.primary?.execution === "external-cli") externalAgents.push(binding.primary.agent);
+  for (const specialist of binding.specialists ?? []) if (specialist.execution === "external-cli") externalAgents.push(specialist.agent);
+  if (externalAgents.length === 0) continue;
+  const budget = registry.runtime_policy?.agent_budgets?.[binding.profile];
+  requireValue(Boolean(budget), `runtime_policy.agent_budgets is missing external profile ${binding.profile}`);
+  for (const agent of externalAgents) {
+    let source = "";
+    try {
+      source = fs.readFileSync(path.join(opencodeAgentsDir, `${agent}.md`), "utf8");
+    } catch {
+      continue;
+    }
+    const steps = Number(source.match(/^steps:\s*(\d+)$/m)?.[1] ?? 0);
+    requireValue(steps >= budget?.max_agent_steps, `${binding.profile} budget steps must not exceed OpenCode agent ${agent} contract (${steps})`);
+  }
+}
 for (const route of routes.values()) {
   const binding = (registry.agent_bindings ?? []).find((entry) => entry?.profile === route.profile);
   const primary = binding?.primary;

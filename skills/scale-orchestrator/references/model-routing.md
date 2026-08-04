@@ -42,3 +42,27 @@ node scripts/scale-opencode-dispatch.mjs \
 The command exits 75 with a JSON native fallback if Go cannot serve the model
 or reports a limit. Route the unchanged work order once to that profile. Do not
 retry Go or fall through to another Go model automatically.
+
+## Budget selection and bounded adjustment
+
+`library/model-registry.json` contains a cheap default budget, per-profile
+overrides, and hard caps. The dispatcher always applies the profile budget
+first. `scale_test_observer` uses a dedicated read-only monitor agent with a
+larger time/step allowance; ordinary routine and exploration lanes remain
+smaller to conserve tokens.
+
+Only the orchestrator may submit one adjustment file, and only when the
+baseline is demonstrably insufficient. Example:
+
+```json
+{
+  "issuer": "scale_orchestrator",
+  "reason": "long_monitoring",
+  "estimate": {"estimated_minutes": 18, "estimated_steps": 16},
+  "requested": {"max_dispatch_ms": 1200000, "max_agent_steps": 24}
+}
+```
+
+The request is limited to two dimensions, bounded deltas, the hard registry
+caps, and the OpenCode agent's declared `steps`. A missing or speculative
+request is rejected; keeping the baseline is the token-saving default.

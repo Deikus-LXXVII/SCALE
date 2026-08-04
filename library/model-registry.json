@@ -7,8 +7,44 @@
     "max_context_files": 12,
     "max_context_bytes": 120000,
     "max_agent_steps": 24,
-    "max_dispatch_ms": 900000,
+    "max_dispatch_ms": 1800000,
     "max_escalations": 1,
+    "defaults": {
+      "max_work_order_bytes": 24000,
+      "max_context_files": 8,
+      "max_context_bytes": 80000,
+      "max_agent_steps": 16,
+      "max_dispatch_ms": 600000
+    },
+    "agent_budgets": {
+      "scale_orchestrator": {"max_work_order_bytes": 24000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 14, "max_dispatch_ms": 600000},
+      "scale_architect": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
+      "scale_audio": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
+      "scale_cleaner": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 12, "max_dispatch_ms": 480000},
+      "scale_code_simple": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
+      "scale_code_standard": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
+      "scale_docs": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 12, "max_dispatch_ms": 480000},
+      "scale_environment": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 10, "max_dispatch_ms": 480000},
+      "scale_frontend": {"max_work_order_bytes": 26000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
+      "scale_indexer": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 10, "max_dispatch_ms": 480000},
+      "scale_library": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 10, "max_dispatch_ms": 480000},
+      "scale_prompt": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 14, "max_dispatch_ms": 900000},
+      "scale_research": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
+      "scale_test_observer": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 20, "max_dispatch_ms": 1800000},
+      "scale_webdesign": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000}
+    },
+    "orchestrator_adjustment": {
+      "enabled": true,
+      "max_adjustments": 1,
+      "max_adjusted_dimensions": 2,
+      "max_step_increase": 4,
+      "max_timeout_increase_ms": 600000,
+      "max_work_order_increase_bytes": 4000,
+      "max_context_file_increase": 2,
+      "max_context_byte_increase": 24000,
+      "allowed_reasons": ["multi_step_plan", "long_monitoring", "large_context_evidence"],
+      "require_estimate": true
+    },
     "direct_route": "If the caller provides an explicit SCALE profile, bounded files, acceptance criteria, and a low-risk scope, dispatch that profile directly without an orchestration turn."
   },
   "providers": [
@@ -58,13 +94,14 @@
     {"profile": "scale_security", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
     {"profile": "scale_swift", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
     {"profile": "scale_test_engineer", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_test_observer", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_observer", "model": "gpt-5.6-luna", "reasoning_effort": "medium"}},
+    {"profile": "scale_test_observer", "primary": {"execution": "external-cli", "agent": "scale-go-monitor", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_observer", "model": "gpt-5.6-luna", "reasoning_effort": "medium"}},
     {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k2.7-code", "reasoning_effort": "provider-default"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}
   ],
   "change_protocol": [
     "Keep provider credentials outside S.C.A.L.E. and Git.",
     "Do not configure or route the DeepSeek API. Every DeepSeek V4 Flash assignment uses OpenCode Go through an explicit external-cli binding.",
     "Use a native Codex fallback only after the dispatcher returns an unavailable/catalog/quota signal; do not retry Go automatically or silently substitute a more expensive Go model.",
+    "Apply the smallest per-profile runtime budget first. The orchestrator may submit at most one evidence-backed budget adjustment across two dimensions; hard caps, the OpenCode agent step contract, and token-saving defaults remain authoritative.",
     "Kimi K2.7 Code is a premium web-design specialist for design briefs, interface critique, visual hierarchy, and component specifications. It does not own production implementation; `scale_frontend` on Terra does.",
     "Run the registry validator with `--opencode` against the live Go catalog before promotion.",
     "Benchmark a newly promoted code-default model before raising its blast radius. User-directed specialist placement is policy until independently benchmarked."

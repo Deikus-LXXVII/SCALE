@@ -94,9 +94,13 @@ intentionally approval-gated.
 
 1. Make one work order one objective, bounded path/scope, acceptance criteria,
    requested output, and stop condition.
-2. Keep Go exploration at ten agent steps, routine tasks at twelve, prompt/QA
-   at fourteen, interface work at twenty, and standard code at twenty-four;
-   escalation is an explicit new task, not an open-ended continuation.
+2. SCALE uses per-profile budgets below a global hard ceiling: exploration is
+   ten steps, routine tasks twelve, prompt/QA fourteen, interface work twenty,
+   and standard code twenty-four. `scale_test_observer` is a separate
+   read-only monitor lane with a twenty-step default (up to the agent's
+   declared twenty-four-step contract through one justified adjustment) and a
+   longer wall-clock allowance; it does not inherit the routine worker's
+   smaller timeout.
 3. Reuse a Go session only for the same bounded problem. Start a fresh session
    for a different subsystem so old context does not consume the five-hour Go
    budget.
@@ -108,6 +112,10 @@ intentionally approval-gated.
    the specialist is intentionally producing an advisory or design handoff.
    Use Kimi only for high-value visual design work; its cost and provider-default
    reasoning make it unsuitable as an automatic coding fallback.
+6. The orchestrator can request one bounded budget adjustment only with a
+   concrete estimate. It may change at most two dimensions and cannot exceed
+   registry hard caps or the agent's declared steps. A default budget that is
+   sufficient must not be enlarged; this is the primary token-saving rule.
 
 OpenCode Go's published subscription budget is value-based, so request count
 depends on the selected model. Monitor it through the OpenCode console or

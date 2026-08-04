@@ -33,3 +33,9 @@ as a reason to replace all Codex roles.
 6. Qwen3.7 Plus may supply a non-sensitive visual prototype, but it is not the
    authority for final product integration. New primary assignments require a
    focused benchmark and registry validation.
+7. Runtime budgets are selected per profile from `model-registry.json`, with a
+   smaller default than the hard cap to conserve tokens. The orchestrator may
+   request one evidence-backed adjustment for `multi_step_plan`,
+   `long_monitoring`, or `large_context_evidence`, limited to two dimensions
+   and the agent's declared step contract. A sufficient baseline must not be
+   enlarged speculatively.

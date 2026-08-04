@@ -38,6 +38,7 @@ bash "$root/scripts/scale-library-install.sh" --target "$target_repo" --remote "
 [[ -L "$target_repo/.agents/skills/scale-orchestrator" ]]
 [[ -f "$target_repo/.agents/skills/scale-orchestrator/SKILL.md" ]]
 [[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
+[[ -L "$target_repo/.opencode/agents/scale-go-monitor.md" ]]
 rg -q 'project-owned hooks' "$target_repo/.codex/hooks.json"
 
 git -C "$target_repo/.codex/scale-library-src" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/AGENTS.md'

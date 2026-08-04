@@ -16,7 +16,7 @@ const values = (name) => args.reduce((result, arg, index) => {
   if (arg === name && args[index + 1] && !args[index + 1].startsWith("--")) result.push(args[index + 1]);
   return result;
 }, []);
-const usage = () => console.log("Usage: scale-opencode-dispatch.mjs --target <project-dir> --profile <scale_profile> --work-order <file> [--specialist <id>] [--task-id <id>] [--context-file <path>]... [--allow-write]");
+const usage = () => console.log("Usage: scale-opencode-dispatch.mjs --target <project-dir> --profile <scale_profile> --work-order <file> [--specialist <id>] [--task-id <id>] [--budget-adjust <json-file>] [--context-file <path>]... [--allow-write]");
 
 if (args.includes("--help") || args.includes("-h")) {
   usage();
@@ -29,6 +29,7 @@ let workOrder;
 let specialistId;
 let taskId;
 let contextFiles;
+let budgetAdjustmentPath;
 try {
   target = resolve(value("--target"));
   profile = value("--profile");
@@ -36,6 +37,7 @@ try {
   specialistId = args.includes("--specialist") ? value("--specialist") : undefined;
   taskId = args.includes("--task-id") ? value("--task-id") : randomUUID();
   contextFiles = values("--context-file");
+  budgetAdjustmentPath = args.includes("--budget-adjust") ? resolve(value("--budget-adjust")) : undefined;
 } catch (error) {
   console.error(`S.C.A.L.E.: ${error.message}`);
   usage();
@@ -104,6 +106,66 @@ if (priorEvents.some((entry) => entry.event === "fallback_required") && runtimeP
   reject("escalation-budget-exhausted", { max_escalations: runtimePolicy.max_escalations }, 78);
 }
 
+const budgetFields = ["max_work_order_bytes", "max_context_files", "max_context_bytes", "max_agent_steps", "max_dispatch_ms"];
+const hardBudget = Object.fromEntries(budgetFields.map((field) => [field, runtimePolicy[field]]));
+const defaultBudget = {
+  ...Object.fromEntries(budgetFields.map((field) => [field, runtimePolicy.defaults?.[field] ?? runtimePolicy[field]])),
+  ...(runtimePolicy.agent_budgets?.[profile] ?? {})
+};
+const budgetAdjustmentPolicy = runtimePolicy.orchestrator_adjustment ?? {};
+let effectiveBudget = { ...defaultBudget };
+let budgetAdjustment;
+for (const field of budgetFields) {
+  if (!Number.isInteger(effectiveBudget[field]) || effectiveBudget[field] <= 0 || effectiveBudget[field] > hardBudget[field]) {
+    reject("runtime-budget-invalid", { field, value: effectiveBudget[field], hard_cap: hardBudget[field] });
+  }
+}
+if (budgetAdjustmentPath) {
+  if (!budgetAdjustmentPolicy.enabled) reject("budget-adjustment-disabled");
+  if (priorEvents.some((entry) => entry.event === "budget_adjusted") && budgetAdjustmentPolicy.max_adjustments <= 1) {
+    reject("budget-adjustment-already-used", { max_adjustments: budgetAdjustmentPolicy.max_adjustments }, 78);
+  }
+  let request;
+  try {
+    request = JSON.parse(readFileSync(budgetAdjustmentPath, "utf8"));
+  } catch (error) {
+    reject("budget-adjustment-invalid-json", { detail: error.message });
+  }
+  if (request?.issuer !== "scale_orchestrator") reject("budget-adjustment-issuer-required");
+  if (!budgetAdjustmentPolicy.allowed_reasons?.includes(request?.reason)) {
+    reject("budget-adjustment-reason-not-allowed", { reason: request?.reason });
+  }
+  if (budgetAdjustmentPolicy.require_estimate && (!request?.estimate || typeof request.estimate !== "object" || !Object.values(request.estimate).some((value) => Number.isFinite(value) && value > 0))) {
+    reject("budget-adjustment-estimate-required");
+  }
+  const requested = request?.requested;
+  if (!requested || typeof requested !== "object") reject("budget-adjustment-requested-missing");
+  const changedFields = [];
+  for (const [field, value] of Object.entries(requested)) {
+    if (!budgetFields.includes(field)) reject("budget-adjustment-field-not-allowed", { field });
+    if (!Number.isInteger(value) || value <= 0) reject("budget-adjustment-value-invalid", { field, value });
+    if (value > hardBudget[field]) reject("budget-adjustment-hard-cap-exceeded", { field, value, hard_cap: hardBudget[field] });
+    if (value !== effectiveBudget[field]) changedFields.push(field);
+    if (value > effectiveBudget[field]) {
+      const delta = value - effectiveBudget[field];
+      const deltaCap = {
+        max_work_order_bytes: budgetAdjustmentPolicy.max_work_order_increase_bytes,
+        max_context_files: budgetAdjustmentPolicy.max_context_file_increase,
+        max_context_bytes: budgetAdjustmentPolicy.max_context_byte_increase,
+        max_agent_steps: budgetAdjustmentPolicy.max_step_increase,
+        max_dispatch_ms: budgetAdjustmentPolicy.max_timeout_increase_ms
+      }[field];
+      if (delta > deltaCap) reject("budget-adjustment-increase-too-large", { field, delta, max_increase: deltaCap });
+    }
+  }
+  if (changedFields.length === 0) reject("budget-adjustment-no-op");
+  if (changedFields.length > budgetAdjustmentPolicy.max_adjusted_dimensions) {
+    reject("budget-adjustment-too-many-dimensions", { dimensions: changedFields.length, max_adjusted_dimensions: budgetAdjustmentPolicy.max_adjusted_dimensions });
+  }
+  effectiveBudget = { ...effectiveBudget, ...requested };
+  budgetAdjustment = { reason: request.reason, estimate: request.estimate, requested: requested, changed_fields: changedFields };
+}
+
 const fallback = selected.fallback ?? binding.fallback ?? binding.primary;
 const agentPath = resolve(target, ".opencode/agents", `${selected.agent}.md`);
 if (!existsSync(agentPath)) {
@@ -111,8 +173,19 @@ if (!existsSync(agentPath)) {
 }
 const agentSource = readFileSync(agentPath, "utf8");
 const declaredSteps = Number(agentSource.match(/^steps:\s*(\d+)$/m)?.[1] ?? 0);
-if (!declaredSteps || declaredSteps > runtimePolicy.max_agent_steps) {
-  reject("agent-step-budget-exceeded", { agent: selected.agent, steps: declaredSteps, max_agent_steps: runtimePolicy.max_agent_steps });
+if (!declaredSteps || effectiveBudget.max_agent_steps > declaredSteps || declaredSteps > hardBudget.max_agent_steps) {
+  reject("agent-step-budget-exceeded", { agent: selected.agent, steps: declaredSteps, max_agent_steps: effectiveBudget.max_agent_steps, hard_max_agent_steps: hardBudget.max_agent_steps });
+}
+if (budgetAdjustment) {
+  writeTelemetry("budget_adjusted", {
+    reason: budgetAdjustment.reason,
+    estimate: budgetAdjustment.estimate,
+    requested: budgetAdjustment.requested,
+    changed_fields: budgetAdjustment.changed_fields,
+    baseline_budget: defaultBudget,
+    effective_budget: effectiveBudget,
+    token_saving_policy: "bounded-one-shot-adjustment"
+  });
 }
 
 let workOrderBytes;
@@ -123,8 +196,8 @@ try {
 } catch (error) {
   reject("work-order-unreadable", { detail: error.message });
 }
-if (workOrderBytes > runtimePolicy.max_work_order_bytes) {
-  reject("work-order-budget-exceeded", { bytes: workOrderBytes, max_work_order_bytes: runtimePolicy.max_work_order_bytes });
+if (workOrderBytes > effectiveBudget.max_work_order_bytes) {
+  reject("work-order-budget-exceeded", { bytes: workOrderBytes, max_work_order_bytes: effectiveBudget.max_work_order_bytes, hard_max_work_order_bytes: hardBudget.max_work_order_bytes });
 }
 
 let contextBytes = 0;
@@ -142,18 +215,18 @@ for (const contextFile of contextFiles) {
   }
   contextBytes += bytes;
 }
-if (contextFiles.length > runtimePolicy.max_context_files) {
-  reject("context-file-count-budget-exceeded", { count: contextFiles.length, max_context_files: runtimePolicy.max_context_files });
+if (contextFiles.length > effectiveBudget.max_context_files) {
+  reject("context-file-count-budget-exceeded", { count: contextFiles.length, max_context_files: effectiveBudget.max_context_files, hard_max_context_files: hardBudget.max_context_files });
 }
-if (contextBytes > runtimePolicy.max_context_bytes) {
-  reject("context-byte-budget-exceeded", { bytes: contextBytes, max_context_bytes: runtimePolicy.max_context_bytes });
+if (contextBytes > effectiveBudget.max_context_bytes) {
+  reject("context-byte-budget-exceeded", { bytes: contextBytes, max_context_bytes: effectiveBudget.max_context_bytes, hard_max_context_bytes: hardBudget.max_context_bytes });
 }
 
 const catalog = spawnSync("opencode", ["models", "opencode-go"], { encoding: "utf8" });
 const catalogText = `${catalog.stdout ?? ""}\n${catalog.stderr ?? ""}`;
 if (catalog.error || catalog.status !== 0 || !catalogText.includes(selected.model)) {
   const detail = (catalog.error?.message || catalog.stderr || "model is unavailable").trim();
-  writeTelemetry("fallback_required", { reason: "opencode-catalog-unavailable", model: selected.model, reasoning_effort: selected.reasoning_effort, fallback, work_order_bytes: workOrderBytes, context_file_count: contextFiles.length, context_bytes: contextBytes, detail });
+  writeTelemetry("fallback_required", { reason: "opencode-catalog-unavailable", model: selected.model, reasoning_effort: selected.reasoning_effort, fallback, budget: effectiveBudget, work_order_bytes: workOrderBytes, context_file_count: contextFiles.length, context_bytes: contextBytes, detail });
   console.log(JSON.stringify({ status: "fallback-required", reason: "opencode-catalog-unavailable", profile, specialist: specialistId, fallback, detail }));
   process.exit(75);
 }
@@ -164,17 +237,17 @@ if (selected.reasoning_effort !== "provider-default") command.push("--variant", 
 command.push("--format", "json");
 if (args.includes("--allow-write")) command.push("--auto");
 command.push(prompt);
-const result = spawnSync("opencode", command, { encoding: "utf8", timeout: runtimePolicy.max_dispatch_ms });
+const result = spawnSync("opencode", command, { encoding: "utf8", timeout: effectiveBudget.max_dispatch_ms });
 const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
 const quotaFailure = /(?:quota|rate\s*limit|usage\s*limit|credit|limit\s*reached|status\s*429)/i.test(output);
 const timedOut = result.error?.code === "ETIMEDOUT";
 if (quotaFailure || timedOut || result.status !== 0) {
   const reason = quotaFailure ? "opencode-go-limit" : timedOut ? "dispatch-timeout" : "opencode-exit";
-  writeTelemetry("fallback_required", { reason, model: selected.model, reasoning_effort: selected.reasoning_effort, fallback, work_order_bytes: workOrderBytes, context_file_count: contextFiles.length, context_bytes: contextBytes, exit_status: result.status ?? null, output_bytes: Buffer.byteLength(output), detail: result.error?.message ?? null });
+  writeTelemetry("fallback_required", { reason, model: selected.model, reasoning_effort: selected.reasoning_effort, fallback, budget: effectiveBudget, work_order_bytes: workOrderBytes, context_file_count: contextFiles.length, context_bytes: contextBytes, exit_status: result.status ?? null, output_bytes: Buffer.byteLength(output), detail: result.error?.message ?? null });
   console.log(JSON.stringify({ status: "fallback-required", reason, profile, specialist: specialistId, fallback }));
   process.exit(75);
 }
-writeTelemetry("completed", { model: selected.model, reasoning_effort: selected.reasoning_effort, execution: selected.execution, work_order_bytes: workOrderBytes, context_file_count: contextFiles.length, context_bytes: contextBytes, exit_status: result.status ?? 0, output_bytes: Buffer.byteLength(output), allow_write: args.includes("--allow-write") });
+writeTelemetry("completed", { model: selected.model, reasoning_effort: selected.reasoning_effort, execution: selected.execution, budget: effectiveBudget, work_order_bytes: workOrderBytes, context_file_count: contextFiles.length, context_bytes: contextBytes, exit_status: result.status ?? 0, output_bytes: Buffer.byteLength(output), allow_write: args.includes("--allow-write") });
 process.stdout.write(result.stdout ?? "");
 process.stderr.write(result.stderr ?? "");
 process.exit(result.status ?? 1);

@@ -49,7 +49,7 @@ for (const event of events) {
   tasks.set(taskId, task);
 }
 
-const counts = Object.fromEntries(["completed", "fallback_required", "rejected"].map((event) => [event, events.filter((entry) => entry.event === event).length]));
+const counts = Object.fromEntries(["completed", "budget_adjusted", "fallback_required", "rejected"].map((event) => [event, events.filter((entry) => entry.event === event).length]));
 const measuredTasks = [...tasks.values()].filter((task) => task.events.includes("completed") || task.events.includes("fallback_required"));
 const fallbackTasks = measuredTasks.filter((task) => task.events.includes("fallback_required"));
 const byProfile = {};
@@ -74,6 +74,6 @@ if (args.includes("--json")) {
   console.log(JSON.stringify(report, null, 2));
 } else {
   console.log(`S.C.A.L.E. telemetry: ${report.tasks} measured task(s), fallback rate ${(report.fallback_rate * 100).toFixed(1)}%, ${report.events} event(s).`);
-  console.log(`Completed: ${counts.completed}; fallback required: ${counts.fallback_required}; rejected: ${counts.rejected}.`);
+  console.log(`Completed: ${counts.completed}; budget adjusted: ${counts.budget_adjusted}; fallback required: ${counts.fallback_required}; rejected: ${counts.rejected}.`);
   for (const [profile, count] of Object.entries(byProfile).sort()) console.log(`  ${profile}: ${count} event(s)`);
 }
