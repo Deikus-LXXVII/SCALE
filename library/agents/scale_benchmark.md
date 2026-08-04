@@ -4,7 +4,7 @@ tags: [agentic-testing, testing, verification, qa, codex]
 status: curated
 provenance:
   source: "SCALE architecture audit on 2026-08-04"
-  evidence: "The repository has no direct-vs-SCALE benchmark harness or task outcome telemetry."
+  evidence: "scripts/scale-benchmark.mjs compares fixed direct and SCALE traces; dispatcher telemetry and scale-telemetry-report.mjs expose task outcomes and provider usage without prompt bodies."
   compatibility: "SCALE >= 0.1.8"
   validated_on: "2026-08-04"
   review_after: "2026-11-02"

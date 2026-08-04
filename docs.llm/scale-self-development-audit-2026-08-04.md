@@ -42,3 +42,16 @@ No separate release, telemetry, or generic runtime roles were added yet: existin
 5. Add fleet health reporting and safe refresh locks without overwriting project-owned paths.
 
 No unrun benchmark or runtime hardening is claimed as complete by this note.
+
+## Implementation follow-up — 2026-08-04
+
+The staged controls above are now implemented in the canonical checkout:
+
+- the dispatcher applies canonical realpath, secret/PII, managed-agent hash, and explicit external-write gates;
+- schema-v2 telemetry records credential-free route, usage, outcome, fallback, and budget-adjustment metadata;
+- `scripts/scale-benchmark.mjs` provides an offline-first direct-vs-SCALE harness with configurable practical thresholds;
+- `scripts/scale-knowledge-shadow.mjs` emits curated/candidate metadata-only manifests, while knowledge validation rejects non-reciprocal conflicts and supersession cycles;
+- CI and `validate-scale-release.mjs` validate the incoming package, and SessionStart refresh uses an exclusive lock, health ledger, and isolated incoming revision checks;
+- all active profiles now have registry runtime budgets, with one evidence-backed bounded adjustment available to the orchestrator.
+
+The harness and fixtures are validated, but a real 30–50 task corpus has not yet been run. Live OpenCode discovery remains an explicit operator/CI check rather than an unauthenticated CI dependency.

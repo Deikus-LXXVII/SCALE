@@ -37,7 +37,17 @@
       "scale_model_ops": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
       "scale_benchmark": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
       "scale_knowledge_eval": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
-      "scale_sync": {"max_work_order_bytes": 20000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000}
+      "scale_sync": {"max_work_order_bytes": 20000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
+      "scale_backend": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
+      "scale_builder": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
+      "scale_code_critical": {"max_work_order_bytes": 32000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 24, "max_dispatch_ms": 1200000},
+      "scale_git": {"max_work_order_bytes": 24000, "max_context_files": 10, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
+      "scale_openwrt": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
+      "scale_optimizer": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
+      "scale_qa": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
+      "scale_security": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 24, "max_dispatch_ms": 1200000},
+      "scale_swift": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
+      "scale_test_engineer": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000}
     },
     "orchestrator_adjustment": {
       "enabled": true,

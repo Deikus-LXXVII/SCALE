@@ -42,10 +42,12 @@ try {
 const tasks = new Map();
 for (const event of events) {
   const taskId = event.task_id ?? `unknown-${tasks.size + 1}`;
-  const task = tasks.get(taskId) ?? { events: [], profiles: new Set(), models: new Set() };
+  const task = tasks.get(taskId) ?? { events: [], profiles: new Set(), models: new Set(), outcome: null, acceptance: null };
   task.events.push(event.event);
   if (event.profile) task.profiles.add(event.profile);
   if (event.model) task.models.add(event.model);
+  if (event.task_outcome_metadata?.task_outcome) task.outcome = event.task_outcome_metadata.task_outcome;
+  if (event.task_outcome_metadata?.acceptance_outcome) task.acceptance = event.task_outcome_metadata.acceptance_outcome;
   tasks.set(taskId, task);
 }
 
@@ -54,12 +56,27 @@ const measuredTasks = [...tasks.values()].filter((task) => task.events.includes(
 const fallbackTasks = measuredTasks.filter((task) => task.events.includes("fallback_required"));
 const byProfile = {};
 const byModel = {};
+const usage = { input_tokens: 0, output_tokens: 0, total_tokens: 0, cost_usd: 0, events_reported: 0 };
+const outcomeCounts = {};
+const acceptanceCounts = {};
 for (const event of events) {
   if (event.profile) byProfile[event.profile] = (byProfile[event.profile] ?? 0) + 1;
   if (event.model) byModel[event.model] = (byModel[event.model] ?? 0) + 1;
+  if (event.usage && typeof event.usage === "object") {
+    const fields = ["input_tokens", "output_tokens", "total_tokens", "cost_usd"];
+    const reported = fields.some((field) => Number.isFinite(Number(event.usage[field])));
+    if (reported) {
+      usage.events_reported += 1;
+      for (const field of fields) if (Number.isFinite(Number(event.usage[field]))) usage[field] += Number(event.usage[field]);
+    }
+  }
+  const outcome = event.task_outcome_metadata?.task_outcome;
+  const acceptance = event.task_outcome_metadata?.acceptance_outcome;
+  if (outcome) outcomeCounts[outcome] = (outcomeCounts[outcome] ?? 0) + 1;
+  if (acceptance) acceptanceCounts[acceptance] = (acceptanceCounts[acceptance] ?? 0) + 1;
 }
 const report = {
-  schema_version: 1,
+  schema_version: 2,
   input,
   events: events.length,
   tasks: measuredTasks.length,
@@ -67,6 +84,9 @@ const report = {
   fallback_rate: measuredTasks.length === 0 ? 0 : Number((fallbackTasks.length / measuredTasks.length).toFixed(4)),
   by_profile: byProfile,
   by_model: byModel,
+  usage,
+  task_outcomes: outcomeCounts,
+  acceptance_outcomes: acceptanceCounts,
   elapsed_ms: events.reduce((sum, event) => sum + (Number(event.elapsed_ms) || 0), 0)
 };
 

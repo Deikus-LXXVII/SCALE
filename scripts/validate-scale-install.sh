@@ -60,6 +60,7 @@ git -C "$source_repo" commit --quiet -m 'fixture: add dynamic SCALE skill'
 
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
 [[ -f "$target_repo/.agents/skills/scale-fixture/SKILL.md" ]]
+rg -q '"result":"success"' "$target_repo/.codex/scale-library-health.json"
 
 cat > "$source_repo/opencode/agents/scale-go-fixture.md" <<'EOF'
 ---

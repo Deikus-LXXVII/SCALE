@@ -232,6 +232,11 @@ for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_bu
   requireValue(bindings.has(profile), `runtime_policy.agent_budgets references unknown profile ${profile}`);
   validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
 }
+for (const profile of profileSources.keys()) {
+  const budget = registry.runtime_policy?.agent_budgets?.[profile];
+  requireValue(Boolean(budget), `runtime_policy.agent_budgets is missing profile ${profile}`);
+  if (budget) validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
+}
 for (const binding of registry.agent_bindings ?? []) {
   const externalAgents = [];
   if (binding.primary?.execution === "external-cli") externalAgents.push(binding.primary.agent);

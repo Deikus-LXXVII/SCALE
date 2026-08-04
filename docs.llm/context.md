@@ -6,7 +6,7 @@ The authoritative operating rules are `AGENTS.md`. Role definitions and fixed mo
 
 The routing policy is intentional:
 
-+ complex or high-impact work receives a strong model with `high` reasoning;
+- complex or high-impact work receives a strong model with `high` reasoning;
 - narrow QA and prompt editing receive a lower-cost model with `high` reasoning;
 - routine, bounded work uses OpenCode Go DeepSeek V4 Flash with `high` reasoning and a tightly scoped work order;
 - durable learning is promoted through a canonical Git repository and dynamically pulled by connected projects.

@@ -1,0 +1,35 @@
+name: SCALE validation
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate profiles and registry
+        run: |
+          bash scripts/validate-scale-agents.sh
+          node scripts/validate-scale-model-registry.mjs
+      - name: Validate library and candidate replay
+        run: |
+          bash scripts/validate-scale-library.sh
+          node scripts/test-scale-knowledge-shadow.mjs
+      - name: Validate dispatch, installation, and benchmark fixtures
+        run: |
+          bash scripts/validate-scale-opencode-dispatch.sh
+          bash scripts/validate-scale-install.sh
+          node scripts/test-scale-benchmark.mjs
+      - name: Validate release package
+        run: node scripts/validate-scale-release.mjs --require-tracked
+      - name: OpenCode live discovery
+        if: ${{ false }}
+        run: node scripts/validate-scale-release.mjs --opencode
