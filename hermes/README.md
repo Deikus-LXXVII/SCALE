@@ -46,3 +46,29 @@ The adapter is intentionally conservative:
 
 The canonical Codex/OpenCode layer remains available for Codex projects and is
 not automatically imported into Hermes.
+
+## Library synchronization
+
+The `scale-hermes` plugin runs two zero-token filesystem operations at every
+new session/reset (they never inject context or start a model call):
+
+1. `scripts/scale-hermes-library-sync.sh` — fast-forward-only `git pull` of the
+   canonical checkout from its origin. It runs only on a clean working tree
+   (local changes are preserved), never pushes, and silently preserves the
+   local snapshot on any failure (offline, diverged, no remote).
+2. `scripts/scale-hermes-project-sync.sh` — links the global library into the
+   current Git project (` .hermes/scale-library` symlink + metadata).
+
+Push stays manual and explicit. Promote any project artifact (agents, skills,
+rules, books, quirks, docs) into the canonical library with:
+
+```bash
+${HERMES_HOME:-$HOME/.hermes}/scale/hermes/scripts/scale-hermes-promote.sh \
+  <source> <canonical-rel> [...] --validate --commit "<message>" --push
+```
+
+Destinations are explicit canonical-relative paths (e.g.
+`library/rules/foo.md`, `hermes/skills/foo/SKILL.md`, `.codex/agents/foo.toml`,
+`docs/foo.md`). Nothing is committed without `--commit`, nothing is pushed
+without `--push`, and only the promoted paths are staged. Use `--dry-run` to
+preview.

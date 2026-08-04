@@ -79,3 +79,16 @@ Named fallbacks always stay on Codex lanes.
 For detailed routing, load `scale-orchestrator`. For initialization or
 validation, load the matching specialized skill rather than this whole
 workflow.
+
+## Library synchronization
+
+- The `scale-hermes` plugin pulls the canonical checkout fast-forward-only at
+  session start (clean tree only; local changes and failures are preserved).
+  Global skills and library entries therefore track the GitHub origin
+  automatically on the pull side.
+- Promote project artifacts (agents, skills, rules, books, quirks, docs) into
+  the canonical library with
+  `${HERMES_HOME:-$HOME/.hermes}/scale/hermes/scripts/scale-hermes-promote.sh
+  <source> <canonical-rel> ... --validate --commit "<msg>" --push`.
+  Nothing is committed without `--commit` and nothing is pushed without
+  `--push`; only the promoted paths are staged.

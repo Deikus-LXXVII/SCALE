@@ -67,8 +67,18 @@ irreversible changes, or global promotion.
 
 ## Promotion gate
 
-Create the candidate in an isolated project fixture, validate frontmatter and
-route metadata, then run one focused acceptance check. Only after evidence is
-valid should `scale-validate` review it and the canonical library receive the
-named files. A successful single task is not enough to promote a new global
-role.
+Create the candidate in an isolated project fixture and validate its
+frontmatter and route contract, then promote any artifact (role, rule, book,
+quirk, skill, or doc) into the canonical library:
+
+```bash
+${HERMES_HOME:-$HOME/.hermes}/scale/hermes/scripts/scale-hermes-promote.sh \
+  <source> <canonical-rel> --validate --commit "<message>" --push
+```
+
+`<canonical-rel>` is explicit (e.g. `library/rules/foo.md`,
+`hermes/skills/foo/SKILL.md`, `.codex/agents/foo.toml`). `--dry-run` previews
+the plan; `--commit` and `--push` are always explicit. Run one focused
+acceptance check; only after evidence is valid should `scale-validate` review
+it and the canonical library receive the named files. A successful single task
+is not enough to promote a new global role.

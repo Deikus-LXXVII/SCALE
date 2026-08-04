@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 _PLUGIN_ROOT = Path(__file__).resolve()
+_PULL_SCRIPT = _PLUGIN_ROOT.parents[2] / "scripts" / "scale-hermes-library-sync.sh"
 _SYNC_SCRIPT = _PLUGIN_ROOT.parents[2] / "scripts" / "scale-hermes-project-sync.sh"
 
 
@@ -22,17 +23,18 @@ def _session_cwd() -> str:
         return os.getcwd()
 
 
-def _sync_project(**_kwargs):
-    if not _SYNC_SCRIPT.is_file():
+def _run_script(script: Path, timeout: int) -> None:
+    """Run a best-effort lifecycle script; never block or fail session start."""
+    if not script.is_file():
         return
     try:
         result = subprocess.run(
-            ["bash", str(_SYNC_SCRIPT)],
+            ["bash", str(script)],
             cwd=_session_cwd(),
             env=os.environ.copy(),
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=timeout,
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired):
@@ -40,6 +42,13 @@ def _sync_project(**_kwargs):
     message = (result.stdout or result.stderr or "").strip()
     if message:
         print(message[:500])
+
+
+def _sync_project(**_kwargs):
+    # 1. Fast-forward-only pull of the canonical checkout (clean tree only).
+    _run_script(_PULL_SCRIPT, timeout=15)
+    # 2. Link the global library into the current Git project (read-only).
+    _run_script(_SYNC_SCRIPT, timeout=10)
 
 
 def register(ctx):
