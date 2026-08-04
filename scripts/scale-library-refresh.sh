@@ -54,17 +54,20 @@ if [[ "$current_revision" == "$remote_revision" ]]; then
   exit 0
 fi
 
-model_paths_changed="$(git -C "$library_repo" diff --name-only "$current_revision" "$remote_revision" -- .codex/agents opencode/agents library/model-registry.json)"
+model_paths_changed="$(git -C "$library_repo" diff --name-only "$current_revision" "$remote_revision" -- .codex/agents opencode/agents library/model-registry.json scripts/validate-scale-model-registry.mjs)"
 if [[ -n "$model_paths_changed" ]]; then
   audit_root="$(mktemp -d "${TMPDIR:-/tmp}/scale-model-audit.XXXXXX")"
   cleanup_audit() { rm -rf "$audit_root"; }
   trap cleanup_audit EXIT
-  if ! git -C "$library_repo" archive "$remote_revision" .codex/agents opencode/agents library/model-registry.json | tar -x -C "$audit_root"; then
+  # Validate the complete incoming policy with its matching validator.  The
+  # current checkout may predate a new registry schema, so using its validator
+  # here would make a compatible schema migration impossible to install.
+  if ! git -C "$library_repo" archive "$remote_revision" .codex/agents opencode/agents library/model-registry.json scripts/validate-scale-model-registry.mjs | tar -x -C "$audit_root"; then
     printf '%s\n' 'S.C.A.L.E.: could not prepare the incoming model policy for validation; keeping the current snapshot.'
     exit 0
   fi
   codex_home_dir="${CODEX_HOME:-$HOME/.codex}"
-  if ! node "$library_repo/scripts/validate-scale-model-registry.mjs" \
+  if ! node "$audit_root/scripts/validate-scale-model-registry.mjs" \
     --registry "$audit_root/library/model-registry.json" \
     --agents-dir "$audit_root/.codex/agents" \
     --opencode-agents-dir "$audit_root/opencode/agents" \

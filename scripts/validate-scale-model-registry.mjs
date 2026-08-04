@@ -80,7 +80,9 @@ for (const route of registry.routes ?? []) {
   const model = models.get(route.model);
   requireValue(Boolean(model?.active), `route ${route.id} references an inactive or unknown model ${route.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
-  if (route.execution === "external-cli") requireValue(typeof route.agent === "string" && route.agent.length > 0, `external CLI route ${route.id} needs an agent`);
+  requireValue(["codex-native", "external-cli"].includes(route.execution), `route ${route.id} needs codex-native or external-cli execution`);
+  if (route.execution === "codex-native") requireValue(providers.get(model?.provider)?.kind === "native", `native route ${route.id} must use a native model`);
+  if (route.execution === "external-cli") requireValue(providers.get(model?.provider)?.kind === "external-cli", `external CLI route ${route.id} must use an external CLI model`);
 }
 for (const [id, [profile, model, effort, execution]] of expectedRoutes) {
   const route = routes.get(id);
@@ -135,8 +137,35 @@ const validateEndpoint = (profile, kind, endpoint) => {
   requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
   requireValue(["codex-native", "external-cli"].includes(endpoint?.execution), `${profile} ${kind} needs codex-native or external-cli execution`);
-  if (endpoint?.execution === "external-cli") validateExternalAgent(endpoint.agent, endpoint.model, endpoint.reasoning_effort, `${profile} ${kind}`);
+  if (endpoint?.execution === "codex-native") requireValue(providers.get(model?.provider)?.kind === "native", `${profile} ${kind} must use a native model`);
+  if (endpoint?.execution === "external-cli") {
+    requireValue(providers.get(model?.provider)?.kind === "external-cli", `${profile} ${kind} must use an external CLI model`);
+    validateExternalAgent(endpoint.agent, endpoint.model, endpoint.reasoning_effort, `${profile} ${kind}`);
+  }
 };
+
+const validateNativeFallback = (owner, fallback) => {
+  requireValue(Boolean(fallback && typeof fallback === "object"), `${owner} needs an explicit native fallback`);
+  if (!fallback || typeof fallback !== "object") return;
+  const profile = fallback.profile;
+  requireValue(typeof profile === "string" && profile.length > 0, `${owner} fallback needs a Codex profile`);
+  const source = profileSources.get(profile);
+  requireValue(Boolean(source), `${owner} fallback references missing Codex profile ${profile}`);
+  const endpoint = { execution: "codex-native", ...fallback };
+  validateEndpoint(owner, "fallback", endpoint);
+  requireValue(source?.modelId === fallback.model && source?.effort === fallback.reasoning_effort, `${owner} fallback must match Codex profile ${profile}`);
+};
+
+for (const route of routes.values()) {
+  const model = models.get(route.model);
+  if (route.execution === "external-cli") {
+    validateExternalAgent(route.agent, route.model, route.reasoning_effort, `route ${route.id}`);
+    validateNativeFallback(`route ${route.id}`, route.fallback);
+  }
+  const source = profileSources.get(route.profile);
+  requireValue(Boolean(source), `route ${route.id} references missing Codex profile ${route.profile}`);
+  if (route.execution === "codex-native") requireValue(source?.modelId === route.model && source?.effort === route.reasoning_effort, `native route ${route.id} must match Codex profile ${route.profile}`);
+}
 
 const bindings = new Set();
 for (const binding of registry.agent_bindings ?? []) {
@@ -151,7 +180,8 @@ for (const binding of registry.agent_bindings ?? []) {
     const source = profileSources.get(profile);
     requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
   }
-  if (binding?.fallback) validateEndpoint(profile, "fallback", { execution: "codex-native", ...binding.fallback });
+  if (primary?.execution === "external-cli") validateNativeFallback(profile, binding.fallback);
+  if (binding?.fallback && primary?.execution !== "external-cli") validateNativeFallback(profile, binding.fallback);
   requireValue(!binding?.specialists || Array.isArray(binding.specialists), `${profile} specialists must be an array`);
   const specialistIds = new Set();
   for (const specialist of binding?.specialists ?? []) {
@@ -161,10 +191,18 @@ for (const binding of registry.agent_bindings ?? []) {
     requireValue(typeof specialist?.use_when === "string" && specialist.use_when.length > 0, `${profile} specialist ${specialist?.id} needs use_when`);
     validateEndpoint(profile, `specialist ${specialist?.id}`, specialist);
     requireValue(Boolean(specialist?.fallback), `${profile} specialist ${specialist?.id} needs a fallback`);
-    if (specialist?.fallback) validateEndpoint(profile, `specialist ${specialist.id} fallback`, { execution: "codex-native", ...specialist.fallback });
+    if (specialist?.fallback) validateNativeFallback(`${profile} specialist ${specialist.id}`, specialist.fallback);
   }
 }
 for (const profile of profileSources.keys()) requireValue(bindings.has(profile), `Codex profile ${profile} has no agent binding`);
+for (const route of routes.values()) {
+  const binding = (registry.agent_bindings ?? []).find((entry) => entry?.profile === route.profile);
+  const primary = binding?.primary;
+  requireValue(Boolean(primary), `route ${route.id} needs a primary binding for ${route.profile}`);
+  if (!primary) continue;
+  requireValue(primary.execution === route.execution && primary.model === route.model && primary.reasoning_effort === route.reasoning_effort, `route ${route.id} must match primary binding for ${route.profile}`);
+  if (route.execution === "external-cli") requireValue(primary.agent === route.agent, `route ${route.id} must match OpenCode agent for ${route.profile}`);
+}
 
 if (catalogPath) {
   let catalog;
