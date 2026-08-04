@@ -12,8 +12,8 @@ installer and are never meant to be committed by the connected project.
 
 Each runtime agent has an explicit model, step cap, and least-privilege
 permission contract. Where the provider exposes one, it also has an explicit
-reasoning effort; Kimi K2.7 Code is recorded as `provider-default` because Go
-exposes no selectable variant. `library/model-registry.json` maps each Go use
+reasoning effort; Kimi K3 is recorded as `max` because Go exposes that
+selectable variant. `library/model-registry.json` maps each Go use
 to an eligible specialist plus a native fallback. The dispatcher emits that
 fallback instead of retrying if Go is exhausted or unavailable.
 

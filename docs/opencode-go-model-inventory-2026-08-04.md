@@ -15,8 +15,8 @@ USD per one million input/output tokens before cache effects.
 | Grok 4.5 | $2.00 / $6.00 | 500K | low, medium, high | Manual-only escalation; not automatic because of cost. |
 | Hy3 | $0.14 / $0.58 | 256K | none, low, high | Available, not auto-routed. |
 | Kimi K2.6 | $0.95 / $4.00 | 262K | no exposed variant | Available, not auto-routed. |
-| Kimi K2.7 Code | $0.95 / $4.00 | 262K | no exposed variant | User-selected premium web-design specialist; design packet only, not a production code executor. |
-| Kimi K3 | $3.00 / $15.00 | 1M | max | Manual-only escalation; too costly for automatic fallback. |
+| Kimi K2.7 Code | $0.95 / $4.00 | 262K | no exposed variant | Available but no longer SCALE-routed; retained as historical inventory. |
+| Kimi K3 | $3.00 / $15.00 | 1M | max | User-directed premium web-design route; too costly for automatic fallback. |
 | MiMo V2.5 | $0.14 / $0.28 | 1M | no exposed variant | Available multimodal option, not auto-routed. |
 | MiMo V2.5 Pro | $0.435 / $0.87 | 1M | no exposed variant | Available, not auto-routed. |
 | MiniMax M2.7 | $0.30 / $1.20 | 205K | no exposed variant | Available, not auto-routed. |
@@ -29,11 +29,13 @@ USD per one million input/output tokens before cache effects.
 ## Budget policy
 
 OpenCode Go has value-based five-hour, weekly, and monthly limits. S.C.A.L.E.
-therefore never chooses Grok, Kimi K3, or Qwen Max automatically. Codex remains
-the steady-state primary: DeepSeek Flash for volume, Terra for implementation,
-and Sol for critical authority. Go Flash, DeepSeek Pro, Luna, Qwen Plus, and
-GLM-5.2 are opted-in specialists. Kimi K2.7 Code is reserved for scarce,
-high-value visual design briefs despite its higher cost.
+therefore never chooses Grok or Qwen Max automatically. Kimi K3 is the explicit
+user-directed web-design specialist, but remains excluded from all automatic
+fallback. Codex remains the steady-state primary: DeepSeek Flash for volume,
+Terra for implementation, and Sol for critical authority. Go Flash, DeepSeek
+Pro, Luna, Qwen Plus, and GLM-5.2 are opted-in specialists. Kimi K3 is reserved
+for scarce, high-value visual design briefs at max reasoning despite its higher
+cost.
 
 The Go runtime does not expose remaining subscription balance through its local
 CLI. `opencode stats` measures observed session usage; the OpenCode console is

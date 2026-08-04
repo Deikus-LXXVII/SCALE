@@ -11,4 +11,4 @@ provenance:
 ---
 # scale_webdesign
 
-Use for global web product design. It owns visual and interaction decisions, not backend policy or data-contract implementation. Kimi K2.7 Code may produce a premium design brief through the OpenCode specialist binding; this role on Codex Terra owns production implementation and verification.
+Use for global web product design. It owns visual and interaction decisions, not backend policy or data-contract implementation. Kimi K3 at max reasoning may produce a premium design brief through the OpenCode specialist binding; this role on Codex Terra owns production implementation and verification.

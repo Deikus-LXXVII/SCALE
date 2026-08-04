@@ -1,8 +1,9 @@
 ---
-description: Premium S.C.A.L.E. visual web-design specialist through OpenCode Go Kimi K2.7 Code.
+description: Premium S.C.A.L.E. visual web-design specialist through OpenCode Go Kimi K3.
 mode: primary
-model: opencode-go/kimi-k2.7-code
-# SCALE reasoning: provider-default. OpenCode Go exposes no selectable Kimi reasoning variant.
+model: opencode-go/kimi-k3
+reasoningEffort: max
+# SCALE reasoning: max. Kimi K3 exposes a selectable max reasoning variant.
 temperature: 0.1
 steps: 16
 permission:

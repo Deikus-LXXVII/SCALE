@@ -25,11 +25,12 @@ as a reason to replace all Codex roles.
    Terra owns production multi-file and frontend implementation; OpenCode Go
    DeepSeek V4 Flash owns all DeepSeek orchestration and routine work. Do not
    configure the DeepSeek API in Codex.
-5. Kimi K2.7 Code is a premium design specialist only: visual direction,
+5. Kimi K3 at max reasoning is a premium design specialist only: visual direction,
    design critique, responsive hierarchy, and component specification. It does
    not implement production UI. `scale_frontend` on Terra implements the
-   validated design handoff. Its reasoning is recorded as `provider-default`
-   because the Go catalog exposes no selectable Kimi variant.
+   validated design handoff. Its reasoning is recorded as `max` because the Go
+   catalog exposes only the max Kimi K3 variant. It is user-directed and never
+   an automatic fallback because of its cost.
 6. Qwen3.7 Plus may supply a non-sensitive visual prototype, but it is not the
    authority for final product integration. New primary assignments require a
    focused benchmark and registry validation.

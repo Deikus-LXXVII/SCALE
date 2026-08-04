@@ -103,7 +103,7 @@ const expectedRoutes = new Map([
   ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
   ["standard-code", ["scale_code_standard", "gpt-5.6-terra", "high", "codex-native"]],
   ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high", "codex-native"]],
-  ["web-design", ["scale_webdesign", "opencode-go/kimi-k2.7-code", "provider-default", "external-cli"]]
+  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "external-cli"]]
 ]);
 const routes = new Map();
 for (const route of registry.routes ?? []) {

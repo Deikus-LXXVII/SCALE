@@ -12,7 +12,7 @@ native fallback.
 | Simple code | Go DeepSeek V4 Flash High | Codex Terra High fallback | Only isolated non-sensitive work with explicit tests. |
 | Standard implementation | Codex Terra High | Go DeepSeek V4 Pro High | Explicit capacity decision for a bounded non-sensitive work order. |
 | Critical/security | Codex Sol High | Read-only evidence only | Sol remains authority; no external final decision. |
-| Web design | Go Kimi K2.7 Code, provider-default | None | Premium design brief only; no production edits. |
+| Web design | Go Kimi K3, max | None | Premium design brief only; no production edits. User-directed only because of cost. |
 | Frontend implementation | Codex Terra High | Go Qwen3.7 Plus High | Qwen may prototype; Terra integrates and validates production code. |
 | Routine/docs/environment/indexing | Go DeepSeek V4 Flash High | Codex Luna High fallback | Non-sensitive bounded handoff only. |
 | Prompt/research | Codex Luna/Terra High | Go Luna/GLM High | Advisory non-sensitive packet only. |
@@ -26,7 +26,7 @@ Use the specialist only when all conditions are true:
    authentication material, or security investigation.
 3. The work order has one objective, scoped files, acceptance criteria, output
    format, and stop condition.
-4. The expected cost/benefit is explicit. Do not use Kimi merely because it is
+4. The expected cost/benefit is explicit. Do not use Kimi K3 merely because it is
    available: its placement is reserved for high-value visual design tasks.
 
 Run:

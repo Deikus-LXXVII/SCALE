@@ -19,8 +19,8 @@ specialist ID when one is selected.
 
 If the dispatcher exits 75, read its JSON fallback handoff and route the same
 work order to the stated native Codex profile. Never retry an OpenCode Go quota
-failure in a loop or promote a different Go model automatically. Kimi K2.7 Code
-is design-only: it returns a visual specification for Terra's frontend worker,
+failure in a loop or promote a different Go model automatically. Kimi K3 at max
+reasoning is design-only: it returns a visual specification for Terra's frontend worker,
 not production code. Keep `scale_security` and `scale_git` native. Do not send
 secrets, credentials, private keys, production dumps, auth flows, or a security
 investigation to OpenCode Go. Require focused local validation before declaring

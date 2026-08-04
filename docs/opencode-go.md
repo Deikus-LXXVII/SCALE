@@ -71,7 +71,7 @@ benchmarked.
 | Routine evidence, docs, cleanup | Go DeepSeek V4 Flash High | Native Luna fallback after a Go failure. |
 | Isolated simple implementation | Go DeepSeek V4 Flash High | Native Terra fallback after a Go failure. |
 | Standard implementation | Codex Terra High | Go DeepSeek Pro High only for an eligible bounded work order. |
-| Web design | Go `scale-go-web-designer` / Kimi K2.7 Code | Premium visual brief only; no edits or production implementation. |
+| Web design | Go `scale-go-web-designer` / Kimi K3 max | Premium visual brief only; no edits or production implementation. |
 | Frontend implementation | Codex `scale_frontend` / Terra High | Go Qwen3.7 Plus High may prototype; Terra integrates. |
 | Prompt or research | Codex Luna/Terra High | Go Luna/GLM High for a non-sensitive advisory packet. |
 | Security and Git promotion | Native Sol/Terra | Never dispatched to Go. |
@@ -110,7 +110,7 @@ intentionally approval-gated.
    boundary above.
 5. Do not call both a native owner and a Go specialist for the same task unless
    the specialist is intentionally producing an advisory or design handoff.
-   Use Kimi only for high-value visual design work; its cost and provider-default
+   Use Kimi K3 only for high-value visual design work; its cost and max
    reasoning make it unsuitable as an automatic coding fallback.
 6. The orchestrator can request one bounded budget adjustment only with a
    concrete estimate. It may change at most two dimensions and cannot exceed

@@ -61,14 +61,14 @@
     {"id": "opencode-go/gpt-5.6-luna", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"], "use": "optional high-context prompt and bounded-QA specialist"},
     {"id": "opencode-go/glm-5.2", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["high", "max"], "use": "optional high-context research and architecture decision packet"},
     {"id": "opencode-go/qwen3.7-plus", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["high", "max"], "use": "optional visual prototype and frontend exploration specialist"},
-    {"id": "opencode-go/kimi-k2.7-code", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["provider-default"], "use": "premium web-design specialist only; the Go catalog exposes no selectable reasoning variant"}
+    {"id": "opencode-go/kimi-k3", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["max"], "use": "user-directed premium web-design specialist only; max is the live Go reasoning variant and Kimi is never an automatic fallback"}
   ],
   "routes": [
     {"id": "orchestration", "profile": "scale_orchestrator", "execution": "external-cli", "agent": "scale-go-orchestrator", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high", "fallback": {"profile": "scale_orchestrator", "model": "gpt-5.6-luna", "reasoning_effort": "high"}, "boundary": "OpenCode Go DeepSeek V4 Flash creates the non-sensitive route plan; native Luna executes the gateway/fallback only when Go is unavailable."},
     {"id": "simple-code", "profile": "scale_code_simple", "execution": "external-cli", "agent": "scale-go-simple-code", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high", "fallback": {"profile": "scale_code_simple", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "boundary": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance tests."},
     {"id": "standard-code", "profile": "scale_code_standard", "execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high", "boundary": "Default for bounded multi-file implementation; Go DeepSeek Pro is optional for an explicitly non-sensitive work order."},
     {"id": "critical-code", "profile": "scale_code_critical", "execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high", "boundary": "Default and final authority for critical changes. OpenCode may provide a read-only draft, never final authority."},
-    {"id": "web-design", "profile": "scale_webdesign", "execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k2.7-code", "reasoning_effort": "provider-default", "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "boundary": "Premium visual design brief and review only. It does not implement production web code."}
+    {"id": "web-design", "profile": "scale_webdesign", "execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k3", "reasoning_effort": "max", "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "boundary": "Premium visual design brief and review only. It does not implement production web code."}
   ],
   "agent_bindings": [
     {"profile": "scale_orchestrator", "primary": {"execution": "external-cli", "agent": "scale-go-orchestrator", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_orchestrator", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
@@ -95,14 +95,14 @@
     {"profile": "scale_swift", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
     {"profile": "scale_test_engineer", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
     {"profile": "scale_test_observer", "primary": {"execution": "external-cli", "agent": "scale-go-monitor", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_observer", "model": "gpt-5.6-luna", "reasoning_effort": "medium"}},
-    {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k2.7-code", "reasoning_effort": "provider-default"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}
+    {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k3", "reasoning_effort": "max"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}
   ],
   "change_protocol": [
     "Keep provider credentials outside S.C.A.L.E. and Git.",
     "Do not configure or route the DeepSeek API. Every DeepSeek V4 Flash assignment uses OpenCode Go through an explicit external-cli binding.",
     "Use a native Codex fallback only after the dispatcher returns an unavailable/catalog/quota signal; do not retry Go automatically or silently substitute a more expensive Go model.",
     "Apply the smallest per-profile runtime budget first. The orchestrator may submit at most one evidence-backed budget adjustment across two dimensions; hard caps, the OpenCode agent step contract, and token-saving defaults remain authoritative.",
-    "Kimi K2.7 Code is a premium web-design specialist for design briefs, interface critique, visual hierarchy, and component specifications. It does not own production implementation; `scale_frontend` on Terra does.",
+    "Kimi K3 is a user-directed premium web-design specialist for design briefs, interface critique, visual hierarchy, and component specifications at max reasoning. It does not own production implementation; `scale_frontend` on Terra does, and Kimi is never an automatic fallback.",
     "Run the registry validator with `--opencode` against the live Go catalog before promotion.",
     "Benchmark a newly promoted code-default model before raising its blast radius. User-directed specialist placement is policy until independently benchmarked."
   ]

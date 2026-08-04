@@ -24,9 +24,9 @@ for profile in "$agents_dir"/scale-go-*.md; do
     printf 'OpenCode Go agent needs an explicit opencode-go model: %s\n' "$profile" >&2
     exit 1
   }
-  if rg -q '^model: opencode-go/kimi-k2.7-code$' "$profile"; then
-    ! rg -q '^reasoningEffort:' "$profile" || {
-      printf 'Kimi K2.7 Code agent must not invent a reasoning variant: %s\n' "$profile" >&2
+  if rg -q '^model: opencode-go/kimi-k3$' "$profile"; then
+    rg -q '^reasoningEffort: max$' "$profile" || {
+      printf 'Kimi K3 agent must use max reasoning: %s\n' "$profile" >&2
       exit 1
     }
   else
