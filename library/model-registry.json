@@ -16,38 +16,247 @@
       "max_agent_steps": 16,
       "max_dispatch_ms": 600000
     },
+    "master_policy": {
+      "enabled": true,
+      "required_for_compound_tasks": true,
+      "required_for_bullet_lists": true,
+      "simple_max_actions": 1,
+      "max_planned_agents": 5,
+      "max_plan_tokens": 1200
+    },
+    "validation_policy": {
+      "default_passes": 1,
+      "max_passes": 2,
+      "max_repair_cycles": 1,
+      "max_full_suite_runs": 1,
+      "batch_independent_checks": true,
+      "rerun_passing_checks": false
+    },
     "agent_budgets": {
-      "scale_orchestrator": {"max_work_order_bytes": 24000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 14, "max_dispatch_ms": 600000},
-      "scale_architect": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
-      "scale_audio": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
-      "scale_cleaner": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 12, "max_dispatch_ms": 480000},
-      "scale_code_simple": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
-      "scale_code_standard": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
-      "scale_docs": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 12, "max_dispatch_ms": 480000},
-      "scale_environment": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 10, "max_dispatch_ms": 480000},
-      "scale_frontend": {"max_work_order_bytes": 26000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
-      "scale_indexer": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 10, "max_dispatch_ms": 480000},
-      "scale_library": {"max_work_order_bytes": 20000, "max_context_files": 6, "max_context_bytes": 60000, "max_agent_steps": 10, "max_dispatch_ms": 480000},
-      "scale_prompt": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 14, "max_dispatch_ms": 900000},
-      "scale_research": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
-      "scale_test_observer": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 20, "max_dispatch_ms": 1800000},
-      "scale_webdesign": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
-      "scale_policy_auditor": {"max_work_order_bytes": 24000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
-      "scale_privacy_gate": {"max_work_order_bytes": 24000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
-      "scale_model_ops": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
-      "scale_benchmark": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
-      "scale_knowledge_eval": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
-      "scale_sync": {"max_work_order_bytes": 20000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
-      "scale_backend": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
-      "scale_builder": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 24, "max_dispatch_ms": 900000},
-      "scale_code_critical": {"max_work_order_bytes": 32000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 24, "max_dispatch_ms": 1200000},
-      "scale_git": {"max_work_order_bytes": 24000, "max_context_files": 10, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
-      "scale_openwrt": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
-      "scale_optimizer": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
-      "scale_qa": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
-      "scale_security": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 24, "max_dispatch_ms": 1200000},
-      "scale_swift": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
-      "scale_test_engineer": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 24, "max_dispatch_ms": 900000}
+      "scale_orchestrator": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 14,
+        "max_dispatch_ms": 600000
+      },
+      "scale_architect": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 18,
+        "max_dispatch_ms": 900000
+      },
+      "scale_audio": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 900000
+      },
+      "scale_cleaner": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 12,
+        "max_dispatch_ms": 480000
+      },
+      "scale_code_simple": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 8,
+        "max_context_bytes": 80000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 600000
+      },
+      "scale_code_standard": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 900000
+      },
+      "scale_docs": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 12,
+        "max_dispatch_ms": 480000
+      },
+      "scale_environment": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 10,
+        "max_dispatch_ms": 480000
+      },
+      "scale_frontend": {
+        "max_work_order_bytes": 26000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 20,
+        "max_dispatch_ms": 900000
+      },
+      "scale_indexer": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 10,
+        "max_dispatch_ms": 480000
+      },
+      "scale_library": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 10,
+        "max_dispatch_ms": 480000
+      },
+      "scale_prompt": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 14,
+        "max_dispatch_ms": 900000
+      },
+      "scale_research": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 18,
+        "max_dispatch_ms": 900000
+      },
+      "scale_test_observer": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 20,
+        "max_dispatch_ms": 1800000
+      },
+      "scale_webdesign": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 8,
+        "max_context_bytes": 80000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 600000
+      },
+      "scale_policy_auditor": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 900000
+      },
+      "scale_privacy_gate": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 900000
+      },
+      "scale_model_ops": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 8,
+        "max_context_bytes": 80000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 900000
+      },
+      "scale_benchmark": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 20,
+        "max_dispatch_ms": 900000
+      },
+      "scale_knowledge_eval": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 900000
+      },
+      "scale_sync": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 900000
+      },
+      "scale_backend": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 900000
+      },
+      "scale_builder": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 900000
+      },
+      "scale_code_critical": {
+        "max_work_order_bytes": 32000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 1200000
+      },
+      "scale_git": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 10,
+        "max_context_bytes": 80000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 600000
+      },
+      "scale_openwrt": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 20,
+        "max_dispatch_ms": 900000
+      },
+      "scale_optimizer": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 8,
+        "max_context_bytes": 80000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 600000
+      },
+      "scale_qa": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 18,
+        "max_dispatch_ms": 900000
+      },
+      "scale_security": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 12,
+        "max_context_bytes": 120000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 1200000
+      },
+      "scale_swift": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 20,
+        "max_dispatch_ms": 900000
+      },
+      "scale_test_engineer": {
+        "max_work_order_bytes": 28000,
+        "max_context_files": 10,
+        "max_context_bytes": 100000,
+        "max_agent_steps": 24,
+        "max_dispatch_ms": 900000
+      },
+      "scale_opencode_native": {
+        "max_work_order_bytes": 20000,
+        "max_context_files": 6,
+        "max_context_bytes": 60000,
+        "max_agent_steps": 12,
+        "max_dispatch_ms": 480000
+      }
     },
     "orchestrator_adjustment": {
       "enabled": true,
@@ -58,74 +267,829 @@
       "max_work_order_increase_bytes": 4000,
       "max_context_file_increase": 2,
       "max_context_byte_increase": 24000,
-      "allowed_reasons": ["multi_step_plan", "long_monitoring", "large_context_evidence"],
+      "allowed_reasons": [
+        "multi_step_plan",
+        "long_monitoring",
+        "large_context_evidence"
+      ],
       "require_estimate": true
     },
     "direct_route": "If the caller provides an explicit SCALE profile, bounded files, acceptance criteria, and a low-risk scope, dispatch that profile directly without an orchestration turn."
   },
   "providers": [
-    {"id": "codex", "kind": "native", "catalog_owner": "Codex", "update_policy": "Discover the locally installed catalog; update approved IDs only after validation and a focused benchmark."},
-    {"id": "opencode-go", "kind": "external-cli", "runtime_command": "opencode", "runtime_provider": "opencode-go", "catalog_owner": "user's OpenCode Go subscription", "update_policy": "Discover live models with `opencode models opencode-go`. Do not represent Go as a Codex provider: its models use different API protocols and are invoked through the local OpenCode agent runtime."}
+    {
+      "id": "codex",
+      "kind": "native",
+      "catalog_owner": "Codex",
+      "update_policy": "Discover the locally installed catalog; update approved IDs only after validation and a focused benchmark."
+    },
+    {
+      "id": "opencode-go",
+      "kind": "external-cli",
+      "runtime_command": "opencode",
+      "runtime_provider": "opencode-go",
+      "api_transport": "loopback-openapi",
+      "catalog_owner": "user's OpenCode Go subscription",
+      "update_policy": "Discover live models with opencode models opencode-go. Use the isolated dispatcher only; do not set global openai_base_url."
+    }
   ],
   "models": [
-    {"id": "gpt-5.6-terra", "provider": "codex", "active": true, "approved_reasoning_efforts": ["medium", "high"], "use": "native bounded multi-file implementation and integration"},
-    {"id": "gpt-5.6-sol", "provider": "codex", "active": true, "approved_reasoning_efforts": ["high"], "use": "native authority for architectural, security, promotion, and critical decisions"},
-    {"id": "codex-auto-review", "provider": "codex", "active": true, "approved_reasoning_efforts": ["high"], "use": "independent native QA"},
-    {"id": "gpt-5.6-luna", "provider": "codex", "active": true, "approved_reasoning_efforts": ["medium", "high"], "use": "native low-cost fallback for external routine and orchestration routes"},
-    {"id": "opencode-go/deepseek-v4-flash", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["high", "max"], "use": "all S.C.A.L.E. DeepSeek V4 Flash work through the authenticated OpenCode Go runtime"},
-    {"id": "opencode-go/deepseek-v4-pro", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["high", "max"], "use": "optional non-sensitive bounded standard-code specialist"},
-    {"id": "opencode-go/gpt-5.6-luna", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"], "use": "optional high-context prompt and bounded-QA specialist"},
-    {"id": "opencode-go/glm-5.2", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["high", "max"], "use": "optional high-context research and architecture decision packet"},
-    {"id": "opencode-go/qwen3.7-plus", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["high", "max"], "use": "optional visual prototype and frontend exploration specialist"},
-    {"id": "opencode-go/kimi-k3", "provider": "opencode-go", "active": true, "approved_reasoning_efforts": ["max"], "use": "user-directed premium web-design specialist only; max is the live Go reasoning variant and Kimi is never an automatic fallback"}
+    {
+      "id": "gpt-5.6-terra",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "medium",
+        "high"
+      ],
+      "use": "native bounded multi-file implementation and integration"
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "use": "native authority for architectural, security, promotion, and critical decisions; hard-capped at high reasoning"
+    },
+    {
+      "id": "codex-auto-review",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high"
+      ],
+      "use": "independent native QA"
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "use": "native low-cost fallback, orchestration, documentation, and bounded advisory work; xhigh is approved for deliberate high-context tasks"
+    },
+    {
+      "id": "opencode-go/deepseek-v4-flash",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "low",
+        "high"
+      ],
+      "use": "all S.C.A.L.E. DeepSeek V4 Flash work through the authenticated OpenCode Go runtime"
+    },
+    {
+      "id": "opencode-go/deepseek-v4-pro",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high",
+        "max"
+      ],
+      "use": "optional non-sensitive bounded standard-code specialist"
+    },
+    {
+      "id": "opencode-go/gpt-5.6-luna",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "use": "optional high-context prompt and bounded-QA specialist"
+    },
+    {
+      "id": "opencode-go/glm-5.2",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high",
+        "max"
+      ],
+      "use": "optional high-context research and architecture decision packet"
+    },
+    {
+      "id": "opencode-go/qwen3.7-plus",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high",
+        "max"
+      ],
+      "use": "optional visual prototype and frontend exploration specialist"
+    },
+    {
+      "id": "opencode-go/kimi-k3",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "max"
+      ],
+      "use": "user-directed premium web-design specialist only; max is the live Go reasoning variant and Kimi is never an automatic fallback"
+    },
+    {
+      "id": "opencode-go/glm-5.1",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual high-context specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/grok-4.5",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "use": "native OpenCode Go manual-only premium escalation through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/hy3",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none",
+        "low",
+        "high"
+      ],
+      "use": "native OpenCode Go manual general-purpose specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/kimi-k2.6",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual multimodal specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/kimi-k2.7-code",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual code specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/mimo-v2.5",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual multimodal specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/mimo-v2.5-pro",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual premium specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/minimax-m2.7",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual general-purpose specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/minimax-m3",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "none"
+      ],
+      "use": "native OpenCode Go manual adaptive-thinking specialist through the SCALE native gateway; OpenCode's thinking variant is not represented as a Codex reasoning enum"
+    },
+    {
+      "id": "opencode-go/qwen3.6-plus",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high",
+        "max"
+      ],
+      "use": "native OpenCode Go reserve performance specialist through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/qwen3.7-max",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high",
+        "max"
+      ],
+      "use": "native OpenCode Go manual-only premium escalation through the SCALE native gateway"
+    },
+    {
+      "id": "opencode-go/qwen3.8-max",
+      "provider": "opencode-go",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "high",
+        "max"
+      ],
+      "use": "native OpenCode Go manual-only premium escalation through the SCALE native gateway"
+    }
   ],
+  "reasoning_limits": {
+    "gpt-5.6-sol": "high"
+  },
   "routes": [
-    {"id": "orchestration", "profile": "scale_orchestrator", "execution": "external-cli", "agent": "scale-go-orchestrator", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high", "fallback": {"profile": "scale_orchestrator", "model": "gpt-5.6-luna", "reasoning_effort": "high"}, "boundary": "OpenCode Go DeepSeek V4 Flash creates the non-sensitive route plan; native Luna executes the gateway/fallback only when Go is unavailable."},
-    {"id": "simple-code", "profile": "scale_code_simple", "execution": "external-cli", "agent": "scale-go-simple-code", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high", "fallback": {"profile": "scale_code_simple", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "boundary": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance tests."},
-    {"id": "standard-code", "profile": "scale_code_standard", "execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high", "boundary": "Default for bounded multi-file implementation; Go DeepSeek Pro is optional for an explicitly non-sensitive work order."},
-    {"id": "critical-code", "profile": "scale_code_critical", "execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high", "boundary": "Default and final authority for critical changes. OpenCode may provide a read-only draft, never final authority."},
-    {"id": "web-design", "profile": "scale_webdesign", "execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k3", "reasoning_effort": "max", "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "boundary": "Premium visual design brief and review only. It does not implement production web code."}
+    {
+      "id": "orchestration",
+      "profile": "scale_orchestrator",
+      "execution": "external-cli",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "fallback": {
+        "profile": "scale_optimizer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "boundary": "OpenCode Go DeepSeek V4 Flash creates the non-sensitive route plan; native Luna xhigh executes the gateway/fallback only when Go is unavailable.",
+      "agent": "scale-go-orchestrator"
+    },
+    {
+      "id": "simple-code",
+      "profile": "scale_code_simple",
+      "execution": "external-cli",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "fallback": {
+        "profile": "scale_optimizer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "boundary": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance tests; Luna xhigh is the native fallback.",
+      "agent": "scale-go-simple-code"
+    },
+    {
+      "id": "standard-code",
+      "profile": "scale_code_standard",
+      "execution": "external-cli",
+      "model": "opencode-go/deepseek-v4-pro",
+      "reasoning_effort": "high",
+      "fallback": {
+        "profile": "scale_optimizer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "boundary": "Default for bounded non-sensitive multi-file implementation; Terra remains the native fallback and authority for sensitive or complex integration.",
+      "agent": "scale-go-code-standard"
+    },
+    {
+      "id": "critical-code",
+      "profile": "scale_code_critical",
+      "execution": "codex-native",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "boundary": "Default and final authority for critical changes. OpenCode may provide a read-only draft, never final authority."
+    },
+    {
+      "id": "web-design",
+      "profile": "scale_webdesign",
+      "execution": "external-cli",
+      "model": "opencode-go/kimi-k3",
+      "reasoning_effort": "max",
+      "fallback": {
+        "profile": "scale_optimizer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "boundary": "Premium visual design brief and review only. It does not implement production web code.",
+      "agent": "scale-go-web-designer"
+    },
+    {
+      "id": "native-opencode-routine",
+      "profile": "scale_opencode_native",
+      "execution": "external-cli",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_effort": "high",
+      "fallback": {
+        "profile": "scale_optimizer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "boundary": "Opt-in native Codex subagent route through the loopback Responses shim for one bounded non-sensitive routine task.",
+      "agent": "scale-go-routine"
+    }
   ],
   "agent_bindings": [
-    {"profile": "scale_orchestrator", "primary": {"execution": "external-cli", "agent": "scale-go-orchestrator", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_orchestrator", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
-    {"profile": "scale_architect", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}, "specialists": [{"id": "go-architecture-draft", "execution": "external-cli", "agent": "scale-go-architecture", "model": "opencode-go/glm-5.2", "reasoning_effort": "high", "use_when": "A non-sensitive high-context comparison or decision packet will improve a native Sol decision.", "fallback": {"profile": "scale_architect", "model": "gpt-5.6-sol", "reasoning_effort": "high"}}]},
-    {"profile": "scale_audio", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "specialists": [{"id": "go-standard-code", "execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high", "use_when": "A bounded, non-sensitive implementation is explicitly delegated to OpenCode capacity.", "fallback": {"profile": "scale_audio", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}]},
-    {"profile": "scale_backend", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_builder", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_cleaner", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_cleaner", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
-    {"profile": "scale_code_critical", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_code_simple", "primary": {"execution": "external-cli", "agent": "scale-go-simple-code", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_code_simple", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
-    {"profile": "scale_code_standard", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "specialists": [{"id": "go-standard-code", "execution": "external-cli", "agent": "scale-go-code-standard", "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high", "use_when": "A bounded multi-file implementation is non-sensitive, has a clear stop condition, and OpenCode capacity is intentionally chosen.", "fallback": {"profile": "scale_code_standard", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}]},
-    {"profile": "scale_docs", "primary": {"execution": "external-cli", "agent": "scale-go-routine", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_docs", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
-    {"profile": "scale_environment", "primary": {"execution": "external-cli", "agent": "scale-go-explorer", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_environment", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
-    {"profile": "scale_frontend", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "specialists": [{"id": "go-visual-prototype", "execution": "external-cli", "agent": "scale-go-interface", "model": "opencode-go/qwen3.7-plus", "reasoning_effort": "high", "use_when": "A non-sensitive visual prototype or component exploration benefits from a second visual model; Terra remains the production implementer.", "fallback": {"profile": "scale_frontend", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}]},
-    {"profile": "scale_git", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
-    {"profile": "scale_indexer", "primary": {"execution": "external-cli", "agent": "scale-go-explorer", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_indexer", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
-    {"profile": "scale_library", "primary": {"execution": "external-cli", "agent": "scale-go-explorer", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_library", "model": "gpt-5.6-luna", "reasoning_effort": "high"}},
-    {"profile": "scale_openwrt", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
-    {"profile": "scale_optimizer", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "medium"}},
-    {"profile": "scale_prompt", "primary": {"execution": "codex-native", "model": "gpt-5.6-luna", "reasoning_effort": "high"}, "specialists": [{"id": "go-prompt-review", "execution": "external-cli", "agent": "scale-go-prompt-qa", "model": "opencode-go/gpt-5.6-luna", "reasoning_effort": "high", "use_when": "A non-sensitive large-context prompt review is explicitly delegated to OpenCode capacity.", "fallback": {"profile": "scale_prompt", "model": "gpt-5.6-luna", "reasoning_effort": "high"}}]},
-    {"profile": "scale_qa", "primary": {"execution": "codex-native", "model": "codex-auto-review", "reasoning_effort": "high"}},
-    {"profile": "scale_research", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}, "specialists": [{"id": "go-high-context-research", "execution": "external-cli", "agent": "scale-go-architecture", "model": "opencode-go/glm-5.2", "reasoning_effort": "high", "use_when": "A non-sensitive high-context synthesis is requested as an input, not final authority.", "fallback": {"profile": "scale_research", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}]},
-    {"profile": "scale_security", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_swift", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
-    {"profile": "scale_test_engineer", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_test_observer", "primary": {"execution": "external-cli", "agent": "scale-go-monitor", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_observer", "model": "gpt-5.6-luna", "reasoning_effort": "medium"}},
-    {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k3", "reasoning_effort": "max"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
-    {"profile": "scale_policy_auditor", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_privacy_gate", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_model_ops", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
-    {"profile": "scale_benchmark", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
-    {"profile": "scale_knowledge_eval", "primary": {"execution": "codex-native", "model": "codex-auto-review", "reasoning_effort": "high"}},
-    {"profile": "scale_sync", "primary": {"execution": "codex-native", "model": "gpt-5.6-luna", "reasoning_effort": "high"}}
+    {
+      "profile": "scale_orchestrator",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-orchestrator"
+      },
+      "fallback": {
+        "profile": "scale_orchestrator",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_architect",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      },
+      "specialists": [
+        {
+          "id": "go-architecture-draft",
+          "execution": "external-cli",
+          "model": "opencode-go/glm-5.2",
+          "reasoning_effort": "high",
+          "use_when": "A non-sensitive high-context comparison or decision packet will improve a native Sol decision.",
+          "fallback": {
+            "profile": "scale_architect",
+            "model": "gpt-5.6-sol",
+            "reasoning_effort": "high"
+          },
+          "agent": "scale-go-architecture"
+        }
+      ]
+    },
+    {
+      "profile": "scale_audio",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high"
+      },
+      "specialists": [
+        {
+          "id": "go-standard-code",
+          "execution": "external-cli",
+          "model": "opencode-go/deepseek-v4-pro",
+          "reasoning_effort": "high",
+          "use_when": "A bounded, non-sensitive implementation is explicitly delegated to OpenCode capacity.",
+          "fallback": {
+            "profile": "scale_audio",
+            "model": "gpt-5.6-terra",
+            "reasoning_effort": "high"
+          },
+          "agent": "scale-go-code-standard"
+        }
+      ]
+    },
+    {
+      "profile": "scale_backend",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_builder",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_cleaner",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-routine"
+      },
+      "fallback": {
+        "profile": "scale_cleaner",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_code_critical",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_code_simple",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-simple-code"
+      },
+      "fallback": {
+        "profile": "scale_code_simple",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_code_standard",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-pro",
+        "reasoning_effort": "high",
+        "agent": "scale-go-code-standard"
+      },
+      "fallback": {
+        "profile": "scale_code_standard",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_docs",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-routine"
+      },
+      "fallback": {
+        "profile": "scale_docs",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_environment",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-explorer"
+      },
+      "fallback": {
+        "profile": "scale_environment",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_frontend",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high"
+      },
+      "specialists": [
+        {
+          "id": "go-visual-prototype",
+          "execution": "external-cli",
+          "model": "opencode-go/qwen3.7-plus",
+          "reasoning_effort": "high",
+          "use_when": "A non-sensitive visual prototype or component exploration benefits from a second visual model; Terra remains the production implementer.",
+          "fallback": {
+            "profile": "scale_frontend",
+            "model": "gpt-5.6-terra",
+            "reasoning_effort": "high"
+          },
+          "agent": "scale-go-interface"
+        }
+      ]
+    },
+    {
+      "profile": "scale_git",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_indexer",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-explorer"
+      },
+      "fallback": {
+        "profile": "scale_indexer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_library",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-explorer"
+      },
+      "fallback": {
+        "profile": "scale_library",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_openwrt",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_optimizer",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_prompt",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "specialists": [
+        {
+          "id": "go-prompt-review",
+          "execution": "external-cli",
+          "model": "opencode-go/gpt-5.6-luna",
+          "reasoning_effort": "high",
+          "use_when": "A non-sensitive large-context prompt review is explicitly delegated to OpenCode capacity.",
+          "fallback": {
+            "profile": "scale_prompt",
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "xhigh"
+          },
+          "agent": "scale-go-prompt-qa"
+        }
+      ]
+    },
+    {
+      "profile": "scale_qa",
+      "primary": {
+        "execution": "codex-native",
+        "model": "codex-auto-review",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_research",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      },
+      "specialists": [
+        {
+          "id": "go-high-context-research",
+          "execution": "external-cli",
+          "model": "opencode-go/glm-5.2",
+          "reasoning_effort": "high",
+          "use_when": "A non-sensitive high-context synthesis is requested as an input, not final authority.",
+          "fallback": {
+            "profile": "scale_research",
+            "model": "gpt-5.6-luna",
+            "reasoning_effort": "xhigh"
+          },
+          "agent": "scale-go-architecture"
+        }
+      ]
+    },
+    {
+      "profile": "scale_security",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_swift",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_test_engineer",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_test_observer",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-monitor"
+      },
+      "fallback": {
+        "profile": "scale_test_observer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_webdesign",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/kimi-k3",
+        "reasoning_effort": "max",
+        "agent": "scale-go-web-designer"
+      },
+      "fallback": {
+        "profile": "scale_webdesign",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_policy_auditor",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_privacy_gate",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_model_ops",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_benchmark",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_knowledge_eval",
+      "primary": {
+        "execution": "codex-native",
+        "model": "codex-auto-review",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_sync",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    },
+    {
+      "profile": "scale_opencode_native",
+      "primary": {
+        "execution": "external-cli",
+        "model": "opencode-go/deepseek-v4-flash",
+        "reasoning_effort": "high",
+        "agent": "scale-go-routine"
+      },
+      "fallback": {
+        "profile": "scale_optimizer",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh"
+      }
+    }
   ],
+  "overlay_bindings": [
+    {
+      "profile": "scale_telik_orchestrator",
+      "base_profile": "scale_orchestrator",
+      "dispatch_mode": "external-primary",
+      "boundary": "Use the OpenCode Go control-plane route for non-sensitive TwitchBot planning; native Luna remains the fallback."
+    },
+    {
+      "profile": "scale_telik_persona",
+      "base_profile": "scale_prompt",
+      "dispatch_mode": "native",
+      "boundary": "Prompt and persona decisions remain native Luna unless an explicitly approved non-sensitive specialist is selected."
+    },
+    {
+      "profile": "scale_telik_identity",
+      "base_profile": "scale_security",
+      "dispatch_mode": "native",
+      "boundary": "Identity and trust decisions remain native Sol; no external write or security investigation is delegated."
+    },
+    {
+      "profile": "scale_telik_status",
+      "base_profile": "scale_test_observer",
+      "dispatch_mode": "external-primary",
+      "boundary": "Read-only status and observation may use OpenCode Go DeepSeek V4 Flash with native Luna xhigh as fallback."
+    },
+    {
+      "profile": "scale_telik_injection_defense",
+      "base_profile": "scale_security",
+      "dispatch_mode": "native",
+      "boundary": "Injection-defense decisions remain native Sol and never use an external final authority."
+    },
+    {
+      "profile": "scale_telik_datacapture",
+      "base_profile": "scale_code_standard",
+      "dispatch_mode": "specialist-only",
+      "boundary": "Capture implementation remains native Terra; OpenCode requires an explicit sanitized specialist request."
+    },
+    {
+      "profile": "scale_telik_extraction",
+      "base_profile": "scale_code_standard",
+      "dispatch_mode": "specialist-only",
+      "boundary": "Extraction implementation remains native Terra; external work requires an explicit non-sensitive specialist request."
+    },
+    {
+      "profile": "scale_telik_framelab",
+      "base_profile": "scale_code_standard",
+      "dispatch_mode": "specialist-only",
+      "boundary": "FrameLab implementation remains native Terra; external work requires an explicit non-sensitive specialist request."
+    },
+    {
+      "profile": "scale_telik_dashboard_backend",
+      "base_profile": "scale_backend",
+      "dispatch_mode": "native",
+      "boundary": "Dashboard backend changes remain native Sol because they cross service and control boundaries."
+    },
+    {
+      "profile": "scale_telik_frontend",
+      "base_profile": "scale_frontend",
+      "dispatch_mode": "native",
+      "boundary": "Terra integrates production frontend changes; an external visual prototype is opt-in only."
+    },
+    {
+      "profile": "scale_telik_webdesign",
+      "base_profile": "scale_webdesign",
+      "dispatch_mode": "external-primary",
+      "boundary": "User-directed visual briefs may use OpenCode Go Kimi K3; native Luna xhigh is the low-cost design fallback and it never writes production UI."
+    },
+    {
+      "profile": "scale_telik_webapp_backend",
+      "base_profile": "scale_backend",
+      "dispatch_mode": "native",
+      "boundary": "OAuth, EventSub, ledger, and bridge changes remain native Sol."
+    },
+    {
+      "profile": "scale_telik_optimizer",
+      "base_profile": "scale_optimizer",
+      "dispatch_mode": "native",
+      "boundary": "Optimization uses native Luna xhigh and remains measurement-led."
+    }
+  ],
+  "native_provider_policy": {
+    "status": "disabled-by-default",
+    "reason": "Codex user-level openai_base_url redirects every native and OpenCode model through one process; a gateway outage becomes a global Codex outage.",
+    "gateway_script": "scripts/scale-opencode-native-gateway.mjs",
+    "recovery_script": "scripts/scale-codex-recover.sh",
+    "safe_default": "No openai_base_url and no opencode-go/* aliases in the Codex catalog. Native Codex profiles use Luna/Terra/Sol; OpenCode Go remains isolated behind the external dispatcher.",
+    "experimental_note": "The gateway retains protocol fixtures and the SSE/non-stream fix for future per-model provider support, but SessionStart does not start it unless the exact loopback route is explicitly configured."
+  },
   "change_protocol": [
     "Keep provider credentials outside S.C.A.L.E. and Git.",
-    "Do not configure or route the DeepSeek API. Every DeepSeek V4 Flash assignment uses OpenCode Go through an explicit external-cli binding.",
-    "Use a native Codex fallback only after the dispatcher returns an unavailable/catalog/quota signal; do not retry Go automatically or silently substitute a more expensive Go model.",
-    "Apply the smallest per-profile runtime budget first. The orchestrator may submit at most one evidence-backed budget adjustment across two dimensions; hard caps, the OpenCode agent step contract, and token-saving defaults remain authoritative.",
-    "Kimi K3 is a user-directed premium web-design specialist for design briefs, interface critique, visual hierarchy, and component specifications at max reasoning. It does not own production implementation; `scale_frontend` on Terra does, and Kimi is never an automatic fallback.",
-    "Run the registry validator with `--opencode` against the live Go catalog before promotion.",
-    "Benchmark a newly promoted code-default model before raising its blast radius. User-directed specialist placement is policy until independently benchmarked."
+    "Never set global openai_base_url for normal SCALE operation: it redirects every Codex model and creates a single point of failure.",
+    "DeepSeek means OpenCode Go through the isolated dispatcher; never configure DeepSeek API.",
+    "If Codex loses connectivity after a provider experiment, run scale-codex-recover, restart Codex, and validate the native catalog before retrying any integration.",
+    "Use one privacy-gated external dispatch and one named native fallback at most; do not retry or silently substitute another Go model.",
+    "Keep Sol at high or lower reasoning and preserve Terra for sensitive integration."
   ]
 }

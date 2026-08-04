@@ -22,6 +22,8 @@ as a reason to replace all Codex roles.
 3. A Go failure or quota signal returns exactly one stated native fallback. Do
    not retry Go or silently select a more expensive Go model.
 4. Sol remains final authority for security, critical decisions, and promotion;
+   Sol is hard-capped at `high` reasoning. Never assign `xhigh` or `max` to a
+   Sol profile, route, fallback, or overlay;
    Terra owns production multi-file and frontend implementation; OpenCode Go
    DeepSeek V4 Flash owns all DeepSeek orchestration and routine work. Do not
    configure the DeepSeek API in Codex.

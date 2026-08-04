@@ -49,6 +49,23 @@ requireValue(Number.isInteger(registry.runtime_policy?.max_context_bytes) && reg
 requireValue(Number.isInteger(registry.runtime_policy?.max_agent_steps) && registry.runtime_policy.max_agent_steps > 0, "runtime_policy.max_agent_steps must be a positive integer");
 requireValue(Number.isInteger(registry.runtime_policy?.max_dispatch_ms) && registry.runtime_policy.max_dispatch_ms > 0, "runtime_policy.max_dispatch_ms must be a positive integer");
 requireValue(Number.isInteger(registry.runtime_policy?.max_escalations) && registry.runtime_policy.max_escalations >= 0, "runtime_policy.max_escalations must be a non-negative integer");
+const masterPolicy = registry.runtime_policy?.master_policy;
+requireValue(masterPolicy && typeof masterPolicy === "object", "runtime_policy.master_policy is missing");
+for (const field of ["simple_max_actions", "max_planned_agents", "max_plan_tokens"]) {
+  requireValue(Number.isInteger(masterPolicy?.[field]) && masterPolicy[field] > 0, `master_policy.${field} must be a positive integer`);
+}
+requireValue(masterPolicy?.required_for_compound_tasks === true, "master_policy must require compound tasks");
+requireValue(masterPolicy?.required_for_bullet_lists === true, "master_policy must require bullet lists");
+const validationPolicy = registry.runtime_policy?.validation_policy;
+requireValue(validationPolicy && typeof validationPolicy === "object", "runtime_policy.validation_policy is missing");
+for (const field of ["default_passes", "max_passes", "max_repair_cycles", "max_full_suite_runs"]) {
+  requireValue(Number.isInteger(validationPolicy?.[field]) && validationPolicy[field] >= 0, `validation_policy.${field} must be a non-negative integer`);
+}
+requireValue(validationPolicy?.default_passes <= validationPolicy?.max_passes, "validation_policy.default_passes exceeds max_passes");
+requireValue(validationPolicy?.max_repair_cycles <= 1, "validation_policy.max_repair_cycles must not exceed one");
+requireValue(validationPolicy?.max_full_suite_runs <= 1, "validation_policy.max_full_suite_runs must not exceed one");
+requireValue(validationPolicy?.batch_independent_checks === true, "validation_policy must batch independent checks");
+requireValue(validationPolicy?.rerun_passing_checks === false, "validation_policy must disable rerunning passing checks");
 
 const budgetFields = ["max_work_order_bytes", "max_context_files", "max_context_bytes", "max_agent_steps", "max_dispatch_ms"];
 const hardBudget = Object.fromEntries(budgetFields.map((field) => [field, registry.runtime_policy?.[field]]));
@@ -98,10 +115,22 @@ for (const model of registry.models ?? []) {
   if (provider?.kind === "external-cli") requireValue(model.id.startsWith(`${provider.runtime_provider}/`), `external CLI model ${model.id} must use ${provider.runtime_provider}/ prefix`);
 }
 
+const reasoningRank = new Map([["none", 0], ["low", 1], ["medium", 2], ["high", 3], ["xhigh", 4], ["max", 5]]);
+for (const [modelId, limit] of Object.entries(registry.reasoning_limits ?? {})) {
+  requireValue(models.has(modelId), `reasoning limit references unknown model ${modelId}`);
+  requireValue(reasoningRank.has(limit), `reasoning limit for ${modelId} is invalid: ${limit}`);
+  if (models.has(modelId)) requireValue(models.get(modelId).approved_reasoning_efforts.includes(limit), `reasoning limit for ${modelId} must be an approved effort`);
+}
+const validateReasoningLimit = (modelId, effort, owner) => {
+  const limit = registry.reasoning_limits?.[modelId];
+  if (!limit || !reasoningRank.has(effort)) return;
+  requireValue(reasoningRank.get(effort) <= reasoningRank.get(limit), `${owner} exceeds reasoning limit ${limit} for ${modelId}`);
+};
+
 const expectedRoutes = new Map([
   ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
   ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "external-cli"]],
-  ["standard-code", ["scale_code_standard", "gpt-5.6-terra", "high", "codex-native"]],
+  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "external-cli"]],
   ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high", "codex-native"]],
   ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "external-cli"]]
 ]);
@@ -113,8 +142,9 @@ for (const route of registry.routes ?? []) {
   const model = models.get(route.model);
   requireValue(Boolean(model?.active), `route ${route.id} references an inactive or unknown model ${route.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
+  validateReasoningLimit(route.model, route.reasoning_effort, `route ${route.id}`);
   requireValue(["codex-native", "external-cli"].includes(route.execution), `route ${route.id} needs codex-native or external-cli execution`);
-  if (route.execution === "codex-native") requireValue(providers.get(model?.provider)?.kind === "native", `native route ${route.id} must use a native model`);
+  if (route.execution === "codex-native") requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `native route ${route.id} must use a native or configured custom Responses model`);
   if (route.execution === "external-cli") requireValue(providers.get(model?.provider)?.kind === "external-cli", `external CLI route ${route.id} must use an external CLI model`);
 }
 for (const [id, [profile, model, effort, execution]] of expectedRoutes) {
@@ -136,6 +166,7 @@ try {
     const model = models.get(modelId);
     requireValue(Boolean(model?.active), `profile ${entry} uses inactive or unregistered model ${modelId}`);
     requireValue(model?.approved_reasoning_efforts?.includes(effort), `profile ${entry} uses unapproved effort ${effort} for ${modelId}`);
+    validateReasoningLimit(modelId, effort, `profile ${entry}`);
     if (name) profileSources.set(name, { entry, modelId, effort });
   }
 } catch (error) {
@@ -169,8 +200,9 @@ const validateEndpoint = (profile, kind, endpoint) => {
   const model = models.get(endpoint?.model);
   requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
+  validateReasoningLimit(endpoint?.model, endpoint?.reasoning_effort, `${profile} ${kind}`);
   requireValue(["codex-native", "external-cli"].includes(endpoint?.execution), `${profile} ${kind} needs codex-native or external-cli execution`);
-  if (endpoint?.execution === "codex-native") requireValue(providers.get(model?.provider)?.kind === "native", `${profile} ${kind} must use a native model`);
+  if (endpoint?.execution === "codex-native") requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `${profile} ${kind} must use a native or configured custom Responses model`);
   if (endpoint?.execution === "external-cli") {
     requireValue(providers.get(model?.provider)?.kind === "external-cli", `${profile} ${kind} must use an external CLI model`);
     validateExternalAgent(endpoint.agent, endpoint.model, endpoint.reasoning_effort, `${profile} ${kind}`);
@@ -201,11 +233,15 @@ for (const route of routes.values()) {
 }
 
 const bindings = new Set();
+const bindingEntries = new Map();
 for (const binding of registry.agent_bindings ?? []) {
   const profile = binding?.profile;
   requireValue(typeof profile === "string" && profile.length > 0, "agent binding is missing profile");
   requireValue(!bindings.has(profile), `duplicate agent binding: ${profile}`);
-  if (typeof profile === "string") bindings.add(profile);
+  if (typeof profile === "string") {
+    bindings.add(profile);
+    bindingEntries.set(profile, binding);
+  }
   requireValue(profileSources.has(profile), `agent binding references missing Codex profile ${profile}`);
   const primary = binding?.primary;
   validateEndpoint(profile, "primary", primary);
@@ -227,13 +263,30 @@ for (const binding of registry.agent_bindings ?? []) {
     if (specialist?.fallback) validateNativeFallback(`${profile} specialist ${specialist.id}`, specialist.fallback);
   }
 }
-for (const profile of profileSources.keys()) requireValue(bindings.has(profile), `Codex profile ${profile} has no agent binding`);
+const overlayBases = new Map();
+for (const overlay of registry.overlay_bindings ?? []) {
+  const profile = overlay?.profile;
+  const baseProfile = overlay?.base_profile;
+  const dispatchMode = overlay?.dispatch_mode;
+  requireValue(typeof profile === "string" && /^scale_telik_[a-z0-9_]+$/.test(profile), `overlay binding has invalid profile ${profile ?? "<missing>"}`);
+  requireValue(typeof baseProfile === "string" && baseProfile.length > 0, `overlay binding ${profile ?? "<missing>"} is missing base_profile`);
+  requireValue(["external-primary", "specialist-only", "native"].includes(dispatchMode), `overlay binding ${profile ?? "<missing>"} has invalid dispatch_mode`);
+  requireValue(!bindings.has(profile), `overlay binding ${profile} duplicates an agent binding`);
+  requireValue(!overlayBases.has(profile), `duplicate overlay binding: ${profile}`);
+  requireValue(bindings.has(baseProfile), `overlay binding ${profile} references missing base profile ${baseProfile}`);
+  if (typeof profile === "string" && typeof baseProfile === "string") overlayBases.set(profile, baseProfile);
+}
+for (const profile of profileSources.keys()) {
+  const effectiveProfile = overlayBases.get(profile) ?? profile;
+  requireValue(bindingEntries.has(effectiveProfile), `Codex profile ${profile} has no agent binding`);
+}
 for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_budgets ?? {})) {
   requireValue(bindings.has(profile), `runtime_policy.agent_budgets references unknown profile ${profile}`);
   validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
 }
 for (const profile of profileSources.keys()) {
-  const budget = registry.runtime_policy?.agent_budgets?.[profile];
+  const effectiveProfile = overlayBases.get(profile) ?? profile;
+  const budget = registry.runtime_policy?.agent_budgets?.[profile] ?? registry.runtime_policy?.agent_budgets?.[effectiveProfile];
   requireValue(Boolean(budget), `runtime_policy.agent_budgets is missing profile ${profile}`);
   if (budget) validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
 }

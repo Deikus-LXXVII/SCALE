@@ -26,16 +26,16 @@ if [[ "$deepseek_count" -ne 0 ]]; then
   exit 1
 fi
 
-if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_orchestrator.toml"; then
-  echo "scale_orchestrator must retain a native Luna fallback profile." >&2
+if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_orchestrator.toml" || ! rg -q '^model_reasoning_effort = "xhigh"$' "$agents_dir/scale_orchestrator.toml"; then
+  echo "scale_orchestrator must retain a native Luna xhigh fallback profile." >&2
   exit 1
 fi
-if ! rg -q '^model = "gpt-5.6-terra"$' "$agents_dir/scale_code_simple.toml"; then
-  echo "scale_code_simple must retain a native Terra fallback profile." >&2
+if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_code_simple.toml" || ! rg -q '^model_reasoning_effort = "xhigh"$' "$agents_dir/scale_code_simple.toml"; then
+  echo "scale_code_simple must retain a native Luna xhigh fallback profile." >&2
   exit 1
 fi
-if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^model_reasoning_effort = "medium"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/scale_test_observer.toml"; then
-  echo "scale_test_observer must use Luna/medium/read-only as the native fallback." >&2
+if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^model_reasoning_effort = "xhigh"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/scale_test_observer.toml"; then
+  echo "scale_test_observer must use Luna/xhigh/read-only as the native fallback." >&2
   exit 1
 fi
 

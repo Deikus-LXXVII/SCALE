@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/scripts/scale-library-refresh.sh\" --hook",
+            "command": "bash \"$(git rev-parse --show-toplevel)/scripts/scale-plugin-session-start.sh\"",
             "timeout": 15,
             "statusMessage": "Refreshing S.C.A.L.E. knowledge",
             "additionalContextLimit": 800

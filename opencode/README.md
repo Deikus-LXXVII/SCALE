@@ -1,22 +1,23 @@
-# OpenCode Go adapter
+# OpenCode Go native adapter
 
-S.C.A.L.E. treats OpenCode Go as an additional specialist pool, not as a Codex
-model provider. Every DeepSeek V4 Flash route, including orchestration, is
-executed through OpenCode Go rather than the DeepSeek API. Codex Luna provides
-the small native gateway/fallback where an external route cannot run.
+S.C.A.L.E. treats OpenCode Go as an additional model pool, exposed natively
+through Codex's built-in OpenAI provider. Every registered model uses an
+`opencode-go/<model>` catalog slug and the loopback
+`scripts/scale-opencode-native-gateway.mjs`; no custom `model_provider` and no
+DeepSeek API are configured.
 
-The materializer exposes the managed agents from this directory to a connected
-project as `.opencode/agents/scale-go-*.md`. Existing project-owned OpenCode
-agents are preserved. These generated links are ignored locally by the S.C.A.L.E.
-installer and are never meant to be committed by the connected project.
+The gateway routes Luna through Responses, OpenAI-compatible models through
+Chat Completions, and MiniMax/Qwen models through Anthropic Messages. It
+translates function tools, tool-call history, and streaming Responses events,
+so Codex main agents and subagents retain their normal sandbox and approval
+boundary. The external dispatcher remains an explicit legacy fallback only.
 
-Each runtime agent has an explicit model, step cap, and least-privilege
-permission contract. Where the provider exposes one, it also has an explicit
-reasoning effort; Kimi K3 is recorded as `max` because Go exposes that
-selectable variant. `library/model-registry.json` maps each Go use
-to an eligible specialist plus a native fallback. The dispatcher emits that
-fallback instead of retrying if Go is exhausted or unavailable.
+The materializer exposes managed role profiles to connected projects as
+`.opencode/agents/scale-go-*.md`; project-owned agents are preserved. Runtime
+profiles declare model, reasoning effort, step budget, and least-privilege
+permissions. Kimi K3 is `max` and is restricted to user-directed design
+packets; Terra implements production UI.
 
-See `docs/opencode-go.md` for setup and privacy boundaries, and
-`docs/opencode-go-model-inventory-2026-08-04.md` for the live-catalog analysis
-and budget policy.
+See `docs/native-opencode.md` for installation, health checks, and the global
+Codex restart requirement. `docs/opencode-go-model-inventory-2026-08-04.md`
+records the live model inventory and cost policy.

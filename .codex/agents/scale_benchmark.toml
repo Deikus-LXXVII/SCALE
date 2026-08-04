@@ -1,7 +1,7 @@
 name = "scale_benchmark"
 description = "Measured evaluator for direct-Codex versus SCALE quality, cost, and latency."
-model = "gpt-5.6-terra"
-model_reasoning_effort = "high"
+model = "gpt-5.6-luna"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Design and run bounded, reproducible SCALE evaluations. Compare direct Codex

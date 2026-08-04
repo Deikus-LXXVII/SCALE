@@ -8,6 +8,16 @@ if [[ -z "$project_root" ]]; then
   exit 0
 fi
 
+# Native OpenCode is a local optional runtime. Start it before refresh so a
+# newly spawned native agent can use the provider during this same session.
+ensure_script="$project_root/.codex/scale-library-src/scripts/scale-opencode-native-ensure.sh"
+if [[ ! -x "$ensure_script" ]]; then
+  ensure_script="$plugin_root/scripts/scale-opencode-native-ensure.sh"
+fi
+if [[ -x "$ensure_script" ]]; then
+  bash "$ensure_script" "$project_root" || printf '%s\n' 'S.C.A.L.E.: native OpenCode autostart failed; continuing with library refresh.' >&2
+fi
+
 # The canonical SCALE checkout is itself a Git project. Do not ask the global
 # plugin to clone SCALE into `.codex/scale-library-src` inside that checkout:
 # development of SCALE happens from the canonical tree, while connected

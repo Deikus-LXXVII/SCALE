@@ -1,123 +1,70 @@
 # OpenCode Go in S.C.A.L.E.
 
-## Purpose
+OpenCode Go is a separately metered model pool exposed natively in Codex.
+SCALE installs all live Go models as `opencode-go/<model>` catalog entries and
+routes them through the built-in OpenAI provider to the loopback gateway. No
+custom `model_provider`, fake Codex provider, or DeepSeek API is used.
 
-OpenCode Go is a separately metered specialist pool. It must not be
-added as a `model_provider` in Codex: Codex custom-agent profiles can only use
-models exposed by Codex's catalog, while OpenCode Go owns its own credential,
-model catalog, permissions, session history, and limits.
+## Setup
 
-S.C.A.L.E. therefore uses this split:
+Authenticate OpenCode Go once (`/connect -> OpenCode Go`) and keep the key in
+OpenCode's credential store. The gateway reads
+`~/.local/share/opencode/auth.json` at runtime. Never put credentials in
+SCALE, Codex config, work orders, telemetry, or Git.
 
-```text
-OpenCode Go DeepSeek V4 Flash: all DeepSeek control-plane and routine work
-Codex native profiles: implementation authority and named fallbacks
-OpenCode Go: explicitly eligible non-sensitive specialists, never a fake Codex provider
-```
-
-This conserves Codex limits only where a specialist is deliberately justified,
-while retaining native Codex ownership and trust-sensitive authority.
-
-## One-time local setup
-
-OpenCode Go is authenticated on the Mac. Inspect the live catalog when the
-model policy changes:
+Install the native catalog and global route with an explicit confirmation:
 
 ```bash
-brew install anomalyco/tap/opencode
-opencode
-# In the OpenCode TUI: /connect -> OpenCode Go -> paste the Go API key
-# Then: /models
-opencode auth list
-opencode models opencode-go
+node scripts/scale-install-opencode-native.mjs \
+  --codex-home /Users/lxxvii/.codex \
+  --allow-global-openai-proxy
 ```
 
-Use the model IDs reported by the final command. As of 2026-08-04, Go documents
-`opencode-go/deepseek-v4-flash`, `opencode-go/deepseek-v4-pro`, and several
-other models, but the provider's catalog is intentionally dynamic.
+The installer backs up `config.toml` and `models.json`, sets user-level
+`openai_base_url = "http://127.0.0.1:8787/v1"`, removes the incompatible custom
+provider, and adds all 18 current Go aliases. Restart Codex afterward because
+the desktop app caches the catalog. The gateway pass-through preserves ordinary
+Codex model requests; OpenCode slugs are handled locally.
 
-Credentials stay in OpenCode's credential store. Do not put the Go key in
-`opencode.json`, S.C.A.L.E., a shell history, or Git. The OpenCode Go account is
-an external processor: do not route secrets, private keys, production dumps,
-unredacted customer data, authentication material, or security investigations
-to it. In particular, gateway data-retention properties are model-specific and
-can change.
+SessionStart starts the gateway automatically. Manual health checks:
 
-## Validate the adapter
+```bash
+curl -sS http://127.0.0.1:8787/healthz
+curl -sS http://127.0.0.1:8787/v1/models
+```
 
-From the canonical S.C.A.L.E. repository, after authentication:
+The gateway selects protocols from the official Go model matrix: Luna uses
+Responses, most models use Chat Completions, and MiniMax/Qwen entries use
+Anthropic Messages. Standard function tools, tool-call history, and streaming
+Responses events are translated; Codex keeps sandbox, approvals, and tool
+execution.
+
+## Routing policy
+
+| Work | Native owner | Fallback/boundary |
+| --- | --- | --- |
+| Control plane and simple code | DeepSeek V4 Flash High | Luna xhigh; non-sensitive only |
+| Standard code | DeepSeek V4 Pro High | Terra High for sensitive/complex integration |
+| Critical/security/Git | Sol High or native QA | Never external final authority |
+| Web design | Kimi K3 max | Design packet only; Terra implements |
+| Frontend production | Terra High | Qwen 3.7 Plus is optional prototype input |
+| Routine/docs/research | DeepSeek Flash High or Luna | Bounded, privacy-gated context |
+
+The external dispatcher remains an opt-in legacy fallback. If used, report it
+as external execution and allow only one escalation; do not retry or silently
+switch to another Go model.
+
+## Validation and cost controls
 
 ```bash
 node scripts/validate-scale-model-registry.mjs \
-  --catalog "$HOME/.codex/models.json" \
-  --config "$HOME/.codex/config.toml" \
+  --catalog /Users/lxxvii/.codex/models.json \
+  --config /Users/lxxvii/.codex/config.toml \
   --opencode
-./scripts/validate-scale-agents.sh
-./scripts/validate-scale-library.sh
-./scripts/validate-scale-install.sh
+bash scripts/validate-scale-agents.sh
+bash scripts/validate-scale-library.sh
 ```
 
-The optional `--opencode` check runs only `opencode models opencode-go`; it does
-not read or print credentials. It confirms that the live Go catalog exposes the
-currently active S.C.A.L.E. Go model. If the provider replaces that model, the
-validator blocks promotion until the registry is updated and the replacement is
-benchmarked.
-
-## Daily routing policy
-
-| Work | Default owner | Optional Go specialist |
-| --- | --- | --- |
-| Control plane | Go `scale-go-orchestrator` / DeepSeek V4 Flash High | Native Luna gateway/fallback executes the dispatch contract. |
-| Routine evidence, docs, cleanup | Go DeepSeek V4 Flash High | Native Luna fallback after a Go failure. |
-| Isolated simple implementation | Go DeepSeek V4 Flash High | Native Terra fallback after a Go failure. |
-| Standard implementation | Codex Terra High | Go DeepSeek Pro High only for an eligible bounded work order. |
-| Web design | Go `scale-go-web-designer` / Kimi K3 max | Premium visual brief only; no edits or production implementation. |
-| Frontend implementation | Codex `scale_frontend` / Terra High | Go Qwen3.7 Plus High may prototype; Terra integrates. |
-| Prompt or research | Codex Luna/Terra High | Go Luna/GLM High for a non-sensitive advisory packet. |
-| Security and Git promotion | Native Sol/Terra | Never dispatched to Go. |
-
-For an exploration task, open the target project in OpenCode and select
-`scale-go-explorer`, or run:
-
-```bash
-opencode run --dir /absolute/path/to/project \
-  --agent scale-go-explorer \
-  "Map the exact files and symbols implementing <one bounded question>. Return evidence, recommended next action, and uncertainty only. Do not edit files."
-```
-
-Pass the resulting compact handoff to Codex rather than the whole transcript.
-This avoids paying for the same repository discovery twice. Do not use
-`--auto` for S.C.A.L.E. Go code agents: their edits and shell commands are
-intentionally approval-gated.
-
-## Cost controls
-
-1. Make one work order one objective, bounded path/scope, acceptance criteria,
-   requested output, and stop condition.
-2. SCALE uses per-profile budgets below a global hard ceiling: exploration is
-   ten steps, routine tasks twelve, prompt/QA fourteen, interface work twenty,
-   and standard code twenty-four. `scale_test_observer` is a separate
-   read-only monitor lane with a twenty-step default (up to the agent's
-   declared twenty-four-step contract through one justified adjustment) and a
-   longer wall-clock allowance; it does not inherit the routine worker's
-   smaller timeout.
-3. Reuse a Go session only for the same bounded problem. Start a fresh session
-   for a different subsystem so old context does not consume the five-hour Go
-   budget.
-4. Let local tests and deterministic checks reject routine failures. On a Go
-   catalog/quota/rate-limit signal, the dispatcher exits 75 and hands the same
-   task to its one native fallback. Escalate to Sol only at the critical
-   boundary above.
-5. Do not call both a native owner and a Go specialist for the same task unless
-   the specialist is intentionally producing an advisory or design handoff.
-   Use Kimi K3 only for high-value visual design work; its cost and max
-   reasoning make it unsuitable as an automatic coding fallback.
-6. The orchestrator can request one bounded budget adjustment only with a
-   concrete estimate. It may change at most two dimensions and cannot exceed
-   registry hard caps or the agent's declared steps. A default budget that is
-   sufficient must not be enlarged; this is the primary token-saving rule.
-
-OpenCode Go's published subscription budget is value-based, so request count
-depends on the selected model. Monitor it through the OpenCode console or
-`opencode stats`; do not silently enable overage balance as a S.C.A.L.E.
-default.
+Use the smallest per-profile context/step budget. The orchestrator may request
+one evidence-backed adjustment across at most two dimensions; the registry
+hard caps and one-fallback rule remain authoritative.

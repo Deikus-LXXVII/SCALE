@@ -25,7 +25,7 @@ const values = (name) => args.reduce((result, arg, index) => {
   if (arg === name && args[index + 1] && !args[index + 1].startsWith("--")) result.push(args[index + 1]);
   return result;
 }, []);
-const usage = () => console.log("Usage: scale-opencode-dispatch.mjs --target <project-dir> --profile <scale_profile> --work-order <file> [--specialist <id>] [--task-id <id>] [--budget-adjust <json-file>] [--context-file <path>]... [--allow-write] [--input-tokens <n>] [--output-tokens <n>] [--cost-usd <n>] [--task-outcome <success|partial|failure|unknown>] [--acceptance-outcome <passed|failed|not-run|unknown>] [--human-intervention <none|required>] [--knowledge-reuse <none|project|library|unknown>] [--regression <none|detected|unknown>]");
+const usage = () => console.log("Usage: scale-opencode-dispatch.mjs --target <project-dir> --profile <scale_profile> --work-order <file> [--specialist <id>] [--task-id <id>] [--transport <auto|api|cli>] [--budget-adjust <json-file>] [--context-file <path>]... [--allow-write] [--input-tokens <n>] [--output-tokens <n>] [--cost-usd <n>] [--task-outcome <success|partial|failure|unknown>] [--acceptance-outcome <passed|failed|not-run|unknown>] [--human-intervention <none|required>] [--knowledge-reuse <none|project|library|unknown>] [--regression <none|detected|unknown>]");
 
 if (args.includes("--help") || args.includes("-h")) {
   usage();
@@ -50,6 +50,7 @@ const boundedNumber = (flag) => {
 
 let target;
 let profile;
+let resolvedProfile = null;
 let workOrderInput;
 let specialistId;
 let taskId;
@@ -57,6 +58,7 @@ let contextFiles;
 let budgetAdjustmentInput;
 let taskOutcomeMetadata;
 let declaredUsage;
+let transportMode;
 try {
   const targetInput = resolve(value("--target"));
   if (!statSync(targetInput).isDirectory()) throw new Error("Target is not a directory");
@@ -67,6 +69,8 @@ try {
   taskId = optionalValue("--task-id") ?? randomUUID();
   contextFiles = values("--context-file");
   budgetAdjustmentInput = optionalValue("--budget-adjust");
+  transportMode = optionalValue("--transport") ?? process.env.SCALE_OPENCODE_TRANSPORT ?? "auto";
+  if (!["auto", "api", "cli"].includes(transportMode)) throw new Error("Invalid --transport");
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(taskId)) throw new Error("Invalid --task-id");
   taskOutcomeMetadata = Object.fromEntries(Object.entries({
     task_outcome: boundedEnum("--task-outcome", ["success", "partial", "failure", "unknown"]),
@@ -112,6 +116,7 @@ const startedAt = new Date().toISOString();
 const startedMs = Date.now();
 let routeSelectionReason = null;
 let catalogCheckStatus = "not-checked";
+let transportUsed = transportMode;
 let workOrderSha256 = null;
 let contextSha256 = [];
 let usageMetadata = Object.keys(declaredUsage).length > 0 ? { ...declaredUsage } : null;
@@ -122,11 +127,13 @@ const writeTelemetry = (event, details = {}) => {
       event,
       task_id: taskId,
       profile,
+      resolved_profile: resolvedProfile,
       specialist: specialistId ?? null,
       started_at: startedAt,
       finished_at: new Date().toISOString(),
       elapsed_ms: Date.now() - startedMs,
       route_selection_reason: routeSelectionReason,
+      transport: transportUsed,
       provider_catalog_check_status: catalogCheckStatus,
       work_order_sha256: workOrderSha256,
       context_sha256: contextSha256,
@@ -249,13 +256,19 @@ const extractUsage = (output) => {
   return candidates.sort((left, right) => Object.keys(right).length - Object.keys(left).length).at(0);
 };
 
-const binding = (registry.agent_bindings ?? []).find((entry) => entry.profile === profile);
-if (!binding) reject("unknown-profile");
+const overlayBinding = (registry.overlay_bindings ?? []).find((entry) => entry.profile === profile);
+resolvedProfile = overlayBinding?.base_profile ?? profile;
+const binding = (registry.agent_bindings ?? []).find((entry) => entry.profile === resolvedProfile);
+if (!binding) reject("unknown-profile", { resolved_profile: resolvedProfile });
 const selected = specialistId
   ? (binding.specialists ?? []).find((candidate) => candidate.id === specialistId)
   : binding.primary;
-routeSelectionReason = specialistId ? "explicit-specialist" : "profile-primary";
+routeSelectionReason = specialistId
+  ? "explicit-specialist"
+  : resolvedProfile !== profile ? "overlay-base-route" : "profile-primary";
 if (!selected) reject("unknown-specialist");
+if (overlayBinding?.dispatch_mode === "native") reject("overlay-native-route", { resolved_profile: resolvedProfile });
+if (overlayBinding?.dispatch_mode === "specialist-only" && !specialistId) reject("overlay-specialist-required", { resolved_profile: resolvedProfile });
 if (selected.execution !== "external-cli") reject("native-route", { model: selected.model });
 
 if (priorEvents.some((entry) => entry.event === "fallback_required") && runtimePolicy.max_escalations <= 1) {
@@ -287,7 +300,7 @@ const budgetFields = ["max_work_order_bytes", "max_context_files", "max_context_
 const hardBudget = Object.fromEntries(budgetFields.map((field) => [field, runtimePolicy[field]]));
 const defaultBudget = {
   ...Object.fromEntries(budgetFields.map((field) => [field, runtimePolicy.defaults?.[field] ?? runtimePolicy[field]])),
-  ...(runtimePolicy.agent_budgets?.[profile] ?? {})
+  ...(runtimePolicy.agent_budgets?.[resolvedProfile] ?? {})
 };
 const budgetAdjustmentPolicy = runtimePolicy.orchestrator_adjustment ?? {};
 let effectiveBudget = { ...defaultBudget };
@@ -345,6 +358,54 @@ if (budgetAdjustmentInput) {
 }
 
 const fallback = selected.fallback ?? binding.fallback ?? binding.primary;
+const apiBaseUrl = process.env.SCALE_OPENCODE_API_URL ?? process.env.OPENCODE_SERVER_URL ?? "";
+const apiEnabled = transportMode === "api" || (transportMode === "auto" && Boolean(apiBaseUrl));
+if (transportMode === "api" && !apiBaseUrl) reject("api-url-required");
+const apiClientPath = resolve(root, "scripts/scale-opencode-api-client.mjs");
+const parseClientResult = (output) => {
+  const lines = output.split(/\r?\n/).filter(Boolean);
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    try { return JSON.parse(lines[index]); } catch { /* diagnostics may precede the JSON result */ }
+  }
+  return null;
+};
+const callApiClient = (operation, timeoutMs) => {
+  const result = spawnSync(process.execPath, [apiClientPath], {
+    input: JSON.stringify({
+      operation,
+      base_url: apiBaseUrl,
+      target,
+      model: selected.model,
+      agent: selected.agent,
+      reasoning_effort: selected.reasoning_effort,
+      prompt,
+      task_id: taskId,
+      timeout_ms: timeoutMs
+    }),
+    encoding: "utf8",
+    timeout: timeoutMs + 5000,
+    env: process.env
+  });
+  const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+  return { result, output, parsed: parseClientResult(output) };
+};
+const fallbackRequired = (reason, details = {}) => {
+  writeTelemetry("fallback_required", {
+    reason,
+    fallback_reason: reason,
+    exit_reason: "fallback-required",
+    model: selected.model,
+    reasoning_effort: selected.reasoning_effort,
+    fallback,
+    budget: effectiveBudget,
+    work_order_bytes: workOrderBytes,
+    context_file_count: contextFiles.length,
+    context_bytes: contextBytes,
+    ...details
+  });
+  console.log(JSON.stringify({ status: "fallback-required", reason, profile, resolved_profile: resolvedProfile, specialist: specialistId, fallback }));
+  process.exit(75);
+};
 const agentPath = resolveTargetFile(resolve(target, ".opencode/agents", `${selected.agent}.md`), "managed-agent");
 const agentBuffer = readFileSync(agentPath);
 const agentHash = sha256(agentBuffer);
@@ -401,58 +462,67 @@ if (contextBytes > effectiveBudget.max_context_bytes) {
   reject("context-byte-budget-exceeded", { bytes: contextBytes, max_context_bytes: effectiveBudget.max_context_bytes, hard_max_context_bytes: hardBudget.max_context_bytes });
 }
 
-const catalog = spawnSync("opencode", ["models", "opencode-go"], { encoding: "utf8" });
-const catalogOutput = `${catalog.stdout ?? ""}\n${catalog.stderr ?? ""}`;
-catalogCheckStatus = catalog.error || catalog.status !== 0 || !catalogOutput.includes(selected.model) ? "failed" : "passed";
-if (catalogCheckStatus === "failed") {
-  const outputBytes = Buffer.byteLength(catalogOutput);
-  writeTelemetry("fallback_required", {
-    reason: "opencode-catalog-unavailable",
-    fallback_reason: "opencode-catalog-unavailable",
-    exit_reason: "fallback-required",
-    model: selected.model,
-    reasoning_effort: selected.reasoning_effort,
-    fallback,
-    budget: effectiveBudget,
-    work_order_bytes: workOrderBytes,
-    context_file_count: contextFiles.length,
-    context_bytes: contextBytes,
-    exit_status: catalog.status ?? null,
-    output_sha256: sha256(catalogOutput),
-    output_bytes: outputBytes
-  });
-  console.log(JSON.stringify({ status: "fallback-required", reason: "opencode-catalog-unavailable", profile, specialist: specialistId, fallback }));
-  process.exit(75);
-}
+let output;
+if (apiEnabled) {
+  transportUsed = "api";
+  const probe = callApiClient("probe", Math.min(effectiveBudget.max_dispatch_ms, 30000));
+  catalogCheckStatus = probe.parsed?.ok ? "passed" : "failed";
+  if (!probe.parsed?.ok) {
+    const reason = probe.parsed?.reason === "opencode-go-limit" ? "opencode-go-limit" : "opencode-api-unavailable";
+    fallbackRequired(reason, {
+      exit_status: probe.result.status ?? null,
+      api_reason: probe.parsed?.reason ?? "invalid-api-response",
+      output_sha256: sha256(probe.output),
+      output_bytes: Buffer.byteLength(probe.output)
+    });
+  }
+  const apiRun = callApiClient("run", effectiveBudget.max_dispatch_ms);
+  if (!apiRun.parsed?.ok) {
+    const childTimedOut = apiRun.result.error?.code === "ETIMEDOUT";
+    const reason = apiRun.parsed?.reason === "opencode-go-limit" ? "opencode-go-limit" : childTimedOut || apiRun.parsed?.reason === "api-timeout" ? "dispatch-timeout" : "opencode-api-exit";
+    fallbackRequired(reason, {
+      exit_status: apiRun.result.status ?? null,
+      api_reason: apiRun.parsed?.reason ?? "invalid-api-response",
+      output_sha256: sha256(apiRun.output),
+      output_bytes: Buffer.byteLength(apiRun.output)
+    });
+  }
+  output = String(apiRun.parsed.output ?? "");
+} else {
+  transportUsed = "cli";
+  const catalog = spawnSync("opencode", ["models", "opencode-go"], { encoding: "utf8" });
+  const catalogOutput = `${catalog.stdout ?? ""}\n${catalog.stderr ?? ""}`;
+  catalogCheckStatus = catalog.error || catalog.status !== 0 || !catalogOutput.includes(selected.model) ? "failed" : "passed";
+  if (catalogCheckStatus === "failed") {
+    const outputBytes = Buffer.byteLength(catalogOutput);
+    const catalogRuntimeIssue = /FileSystem\.open|EACCES|EPERM|operation not permitted/i.test(catalogOutput)
+      ? "sandbox-blocked"
+      : "unavailable";
+    fallbackRequired("opencode-catalog-unavailable", {
+      exit_status: catalog.status ?? null,
+      catalog_runtime_issue: catalogRuntimeIssue,
+      output_sha256: sha256(catalogOutput),
+      output_bytes: outputBytes
+    });
+  }
 
-const command = ["run", "--dir", target, "--agent", selected.agent, "--model", selected.model];
-if (selected.reasoning_effort !== "provider-default") command.push("--variant", selected.reasoning_effort);
-command.push("--format", "json");
-if (args.includes("--allow-write")) command.push("--auto");
-command.push(prompt);
-const result = spawnSync("opencode", command, { encoding: "utf8", timeout: effectiveBudget.max_dispatch_ms });
-const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
-const quotaFailure = /(?:quota|rate\s*limit|usage\s*limit|credit|limit\s*reached|status\s*429)/i.test(output);
-const timedOut = result.error?.code === "ETIMEDOUT";
-if (quotaFailure || timedOut || result.status !== 0) {
-  const reason = quotaFailure ? "opencode-go-limit" : timedOut ? "dispatch-timeout" : "opencode-exit";
-  writeTelemetry("fallback_required", {
-    reason,
-    fallback_reason: reason,
-    exit_reason: "fallback-required",
-    model: selected.model,
-    reasoning_effort: selected.reasoning_effort,
-    fallback,
-    budget: effectiveBudget,
-    work_order_bytes: workOrderBytes,
-    context_file_count: contextFiles.length,
-    context_bytes: contextBytes,
-    exit_status: result.status ?? null,
-    output_sha256: sha256(output),
-    output_bytes: Buffer.byteLength(output)
-  });
-  console.log(JSON.stringify({ status: "fallback-required", reason, profile, specialist: specialistId, fallback }));
-  process.exit(75);
+  const command = ["run", "--dir", target, "--agent", selected.agent, "--model", selected.model];
+  if (selected.reasoning_effort !== "provider-default") command.push("--variant", selected.reasoning_effort);
+  command.push("--format", "json");
+  if (args.includes("--allow-write")) command.push("--auto");
+  command.push(prompt);
+  const result = spawnSync("opencode", command, { encoding: "utf8", timeout: effectiveBudget.max_dispatch_ms });
+  output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+  const quotaFailure = /(?:quota|rate\s*limit|usage\s*limit|credit|limit\s*reached|status\s*429)/i.test(output);
+  const timedOut = result.error?.code === "ETIMEDOUT";
+  if (quotaFailure || timedOut || result.status !== 0) {
+    const reason = quotaFailure ? "opencode-go-limit" : timedOut ? "dispatch-timeout" : "opencode-exit";
+    fallbackRequired(reason, {
+      exit_status: result.status ?? null,
+      output_sha256: sha256(output),
+      output_bytes: Buffer.byteLength(output)
+    });
+  }
 }
 usageMetadata = { ...(extractUsage(output) ?? {}), ...(usageMetadata ?? {}) };
 writeTelemetry("completed", {
@@ -463,7 +533,8 @@ writeTelemetry("completed", {
   work_order_bytes: workOrderBytes,
   context_file_count: contextFiles.length,
   context_bytes: contextBytes,
-  exit_status: result.status ?? 0,
+  transport: transportUsed,
+  exit_status: 0,
   exit_reason: "completed",
   fallback_reason: null,
   output_sha256: sha256(output),
@@ -477,6 +548,5 @@ writeTelemetry("completed", {
   },
   allow_write: args.includes("--allow-write")
 });
-process.stdout.write(result.stdout ?? "");
-process.stderr.write(result.stderr ?? "");
-process.exit(result.status ?? 1);
+process.stdout.write(output);
+process.exit(0);

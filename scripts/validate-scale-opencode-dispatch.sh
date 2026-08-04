@@ -2,6 +2,9 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Keep the CLI fixture deterministic even when a user's shell enables the
+# optional OpenCode API transport globally.
+unset SCALE_OPENCODE_TRANSPORT SCALE_OPENCODE_API_URL OPENCODE_SERVER_URL
 workspace="$(mktemp -d "${TMPDIR:-/tmp}/scale-opencode-dispatch.XXXXXX")"
 fake_bin="$workspace/bin"
 target="$workspace/target"
@@ -12,7 +15,7 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "$fake_bin" "$target/.opencode/agents" "$target/.codex/scale-library-src/opencode/agents"
-for agent in scale-go-routine.md scale-go-code-standard.md scale-go-monitor.md; do
+for agent in scale-go-routine.md scale-go-code-standard.md scale-go-monitor.md scale-go-orchestrator.md; do
   cp "$root/opencode/agents/$agent" "$target/.codex/scale-library-src/opencode/agents/$agent"
   ln -s "../../.codex/scale-library-src/opencode/agents/$agent" "$target/.opencode/agents/$agent"
 done
@@ -39,6 +42,19 @@ exit 1
 EOF
 chmod +x "$fake_bin/opencode"
 
+telemetry="$target/.codex/scale-telemetry.jsonl"
+overlay_success="$(SCALE_TEST_SUCCESS=1 PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_telik_orchestrator --work-order work-order.md --task-id overlay-fixture)"
+[[ "$overlay_success" == *'"result":"ok"'* ]]
+node - "$telemetry" <<'NODE'
+const fs = require("node:fs");
+const events = fs.readFileSync(process.argv[2], "utf8").trim().split("\n").map(JSON.parse);
+const completed = events.find((event) => event.task_id === "overlay-fixture" && event.event === "completed");
+if (!completed) process.exit(1);
+if (completed.profile !== "scale_telik_orchestrator") process.exit(2);
+if (completed.resolved_profile !== "scale_orchestrator") process.exit(3);
+if (completed.route_selection_reason !== "overlay-base-route") process.exit(4);
+NODE
+
 set +e
 output="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_docs --work-order work-order.md --context-file context.md --task-id dispatch-fixture 2>&1)"
 status=$?
@@ -50,11 +66,10 @@ set -e
 [[ "$output" == *'"profile":"scale_docs"'* ]]
 [[ "$output" == *'"model":"gpt-5.6-luna"'* ]]
 
-telemetry="$target/.codex/scale-telemetry.jsonl"
 [[ -s "$telemetry" ]]
 report="$(node "$root/scripts/scale-telemetry-report.mjs" --input "$telemetry" --json)"
-[[ "$report" == *'"tasks": 1'* ]]
-[[ "$report" == *'"fallback_rate": 1'* ]]
+[[ "$report" == *'"tasks": 2'* ]]
+[[ "$report" == *'"fallback_rate": 0.5'* ]]
 
 set +e
 repeat="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_docs --work-order work-order.md --task-id dispatch-fixture 2>&1)"
@@ -85,7 +100,7 @@ set -e
 [[ "$oversized_adjustment" == *'budget-adjustment-increase-too-large'* ]]
 
 set +e
-adjusted="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_code_standard --specialist go-standard-code --work-order work-order.md --budget-adjust budget-adjust.json --task-id adjusted-fixture 2>&1)"
+adjusted="$(PATH="$fake_bin:$PATH" node "$root/scripts/scale-opencode-dispatch.mjs" --target "$target" --profile scale_code_standard --work-order work-order.md --budget-adjust budget-adjust.json --task-id adjusted-fixture 2>&1)"
 adjusted_status=$?
 set -e
 [[ "$adjusted_status" -eq 75 ]]
