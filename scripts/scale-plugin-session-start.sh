@@ -8,9 +8,21 @@ if [[ -z "$project_root" ]]; then
   exit 0
 fi
 
+# The canonical SCALE checkout is itself a Git project. Do not ask the global
+# plugin to clone SCALE into `.codex/scale-library-src` inside that checkout:
+# development of SCALE happens from the canonical tree, while connected
+# product projects receive a separate sparse clone.
+scale_remote_url="${SCALE_REMOTE_URL:-https://github.com/Deikus-LXXVII/SCALE.git}"
+origin_url="$(git -C "$project_root" remote get-url origin 2>/dev/null || true)"
+if [[ -f "$project_root/.codex-plugin/plugin.json" ]] \
+  && rg -q '"name"[[:space:]]*:[[:space:]]*"scale"' "$project_root/.codex-plugin/plugin.json" \
+  && [[ "${origin_url%.git}" == "${scale_remote_url%.git}" ]]; then
+  printf '%s\n' 'S.C.A.L.E.: canonical library checkout active; self-clone skipped.'
+  exit 0
+fi
+
 refresh_script="$project_root/.codex/scale-library-src/scripts/scale-library-refresh.sh"
 if [[ ! -x "$refresh_script" ]]; then
-  scale_remote_url="${SCALE_REMOTE_URL:-https://github.com/Deikus-LXXVII/SCALE.git}"
   scale_branch="${SCALE_BRANCH:-main}"
   printf 'S.C.A.L.E.: connecting this Git project to %s.\n' "$scale_remote_url"
   if ! bash "$plugin_root/scripts/scale-library-install.sh" \

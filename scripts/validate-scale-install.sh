@@ -19,6 +19,7 @@ git -C "$source_repo" config user.name 'SCALE install test'
 git -C "$source_repo" add .
 git -C "$source_repo" commit --quiet -m 'fixture: SCALE library'
 git -C "$source_repo" branch -M main
+git -C "$source_repo" remote add origin "$source_repo"
 
 git -C "$target_repo" init --quiet
 git -C "$target_repo" config user.email 'scale-test@example.invalid'
@@ -122,5 +123,9 @@ git -C "$global_target" commit --quiet -m 'fixture: global target'
 rg -qxF '.codex/scale-library-src/' "$global_target/.git/info/exclude"
 rg -qxF '.codex/scale-telemetry.jsonl' "$global_target/.git/info/exclude"
 rg -qxF '.opencode/agents/scale-go-*' "$global_target/.git/info/exclude"
+
+canonical_output="$(cd "$source_repo" && SCALE_REMOTE_URL="$source_repo" bash "$source_repo/scripts/scale-plugin-session-start.sh")"
+[[ "$canonical_output" == *'canonical library checkout active; self-clone skipped.'* ]]
+[[ ! -e "$source_repo/.codex/scale-library-src" ]]
 
 printf '%s\n' 'Validated S.C.A.L.E. install, local-path preservation, hooks preservation, and dynamic profile/skill materialization.'
