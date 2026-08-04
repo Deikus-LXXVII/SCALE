@@ -118,6 +118,7 @@ git -C "$global_target" commit --quiet -m 'fixture: global target'
 [[ ! -e "$global_target/.codex/hooks.json" ]]
 [[ ! -e "$global_target/.gitignore" ]]
 rg -qxF '.codex/scale-library-src/' "$global_target/.git/info/exclude"
+rg -qxF '.codex/scale-telemetry.jsonl' "$global_target/.git/info/exclude"
 rg -qxF '.opencode/agents/scale-go-*' "$global_target/.git/info/exclude"
 
 printf '%s\n' 'Validated S.C.A.L.E. install, local-path preservation, hooks preservation, and dynamic profile/skill materialization.'

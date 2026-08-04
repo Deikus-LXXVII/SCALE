@@ -11,8 +11,8 @@
 #     (single-line flow-sequence only — this is an intentional
 #     constraint, not an oversight: a full YAML block-sequence parser would need a
 #     jq/python3 dependency this repo deliberately avoids).
-#   - library/agents/*.md: a `## Tags` body section, tag list on the very next
-#     non-blank line, comma-separated, no brackets.
+#   - library/agents/*.md: YAML frontmatter `tags: [...]` (the same format as
+#     rules/books; legacy `## Tags` body sections remain supported).
 
 set -eu
 
@@ -53,12 +53,27 @@ for tag in "$@"; do
         ' "$f"
     done
 
-    # --- 2. library/agents/*.md: `## Tags` body section — tag list is the next
-    #        non-blank line after the heading ---
+    # --- 2. library/agents/*.md: YAML frontmatter, with a legacy body fallback ---
     for f in "$LIB_DIR"/agents/*.md; do
         [ -f "$f" ] || continue
         [ "$(basename "$f")" = "README.md" ] && continue
         awk -v tag="$tag" -v file="$f" '
+            /^---[ \t]*$/ {
+                fmcount++
+                if (fmcount == 2) exit
+                next
+            }
+            fmcount == 1 && /^tags:/ {
+                line = $0
+                sub(/^tags:[ \t]*\[?/, "", line)
+                sub(/\][ \t]*$/, "", line)
+                n = split(line, parts, ",")
+                for (i = 1; i <= n; i++) {
+                    t = parts[i]
+                    gsub(/^[ \t"]+|[ \t"]+$/, "", t)
+                    if (t == tag) print tag "\t" file
+                }
+            }
             /^## Tags[ \t]*$/ { armed = 1; next }
             armed && NF == 0 { next }
             armed {

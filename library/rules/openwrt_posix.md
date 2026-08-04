@@ -1,6 +1,13 @@
 ---
 description: "Domain rules for OpenWrt 21.02+, POSIX Shell (ash), procd, ubus, and UCI."
 tags: [openwrt, posix, embedded-linux, uci, procd, ubus]
+status: curated
+provenance:
+  source: "canonical SCALE Git history"
+  evidence: "Baseline entry reviewed during SCALE governance migration; requires task-specific validation."
+  compatibility: "SCALE >= 0.1.4"
+  validated_on: "2026-08-04"
+  review_after: "2026-11-02"
 ---
 
 # OpenWrt System & Shell Development Standards

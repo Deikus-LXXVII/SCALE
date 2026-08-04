@@ -1,6 +1,13 @@
 ---
 description: "Domain rules for modern Client-Side Rendering (CSR) apps in LuCI using ES6+ and OpenWrt JSON-RPC."
 tags: [openwrt, luci, frontend, javascript, csr]
+status: curated
+provenance:
+  source: "canonical SCALE Git history"
+  evidence: "Baseline entry reviewed during SCALE governance migration; requires task-specific validation."
+  compatibility: "SCALE >= 0.1.4"
+  validated_on: "2026-08-04"
+  review_after: "2026-11-02"
 ---
 
 # LuCI CSR (Client-Side Rendering) Development Standards

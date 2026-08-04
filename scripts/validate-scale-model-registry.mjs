@@ -39,6 +39,16 @@ requireValue([1, 2, 3, 4].includes(registry.schema_version), "model registry mus
 requireValue(Array.isArray(registry.providers) && registry.providers.length > 0, "model registry has no providers");
 requireValue(Array.isArray(registry.models) && registry.models.length > 0, "model registry has no models");
 requireValue(Array.isArray(registry.routes) && registry.routes.length > 0, "model registry has no routes");
+requireValue(registry.runtime_policy && typeof registry.runtime_policy === "object", "model registry has no runtime_policy");
+for (const key of ["telemetry_path", "max_work_order_bytes", "max_context_files", "max_context_bytes", "max_agent_steps", "max_dispatch_ms", "max_escalations", "direct_route"]) {
+  requireValue(registry.runtime_policy?.[key] !== undefined, `runtime_policy is missing ${key}`);
+}
+requireValue(Number.isInteger(registry.runtime_policy?.max_work_order_bytes) && registry.runtime_policy.max_work_order_bytes > 0, "runtime_policy.max_work_order_bytes must be a positive integer");
+requireValue(Number.isInteger(registry.runtime_policy?.max_context_files) && registry.runtime_policy.max_context_files > 0, "runtime_policy.max_context_files must be a positive integer");
+requireValue(Number.isInteger(registry.runtime_policy?.max_context_bytes) && registry.runtime_policy.max_context_bytes > 0, "runtime_policy.max_context_bytes must be a positive integer");
+requireValue(Number.isInteger(registry.runtime_policy?.max_agent_steps) && registry.runtime_policy.max_agent_steps > 0, "runtime_policy.max_agent_steps must be a positive integer");
+requireValue(Number.isInteger(registry.runtime_policy?.max_dispatch_ms) && registry.runtime_policy.max_dispatch_ms > 0, "runtime_policy.max_dispatch_ms must be a positive integer");
+requireValue(Number.isInteger(registry.runtime_policy?.max_escalations) && registry.runtime_policy.max_escalations >= 0, "runtime_policy.max_escalations must be a non-negative integer");
 
 const providers = new Map();
 for (const provider of registry.providers ?? []) {

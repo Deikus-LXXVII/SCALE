@@ -1,6 +1,13 @@
 ---
 description: "2025-2026 best practices for hardening macOS XPC services against unauthorized clients (audit-token validation, Team ID/Bundle ID checks, common mistakes), plus concrete guidance on choosing Secure Enclave vs. Keychain for cryptographic keys used by an XPC-connected daemon on Apple Silicon."
 tags: [xpc, security, swift, macos, cryptokit, apple-silicon]
+status: curated
+provenance:
+  source: "canonical SCALE Git history"
+  evidence: "Baseline entry reviewed during SCALE governance migration; requires task-specific validation."
+  compatibility: "SCALE >= 0.1.4"
+  validated_on: "2026-08-04"
+  review_after: "2026-11-02"
 ---
 
 # macOS XPC Hardening & Secure Enclave vs. Keychain (2025-2026)

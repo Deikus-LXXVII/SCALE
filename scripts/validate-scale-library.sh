@@ -5,6 +5,10 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 taxonomy="$root/library/tag-taxonomy.md"
 status=0
 
+if ! node "$root/scripts/validate-scale-knowledge.mjs"; then
+  status=1
+fi
+
 for entry in "$root"/library/rules/*.md "$root"/library/books/*.md; do
   [[ -f "$entry" ]] || continue
   [[ "$(basename "$entry")" == "README.md" ]] && continue

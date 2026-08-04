@@ -1,6 +1,13 @@
 ---
 description: "Rules for building audio pipelines (STT, TTS, Routing) on Apple Silicon."
 tags: [audio, macos, apple-silicon, stt, tts, real-time]
+status: curated
+provenance:
+  source: "canonical SCALE Git history"
+  evidence: "Baseline entry reviewed during SCALE governance migration; requires task-specific validation."
+  compatibility: "SCALE >= 0.1.4"
+  validated_on: "2026-08-04"
+  review_after: "2026-11-02"
 ---
 
 # Builder Domain Rules: Audio Pipelines (Apple Silicon)

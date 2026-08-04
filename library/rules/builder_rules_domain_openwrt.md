@@ -1,6 +1,13 @@
 ---
 description: "Architectural rules for OpenWrt development (POSIX, UCI, procd, ubus)."
 tags: [openwrt, posix, embedded-linux, uci, procd, ubus]
+status: curated
+provenance:
+  source: "canonical SCALE Git history"
+  evidence: "Baseline entry reviewed during SCALE governance migration; requires task-specific validation."
+  compatibility: "SCALE >= 0.1.4"
+  validated_on: "2026-08-04"
+  review_after: "2026-11-02"
 ---
 
 # Builder Domain Rules: OpenWrt

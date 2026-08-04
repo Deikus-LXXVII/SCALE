@@ -78,6 +78,22 @@ if [[ -n "$model_paths_changed" ]]; then
   fi
 fi
 
+knowledge_paths_changed="$(git -C "$library_repo" diff --name-only "$current_revision" "$remote_revision" -- library/rules library/books library/agents)"
+if [[ -n "$knowledge_paths_changed" ]]; then
+  knowledge_audit_root="$(mktemp -d "${TMPDIR:-/tmp}/scale-knowledge-audit.XXXXXX")"
+  if ! git -C "$library_repo" archive "$remote_revision" library/rules library/books library/agents | tar -x -C "$knowledge_audit_root"; then
+    rm -rf "$knowledge_audit_root"
+    printf '%s\n' 'S.C.A.L.E.: could not prepare incoming knowledge for validation; keeping the current snapshot.'
+    exit 0
+  fi
+  if ! node "$library_repo/scripts/validate-scale-knowledge.mjs" --library-root "$knowledge_audit_root/library"; then
+    rm -rf "$knowledge_audit_root"
+    printf '%s\n' 'S.C.A.L.E.: incoming knowledge governance failed; keeping the current snapshot.'
+    exit 0
+  fi
+  rm -rf "$knowledge_audit_root"
+fi
+
 if git -C "$library_repo" merge --ff-only --quiet "$remote_revision"; then
   bash "$library_repo/scripts/scale-library-materialize.sh" --target "$session_root"
   revision="$(git -C "$library_repo" rev-parse --short HEAD)"

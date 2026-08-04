@@ -1,6 +1,16 @@
 {
   "schema_version": 4,
   "description": "Canonical S.C.A.L.E. hybrid model policy. Codex supplies native models and fallback authority; OpenCode Go supplies external specialists, including every DeepSeek V4 Flash route. This file contains no credentials.",
+  "runtime_policy": {
+    "telemetry_path": ".codex/scale-telemetry.jsonl",
+    "max_work_order_bytes": 32000,
+    "max_context_files": 12,
+    "max_context_bytes": 120000,
+    "max_agent_steps": 24,
+    "max_dispatch_ms": 900000,
+    "max_escalations": 1,
+    "direct_route": "If the caller provides an explicit SCALE profile, bounded files, acceptance criteria, and a low-risk scope, dispatch that profile directly without an orchestration turn."
+  },
   "providers": [
     {"id": "codex", "kind": "native", "catalog_owner": "Codex", "update_policy": "Discover the locally installed catalog; update approved IDs only after validation and a focused benchmark."},
     {"id": "opencode-go", "kind": "external-cli", "runtime_command": "opencode", "runtime_provider": "opencode-go", "catalog_owner": "user's OpenCode Go subscription", "update_policy": "Discover live models with `opencode models opencode-go`. Do not represent Go as a Codex provider: its models use different API protocols and are invoked through the local OpenCode agent runtime."}

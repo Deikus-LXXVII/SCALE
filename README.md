@@ -21,6 +21,7 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 - `library/quirks/` — persistent operational memory for every role.
 - `library/tag-taxonomy.md` and `find-by-tag.sh` — governed semantic retrieval without broad scans.
 - `library/model-registry.json` — credential-free provider/model policy and stable code-complexity routes.
+- `library/*` frontmatter — provenance, compatibility, review/expiry, status, and optional conflict/supersession metadata for durable knowledge.
 - `scripts/scale-library-*.sh` — safe library refresh, project connection, and role activation; model-policy updates are compatibility-gated before materialization.
 - `.codex/hooks.json` and `hooks/hooks.json` — trusted SessionStart hooks that refresh and materialize an attached library clone.
 
@@ -69,7 +70,9 @@ the global plugin skills but are not materialized as S.C.A.L.E. projects.
 4. `scale_qa` validates profiles and metadata.
 5. `scale_git` pulls, selectively commits, and pushes the validated library changes to the canonical remote.
 
-Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Every DeepSeek V4 Flash route runs through authenticated OpenCode Go; the native Codex lane is a named fallback, never the DeepSeek API. Terra/Sol/Luna retain their Codex roles, Kimi K2.7 Code owns premium web-design packets, and Terra owns production frontend implementation. The registry governs exact IDs, reasoning efforts, cost boundaries, and provider compatibility.
+Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) for allocation. Every DeepSeek V4 Flash route runs through authenticated OpenCode Go; the native Codex lane is a named fallback, never the DeepSeek API. Terra/Sol/Luna retain their Codex roles, Kimi K2.7 Code owns premium web-design packets, and Terra owns production frontend implementation. The registry governs exact IDs, reasoning efforts, cost boundaries, provider compatibility, and runtime budgets. An explicit low-risk profile with bounded files uses the direct route and skips an unnecessary orchestration turn.
+
+Dispatcher telemetry is project-local JSONL at `.codex/scale-telemetry.jsonl` (ignored by Git). It records completed, rejected, and fallback-required events without prompts or credentials. Inspect it with `node scripts/scale-telemetry-report.mjs --input <project>/.codex/scale-telemetry.jsonl --json`. The dispatcher enforces work-order bytes, optional context-file count/bytes, OpenCode agent steps, timeout, and one fallback escalation per task.
 
 ## Validate
 
@@ -78,6 +81,7 @@ Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) fo
 ./scripts/validate-scale-opencode-agents.sh
 ./scripts/validate-scale-opencode-dispatch.sh
 ./scripts/validate-scale-library.sh
+./scripts/validate-scale-knowledge.sh
 ./scripts/validate-scale-install.sh
 ```
 

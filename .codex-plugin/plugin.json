@@ -1,7 +1,7 @@
 {
   "name": "scale",
-  "version": "0.1.4+codex.20260804",
-  "description": "Self-evolving Codex Agent Library Ecosystem with OpenCode Go DeepSeek routing and native Codex fallbacks.",
+  "version": "0.1.5+codex.20260804",
+  "description": "Self-evolving Codex Agent Library Ecosystem with governed knowledge, budgeted telemetry, OpenCode Go DeepSeek routing, and native Codex fallbacks.",
   "author": {
     "name": "Deikus-LXXVII"
   },

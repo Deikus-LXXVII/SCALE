@@ -50,11 +50,13 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 ## Model policy
 
 - `scale_orchestrator` dispatches through OpenCode Go DeepSeek V4 Flash with `high`; native Codex Luna is its gateway/fallback only. It writes bounded work orders, selects `agent_bindings`, and receives deterministic fallbacks.
+- When the caller already provides a bounded low-risk profile, explicit files, acceptance criteria, and a stop condition, use that profile directly and skip an extra orchestration turn.
 - Codex profiles remain primary for Terra standard implementation and production frontend work, Sol critical authority, Luna fallback/prompt work, and auto-review QA. Every DeepSeek V4 Flash assignment is an OpenCode Go route; the DeepSeek API is not configured or used.
 - Kimi K2.7 Code is the premium web-design specialist: it creates a design packet, never production UI code. Terra's `scale_frontend` implements the handoff. Security and Git promotion remain native Codex. A Go quota signal is routed once to the exact native fallback in the binding; it is never retried in a loop.
 - Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
 - DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. As the Codex orchestrator, it must write one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition before dispatching Go. Independently validate global promotion and high-impact decisions.
 - `library/model-registry.json` is the provider-neutral source of truth for approved providers, model IDs, efforts, and routes. It contains no credentials. Codex-native and Codex-external models are validated against the local Codex catalog; external CLI providers such as OpenCode Go are validated by their own executable and must never be represented as a fake Codex provider. New native or external code-default models are admitted only after catalog validation and a focused benchmark.
+- The dispatcher enforces the registry runtime policy: bounded work-order/context bytes, OpenCode agent steps, a timeout, and at most one fallback escalation per task. It writes credential-free JSONL telemetry to the project-local ignored `.codex/scale-telemetry.jsonl`.
 
 ## Collaboration rules
 
@@ -63,3 +65,4 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 3. A new durable fact must have a home: project fact → `docs.llm`, domain rule → `library/rules`, researched fact → `library/books`, role design → `library/agents`, operational workaround → `library/quirks`, model/provider policy → `library/model-registry.json`.
 4. Preserve user changes. Use `rg` for search, `apply_patch` for edits, and never use destructive Git commands unless explicitly requested.
 5. Project-level rules belong in `AGENTS.md`; Codex runtime defaults in `.codex/config.toml`; role settings in `.codex/agents`; reusable procedures in `skills`.
+6. Durable library entries require provenance, evidence, compatibility, validation/review dates, and explicit conflict or supersession links where needed. Candidates remain shadow-evaluated until deterministic or human review promotes them.

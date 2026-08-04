@@ -9,7 +9,7 @@ library/agents/scale_rust_reviewer.toml  # executable Codex custom-agent profile
 library/agents/scale_rust_reviewer.md    # tagged design note discoverable by find-by-tag.sh
 ```
 
-The TOML profile must contain `name`, `description`, `model`, `model_reasoning_effort`, and `developer_instructions`. The Markdown design note must have YAML frontmatter with `description` and canonical `tags`, then explain the trigger, knowledge source, scope, sandbox choice, and validation expectations.
+The TOML profile must contain `name`, `description`, `model`, `model_reasoning_effort`, and `developer_instructions`. The Markdown design note must have YAML frontmatter with `description`, canonical `tags`, `status`, and the full `provenance` block (`source`, `evidence`, `compatibility`, `validated_on`, `review_after`), then explain the trigger, knowledge source, scope, sandbox choice, and validation expectations. Optional `conflicts_with` and `supersedes` lists make relationships explicit.
 
 To activate a catalogued role in a connected project, use `scripts/scale-agent-activate.sh`. It symlinks the profile into the target project's `.codex/agents/` without overwriting a project-owned profile.
 

@@ -1,6 +1,13 @@
 ---
 description: "Guidance for writing Codex custom-agent and skill instructions in this repository."
 tags: [prompt-engineering, codex, agent-design]
+status: curated
+provenance:
+  source: "canonical SCALE Git history"
+  evidence: "Baseline entry reviewed during SCALE governance migration; requires task-specific validation."
+  compatibility: "SCALE >= 0.1.4"
+  validated_on: "2026-08-04"
+  review_after: "2026-11-02"
 ---
 # Domain Rules: Prompt Engineering for Codex
 

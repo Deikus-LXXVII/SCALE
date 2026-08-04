@@ -82,7 +82,7 @@ if [[ "$local_ignore" == true ]]; then
 else
   gitignore_file="$target_root/.gitignore"
 fi
-for ignored_path in '.codex/scale-library-src/' '.codex/scale-library' '.agents/skills/scale-*' '.opencode/agents/scale-go-*'; do
+for ignored_path in '.codex/scale-library-src/' '.codex/scale-library' '.codex/scale-telemetry.jsonl' '.agents/skills/scale-*' '.opencode/agents/scale-go-*'; do
   if [[ -f "$gitignore_file" ]]; then
     rg -qxF "$ignored_path" "$gitignore_file" || printf '%s\n' "$ignored_path" >> "$gitignore_file"
   else

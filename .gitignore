@@ -45,3 +45,4 @@ dist/
 .codex/cache/
 .codex/scale-library-src/
 .codex/scale-library
+.codex/scale-telemetry.jsonl
