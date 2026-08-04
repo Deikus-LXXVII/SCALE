@@ -37,6 +37,12 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 | Swift/macOS, OpenWrt, or audio domain work | `scale_swift`, `scale_openwrt`, `scale_audio` |
 | Prompt/instruction design | `scale_prompt` |
 | Environment, documentation, cleanup, library lookup, or integrity scan | `scale_environment`, `scale_docs`, `scale_cleaner`, `scale_library`, `scale_indexer` |
+| Policy and source-of-truth drift audit | `scale_policy_auditor` |
+| External-dispatch privacy and boundary gate | `scale_privacy_gate` |
+| Model/provider lifecycle and admission review | `scale_model_ops` |
+| Direct-vs-SCALE benchmark and efficiency measurement | `scale_benchmark` |
+| Candidate knowledge and retrieval evaluation | `scale_knowledge_eval` |
+| Connected-project sync and materialization health | `scale_sync` |
 
 ## Differentiation and promotion
 
@@ -52,11 +58,12 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 - `scale_orchestrator` dispatches through OpenCode Go DeepSeek V4 Flash with `high`; native Codex Luna is its gateway/fallback only. It writes bounded work orders, selects `agent_bindings`, and receives deterministic fallbacks.
 - When the caller already provides a bounded low-risk profile, explicit files, acceptance criteria, and a stop condition, use that profile directly and skip an extra orchestration turn.
 - Codex profiles remain primary for Terra standard implementation and production frontend work, Sol critical authority, Luna fallback/prompt work, and auto-review QA. Every DeepSeek V4 Flash assignment is an OpenCode Go route; the DeepSeek API is not configured or used.
-- Kimi K2.7 Code is the premium web-design specialist: it creates a design packet, never production UI code. Terra's `scale_frontend` implements the handoff. Security and Git promotion remain native Codex. A Go quota signal is routed once to the exact native fallback in the binding; it is never retried in a loop.
++ Kimi K3 is the premium web-design specialist: it creates a design packet, never production UI code. Terra's `scale_frontend` implements the handoff. Security and Git promotion remain native Codex. A Go quota signal is routed once to the exact native fallback in the binding; it is never retried in a loop.
 - Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
 - DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. As the Codex orchestrator, it must write one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition before dispatching Go. Independently validate global promotion and high-impact decisions.
 - `library/model-registry.json` is the provider-neutral source of truth for approved providers, model IDs, efforts, and routes. It contains no credentials. Codex-native and Codex-external models are validated against the local Codex catalog; external CLI providers such as OpenCode Go are validated by their own executable and must never be represented as a fake Codex provider. New native or external code-default models are admitted only after catalog validation and a focused benchmark.
-- The dispatcher applies a cheaper per-profile budget before enforcing hard work-order/context/step/timeout caps. The orchestrator may request one evidence-backed adjustment across at most two dimensions; speculative increases are rejected. At most one fallback escalation is allowed per task. Credential-free JSONL telemetry is written to the project-local ignored `.codex/scale-telemetry.jsonl`.
++ The dispatcher applies a cheaper per-profile budget before enforcing hard work-order/context/step/timeout caps. The orchestrator may request one evidence-backed adjustment across at most two dimensions; speculative increases are rejected. At most one fallback escalation is allowed per task. Credential-free JSONL telemetry is written to the project-local ignored `.codex/scale-telemetry.jsonl`.
++- The internal-development lanes are deliberately separate: policy and privacy gates are read-only authority reports; model operations and benchmark roles provide admission evidence; knowledge evaluation gates candidate promotion; sync reports fleet health while `scale_git` remains the writer. Do not add a new agent when an existing owner can absorb the capability without widening its boundary.
 
 ## Collaboration rules
 

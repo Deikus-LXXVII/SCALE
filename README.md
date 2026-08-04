@@ -21,6 +21,7 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 - `library/quirks/` — persistent operational memory for every role.
 - `library/tag-taxonomy.md` and `find-by-tag.sh` — governed semantic retrieval without broad scans.
 - `library/model-registry.json` — credential-free provider/model policy and stable code-complexity routes.
+- Internal SCALE development has dedicated read-only policy, privacy, model-operations, knowledge-evaluation, and fleet-sync gates, plus a measured direct-vs-SCALE benchmark role; existing Git, optimizer, library, and test owners remain the writers.
 - `library/*` frontmatter — provenance, compatibility, review/expiry, status, and optional conflict/supersession metadata for durable knowledge.
 - `scripts/scale-library-*.sh` — safe library refresh, project connection, and role activation; model-policy updates are compatibility-gated before materialization.
 - `.codex/hooks.json` and `hooks/hooks.json` — trusted SessionStart hooks that refresh and materialize an attached library clone.

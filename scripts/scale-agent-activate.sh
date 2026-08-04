@@ -26,9 +26,16 @@ fi
 
 target_root="$(cd "$target_input" && pwd)"
 library_root="${library_input:-$target_root/.codex/scale-library}"
-profile="$library_root/agents/$agent_name.toml"
+catalog_profile="$library_root/agents/$agent_name.toml"
+active_profile="$target_root/.codex/scale-library-src/.codex/agents/$agent_name.toml"
+profile_kind="catalog"
+profile="$catalog_profile"
+if [[ ! -f "$profile" && -f "$active_profile" ]]; then
+  profile_kind="active"
+  profile="$active_profile"
+fi
 if [[ ! -f "$profile" ]]; then
-  printf 'Catalog profile not found: %s\n' "$profile" >&2
+  printf 'S.C.A.L.E. profile not found in catalog or active library: %s\n' "$agent_name" >&2
   exit 2
 fi
 
@@ -40,7 +47,9 @@ if [[ -e "$target_profile" && ! -L "$target_profile" ]]; then
   exit 2
 fi
 
-if [[ "$library_root" == "$target_root/.codex/scale-library" ]]; then
+if [[ "$profile_kind" == "active" ]]; then
+  link_target="../scale-library-src/.codex/agents/$agent_name.toml"
+elif [[ "$library_root" == "$target_root/.codex/scale-library" ]]; then
   link_target="../scale-library/agents/$agent_name.toml"
 else
   link_target="$profile"

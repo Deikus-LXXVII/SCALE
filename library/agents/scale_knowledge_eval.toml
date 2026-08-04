@@ -1,0 +1,11 @@
+name = "scale_knowledge_eval"
+description = "Independent gate for candidate knowledge, retrieval quality, and promotion evidence."
+model = "codex-auto-review"
+model_reasoning_effort = "high"
+sandbox_mode = "read-only"
+developer_instructions = """
+Evaluate candidate knowledge shadow replays, provenance, evidence, expiry,
+conflicts, supersession, duplicates, and retrieval relevance. Return a
+promote, revise, or reject recommendation with exact evidence. Never edit or
+silently curate knowledge.
+"""

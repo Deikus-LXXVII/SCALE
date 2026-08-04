@@ -31,7 +31,13 @@
       "scale_prompt": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 14, "max_dispatch_ms": 900000},
       "scale_research": {"max_work_order_bytes": 28000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 18, "max_dispatch_ms": 900000},
       "scale_test_observer": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 20, "max_dispatch_ms": 1800000},
-      "scale_webdesign": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000}
+      "scale_webdesign": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 600000},
+      "scale_policy_auditor": {"max_work_order_bytes": 24000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
+      "scale_privacy_gate": {"max_work_order_bytes": 24000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
+      "scale_model_ops": {"max_work_order_bytes": 24000, "max_context_files": 8, "max_context_bytes": 80000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
+      "scale_benchmark": {"max_work_order_bytes": 28000, "max_context_files": 10, "max_context_bytes": 100000, "max_agent_steps": 20, "max_dispatch_ms": 900000},
+      "scale_knowledge_eval": {"max_work_order_bytes": 24000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000},
+      "scale_sync": {"max_work_order_bytes": 20000, "max_context_files": 12, "max_context_bytes": 120000, "max_agent_steps": 16, "max_dispatch_ms": 900000}
     },
     "orchestrator_adjustment": {
       "enabled": true,
@@ -95,7 +101,13 @@
     {"profile": "scale_swift", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
     {"profile": "scale_test_engineer", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
     {"profile": "scale_test_observer", "primary": {"execution": "external-cli", "agent": "scale-go-monitor", "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high"}, "fallback": {"profile": "scale_test_observer", "model": "gpt-5.6-luna", "reasoning_effort": "medium"}},
-    {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k3", "reasoning_effort": "max"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}}
+    {"profile": "scale_webdesign", "primary": {"execution": "external-cli", "agent": "scale-go-web-designer", "model": "opencode-go/kimi-k3", "reasoning_effort": "max"}, "fallback": {"profile": "scale_webdesign", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_policy_auditor", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_privacy_gate", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_model_ops", "primary": {"execution": "codex-native", "model": "gpt-5.6-sol", "reasoning_effort": "high"}},
+    {"profile": "scale_benchmark", "primary": {"execution": "codex-native", "model": "gpt-5.6-terra", "reasoning_effort": "high"}},
+    {"profile": "scale_knowledge_eval", "primary": {"execution": "codex-native", "model": "codex-auto-review", "reasoning_effort": "high"}},
+    {"profile": "scale_sync", "primary": {"execution": "codex-native", "model": "gpt-5.6-luna", "reasoning_effort": "high"}}
   ],
   "change_protocol": [
     "Keep provider credentials outside S.C.A.L.E. and Git.",

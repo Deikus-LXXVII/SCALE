@@ -13,4 +13,5 @@
 | `library/quirks/` | Persistent role-local operational memory. |
 | `docs.llm/` | Project context, operational notes, and roadmap. |
 | `scripts/scale-library-*.sh` | Dynamic library connection, refresh, and role activation. |
-| `scripts/validate-codex-*.sh` | Structural validators for profiles and library metadata. |
+| `scripts/validate-scale-*.sh` | Structural validators for profiles, registry, library metadata, dispatch, and materialization. |
+| `docs.llm/scale-self-development-audit-2026-08-04.md` | Evidence-backed gaps, role ownership, and staged SCALE improvement work. |
