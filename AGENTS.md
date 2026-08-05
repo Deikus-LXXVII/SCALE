@@ -58,32 +58,35 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 - The SCALE Master is mandatory for every compound task or task written as a
   bullet list. Only one atomic, low-risk action with an obvious acceptance
   check may bypass it. The Master may still select a single executor.
-- For the normal Master route, invoke the native `scale_orchestrator` registry
-  binding through the native Hermes `opencode-go` provider. There is no
-  dispatcher, loopback gateway, or base_url override; a Go provider failure
-  routes once to the named native Codex fallback.
+- For the normal Master route, invoke the named `scale_orchestrator` Codex
+  profile. OpenCodex exposes its OpenCode Go DeepSeek V4 Flash binding in the
+  native Codex catalog and translates Responses/tool traffic. OpenAI remains
+  the default provider, and a Go failure routes once to the named native Codex
+  fallback.
 - Validation is batched: run one final combined check set for the whole task,
   not one test cycle per bullet. Allow at most one repair cycle and one final
   acceptance pass; do not rerun passing checks.
 
 - `scale_orchestrator` uses OpenCode Go DeepSeek V4 Flash with `high` through
-  the native opencode-go route. It writes bounded work orders, selects
+  its model-pinned Codex custom-agent card. It writes bounded work orders, selects
   `agent_bindings`, and receives deterministic fallbacks.
 - `gpt-5.6-sol` is hard-capped at `high` reasoning. No Sol profile, route,
   fallback, specialist, or project overlay may use `xhigh` or `max`; the
   registry validator enforces this limit.
 - When the caller already provides a bounded low-risk profile, explicit files, acceptance criteria, and a stop condition, use that profile directly and skip an extra orchestration turn.
-- Codex profiles keep Terra for production frontend, hardware/domain integration, and sensitive implementation; OpenCode Go owns bounded routine/simple work and non-sensitive standard implementation, while native Luna xhigh is the low-cost high-context fallback and advisory lane. Sol remains critical authority and auto-review remains independent. Every DeepSeek V4 Flash assignment is an OpenCode Go route; the DeepSeek API is not configured or used.
+- Codex profiles keep Terra for production frontend, hardware/domain integration, and sensitive implementation; OpenCode Go owns bounded routine/simple work and non-sensitive standard implementation, while native Luna high is the low-cost fallback, advisory, and independent-QA lane. Sol remains critical authority. Every DeepSeek V4 Flash assignment is an OpenCode Go route; the DeepSeek API is not configured or used.
 - Kimi K3 is the premium web-design specialist: it creates a design packet, never production UI code. Terra's `scale_frontend` implements the handoff. Security and Git promotion remain native Codex. A Go quota signal is routed once to the exact native fallback in the binding; it is never retried in a loop.
 - Select the lane from change risk and coupling, not line count: isolated low-risk code is simple; ordinary multi-file work is standard; security boundaries, hard concurrency, data migration, public contracts, and cross-system changes are critical.
 - DeepSeek may own bounded diagnostics, documentation, retrieval, and isolated low-risk code. As the Codex orchestrator, it must write one objective, exact scope/files when known, acceptance criteria, output format, and a stop condition before routing a Go lane. Independently validate global promotion and high-impact decisions.
 - `library/model-registry.json` is the provider-neutral source of truth for
   approved providers, model IDs, efforts, and routes. It contains no
   credentials. Every OpenCode Go model uses an `opencode-go/<model>` catalog
-  slug through the native Hermes opencode-go provider; never configure a
-  custom `model_provider`, fake a model, or route to the DeepSeek API. New code-default models are admitted only after catalog
+  slug through OpenCodex's Codex-compatible Responses transport; never
+  configure a fake Codex model or route to the DeepSeek API. New code-default models are admitted only after catalog
   validation and a focused benchmark.
-- Every active profile has a registry runtime budget for work-order bytes, context files/bytes, agent steps, and timeout. Hermes enforces the budget contract for route selection and handoff planning, while Codex controls native turn execution. The orchestrator may request one evidence-backed adjustment across at most two dimensions; speculative increases are rejected. At most one fallback escalation is allowed per task. Credential-free JSONL telemetry is written only by legacy Codex tooling to the project-local ignored `.codex/scale-telemetry.jsonl`.
+- Every active profile has a registry runtime budget for work-order bytes, context files/bytes, agent steps, and timeout. SCALE enforces the planning contract while Codex controls native turn execution. The orchestrator may request one evidence-backed adjustment across at most two dimensions; speculative increases are rejected. At most one fallback escalation is allowed per task.
+- Every SCALE profile must begin its first assistant message with the exact identity line declared in its TOML: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. A profile must report a runtime mismatch instead of claiming the configured identity.
+- OpenCodex must run in multi-agent V1 mode for OpenCode Go children. Keep its background service healthy; `scripts/scale-codex-recover.sh restore` immediately removes the loopback transport dependency and returns Codex to native ChatGPT routing.
 - The internal-development lanes are deliberately separate: policy and privacy gates are read-only authority reports; model operations and benchmark roles provide admission evidence; knowledge evaluation gates candidate promotion; sync reports fleet health while `scale_git` remains the writer. Do not add a new agent when an existing owner can absorb the capability without widening its boundary.
 
 ## Collaboration rules

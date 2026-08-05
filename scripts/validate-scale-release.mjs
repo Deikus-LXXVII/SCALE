@@ -75,4 +75,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 if (args.includes("--json")) console.log(JSON.stringify(report, null, 2));
-else console.log(`Validated S.C.A.L.E. release metadata (${version}); OpenCode discovery skipped (native Hermes provider).`);
+else console.log(`Validated S.C.A.L.E. release metadata (${version}); live OpenCodex discovery is a separate acceptance check.`);

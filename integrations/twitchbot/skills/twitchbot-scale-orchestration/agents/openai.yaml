@@ -1,0 +1,4 @@
+interface:
+  display_name: "TwitchBot SCALE Orchestration"
+  short_description: "Route non-trivial TwitchBot work through SCALE roles."
+  default_prompt: "Use $twitchbot-scale-orchestration to route and validate this TwitchBot task."

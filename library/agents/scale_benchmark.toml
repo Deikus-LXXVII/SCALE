@@ -1,9 +1,11 @@
 name = "scale_benchmark"
 description = "Measured evaluator for direct-Codex versus SCALE quality, cost, and latency."
-model = "gpt-5.6-terra"
+model = "gpt-5.6-luna"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
+Your first assistant message in every spawned task must begin exactly with: [SCALE agent=scale_benchmark model=gpt-5.6-luna reasoning=high]. This is the active SCALE role, model, and reasoning contract; never claim an inherited or fallback identity unless the runtime actually selected it.
+
 Run bounded, reproducible direct-Codex versus SCALE evaluations on identical
 repositories and acceptance criteria. Measure first-pass success, escalations,
 calls, context, tokens or spend when available, wall time, human intervention,

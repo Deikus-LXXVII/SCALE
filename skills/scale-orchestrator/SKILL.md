@@ -18,21 +18,23 @@ go through `scale_orchestrator` as the SCALE Master, even when the wording is
 already clear. The Master may return a one-agent plan, so this gate does not
 force unnecessary specialist fan-out.
 
-### Isolated OpenCode execution
+### Native OpenCode execution in Codex
 
-The Codex custom-agent card remains on its native Luna/Terra/Sol fallback.
-OpenCode Go runs natively through the Hermes `opencode-go` provider with a
-bounded, privacy-gated work order. Do not set a global `openai_base_url`; the
-legacy dispatcher, gateway, and protocol shims were removed.
+Named Codex custom-agent cards pin their exact OpenCode Go or native Codex
+model. OpenCodex exposes OpenCode Go through Codex's Responses transport and
+keeps the canonical OpenAI provider as the default. Its managed background
+service is required while OpenCode models are selected; native recovery is
+`scripts/scale-codex-recover.sh restore`.
 
 1. Refresh a connected `.codex/scale-library-src` clone before retrieving knowledge; SessionStart normally handles this, but verify its state when the task depends on fresh knowledge.
 2. Classify the request before creating agents. If the caller already supplies an explicit SCALE profile, bounded files, acceptance criteria, a low-risk scope, and a stop condition, use the direct route once.
-3. For genuinely multi-model work, resolve the `scale_orchestrator` binding in `library/model-registry.json`. Its visible Codex profile is Luna xhigh fallback; OpenCode Go DeepSeek V4 Flash High is the native `hermes-native` primary route.
+3. For genuinely multi-model work, resolve the `scale_orchestrator` binding in `library/model-registry.json`. Its named Codex profile pins OpenCode Go DeepSeek V4 Flash High; native Luna high is its single fallback.
 4. Write one concise work order with objective, scope/files, acceptance criteria, output format, and stop condition for the mapped role.
 5. The orchestrator may request one bounded budget adjustment only when the baseline is insufficient; hard caps and the one-fallback rule remain authoritative.
 6. An OpenCode Go provider failure routes the unchanged work order once to the named native fallback. Do not retry or silently upgrade. Kimi K3 produces a design packet only; `scale_frontend` on Terra implements it. `scale_security` and `scale_git` stay native.
-7. Run read-only mapping, research, security, or QA work in parallel when their outputs do not depend on each other. Run dependent implementation and validation sequentially.
-8. When durable knowledge changes, require provenance, validation evidence, review/expiry metadata, and explicit conflict handling. Route it through `scale_builder` or `scale_research`, validate with `scale_qa`, then invoke `scale_git` to promote only the named library files to the canonical remote. A strong external result is evidence, not an automatic global promotion.
+7. Require each spawned agent's first message to begin with its exact TOML identity line: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. Treat a mismatch as routing failure.
+8. Run read-only mapping, research, security, or QA work in parallel when their outputs do not depend on each other. Run dependent implementation and validation sequentially.
+9. When durable knowledge changes, require provenance, validation evidence, review/expiry metadata, and explicit conflict handling. Route it through `scale_builder` or `scale_research`, validate with `scale_qa`, then invoke `scale_git` to promote only the named library files to the canonical remote. A strong external result is evidence, not an automatic global promotion.
 
 ## Escalation
 

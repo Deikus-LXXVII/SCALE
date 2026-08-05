@@ -8,8 +8,14 @@ if [[ -z "$project_root" ]]; then
   exit 0
 fi
 
-# OpenCode Go is a native Hermes provider; no gateway or dispatcher autostart
-# is required from Codex. Project materialization below still applies.
+# OpenCode Go custom-agent models require the managed OpenCodex transport. Do
+# not fail SessionStart when it is absent: native Codex remains authoritative.
+if command -v ocx >/dev/null 2>&1; then
+  if ! ocx ensure >/dev/null 2>&1; then
+    printf '%s\n' 'S.C.A.L.E.: OpenCodex is unavailable; restoring native Codex transport.' >&2
+    ocx restore >/dev/null 2>&1 || true
+  fi
+fi
 
 # The canonical SCALE checkout is itself a Git project. Do not ask the global
 # plugin to clone SCALE into `.codex/scale-library-src` inside that checkout:

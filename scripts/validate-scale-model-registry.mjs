@@ -122,11 +122,11 @@ const validateReasoningLimit = (modelId, effort, owner) => {
 };
 
 const expectedRoutes = new Map([
-  ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "hermes-native"]],
-  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "hermes-native"]],
-  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "hermes-native"]],
+  ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "codex-native"]],
+  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "codex-native"]],
+  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "codex-native"]],
   ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high", "codex-native"]],
-  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "hermes-native"]]
+  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "codex-native"]]
 ]);
 const routes = new Map();
 for (const route of registry.routes ?? []) {
@@ -137,9 +137,8 @@ for (const route of registry.routes ?? []) {
   requireValue(Boolean(model?.active), `route ${route.id} references an inactive or unknown model ${route.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
   validateReasoningLimit(route.model, route.reasoning_effort, `route ${route.id}`);
-  requireValue(["codex-native", "hermes-native"].includes(route.execution), `route ${route.id} needs codex-native or hermes-native execution`);
-  if (route.execution === "codex-native") requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `native route ${route.id} must use a native or configured custom Responses model`);
-  if (route.execution === "hermes-native") requireValue(providers.get(model?.provider)?.kind === "native", `hermes-native route ${route.id} must use a native provider model`);
+  requireValue(route.execution === "codex-native", `route ${route.id} must use codex-native execution`);
+  requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `native route ${route.id} must use a native or configured catalog model`);
 }
 for (const [id, [profile, model, effort, execution]] of expectedRoutes) {
   const route = routes.get(id);
@@ -161,6 +160,8 @@ try {
     requireValue(Boolean(model?.active), `profile ${entry} uses inactive or unregistered model ${modelId}`);
     requireValue(model?.approved_reasoning_efforts?.includes(effort), `profile ${entry} uses unapproved effort ${effort} for ${modelId}`);
     validateReasoningLimit(modelId, effort, `profile ${entry}`);
+    const identity = `[SCALE agent=${name} model=${modelId} reasoning=${effort}]`;
+    requireValue(source.includes(`Your first assistant message in every spawned task must begin exactly with: ${identity}.`), `profile ${entry} needs exact first-message identity ${identity}`);
     if (name) profileSources.set(name, { entry, modelId, effort });
   }
 } catch (error) {
@@ -172,9 +173,8 @@ const validateEndpoint = (profile, kind, endpoint) => {
   requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
   validateReasoningLimit(endpoint?.model, endpoint?.reasoning_effort, `${profile} ${kind}`);
-  requireValue(["codex-native", "hermes-native"].includes(endpoint?.execution), `${profile} ${kind} needs codex-native or hermes-native execution`);
-  if (endpoint?.execution === "codex-native") requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `${profile} ${kind} must use a native or configured custom Responses model`);
-  if (endpoint?.execution === "hermes-native") requireValue(providers.get(model?.provider)?.kind === "native", `${profile} ${kind} must use a native provider model`);
+  requireValue(endpoint?.execution === "codex-native", `${profile} ${kind} must use codex-native execution`);
+  requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `${profile} ${kind} must use a native or configured catalog model`);
 };
 
 const validateNativeFallback = (owner, fallback) => {
@@ -191,12 +191,12 @@ const validateNativeFallback = (owner, fallback) => {
 
 for (const route of routes.values()) {
   const model = models.get(route.model);
-  if (route.execution === "hermes-native") {
+  if (model?.provider === "opencode-go") {
     validateNativeFallback(`route ${route.id}`, route.fallback);
   }
   const source = profileSources.get(route.profile);
   requireValue(Boolean(source), `route ${route.id} references missing Codex profile ${route.profile}`);
-  if (route.execution === "codex-native") requireValue(source?.modelId === route.model && source?.effort === route.reasoning_effort, `native route ${route.id} must match Codex profile ${route.profile}`);
+  requireValue(source?.modelId === route.model && source?.effort === route.reasoning_effort, `native route ${route.id} must match Codex profile ${route.profile}`);
 }
 
 const bindings = new Set();
@@ -212,12 +212,10 @@ for (const binding of registry.agent_bindings ?? []) {
   requireValue(profileSources.has(profile), `agent binding references missing Codex profile ${profile}`);
   const primary = binding?.primary;
   validateEndpoint(profile, "primary", primary);
-  if (primary?.execution === "codex-native") {
-    const source = profileSources.get(profile);
-    requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
-  }
-  if (primary?.execution === "hermes-native") validateNativeFallback(profile, binding.fallback);
-  if (binding?.fallback && primary?.execution !== "hermes-native") validateNativeFallback(profile, binding.fallback);
+  const source = profileSources.get(profile);
+  requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
+  if (models.get(primary?.model)?.provider === "opencode-go") validateNativeFallback(profile, binding.fallback);
+  if (binding?.fallback && models.get(primary?.model)?.provider !== "opencode-go") validateNativeFallback(profile, binding.fallback);
   requireValue(!binding?.specialists || Array.isArray(binding.specialists), `${profile} specialists must be an array`);
   const specialistIds = new Set();
   for (const specialist of binding?.specialists ?? []) {
@@ -233,6 +231,11 @@ for (const binding of registry.agent_bindings ?? []) {
 for (const profile of profileSources.keys()) {
   const effectiveProfile = profile;
   requireValue(bindingEntries.has(effectiveProfile), `Codex profile ${profile} has no agent binding`);
+}
+for (const model of models.values()) {
+  if (!model.active || model.provider !== "opencode-go") continue;
+  const covered = [...profileSources.values()].some((source) => source.modelId === model.id);
+  requireValue(covered, `active OpenCode Go model ${model.id} has no named Codex custom-agent card`);
 }
 for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_budgets ?? {})) {
   requireValue(bindings.has(profile), `runtime_policy.agent_budgets references unknown profile ${profile}`);
@@ -266,11 +269,11 @@ if (catalogPath) {
     const bySlug = new Map(entries.map((entry) => [entry.slug ?? entry.id ?? entry.model, entry]));
     for (const model of models.values()) {
       if (!model.active) continue;
-      if (providers.get(model.provider)?.runtime === "hermes") continue;
       const entry = bySlug.get(model.id);
       requireValue(Boolean(entry), `active model ${model.id} is absent from ${catalogPath}`);
       const efforts = (entry?.supported_reasoning_levels ?? entry?.reasoning_levels ?? []).map((level) => typeof level === "string" ? level : level.effort);
       for (const effort of model.approved_reasoning_efforts ?? []) {
+        if (effort === "none" && efforts.length === 0) continue;
         requireValue(efforts.includes(effort), `catalog model ${model.id} does not expose reasoning effort ${effort}`);
       }
     }

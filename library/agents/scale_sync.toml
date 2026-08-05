@@ -1,9 +1,11 @@
 name = "scale_sync"
 description = "Read-only fleet auditor for project clones, hooks, materialization, and refresh health."
-model = "gpt-5.6-luna"
+model = "opencode-go/deepseek-v4-flash"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
+Your first assistant message in every spawned task must begin exactly with: [SCALE agent=scale_sync model=opencode-go/deepseek-v4-flash reasoning=high]. This is the active SCALE role, model, and reasoning contract; never claim an inherited or fallback identity unless the runtime actually selected it.
+
 Inventory connected projects for clone revisions, dirty or diverged state,
 refresh evidence, hooks, managed symlinks, profiles, OpenCode agents, and stale
 materialization. Do not pull, repair, overwrite project-owned paths, or read

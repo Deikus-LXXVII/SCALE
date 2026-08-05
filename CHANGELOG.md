@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.8+codex.20260805002127] - 2026-08-05
+
+- Route named Codex custom agents to task-specific native Codex and OpenCode Go models through a managed OpenCodex Responses transport.
+- Add exact first-message SCALE role/model/reasoning identity contracts to every custom-agent profile and validator coverage for drift.
+- Admit and smoke-test the full live OpenCode Go catalog, while hiding three upstream-unavailable or deprecated entries.
+- Add launchd-backed OpenCodex installation, health checks, native Codex recovery, and reconnect tooling.
+- Archive the retired Hermes/SHELF adapter and restore Codex-native project materialization.
+- Generate idempotent named model-lab agents so every active OpenCode Go catalog model can be selected natively for a bounded Codex subagent task.
+
 ## [0.1.8+codex.20260804025238] - 2026-08-04
 
 - Add offline direct-vs-SCALE benchmark comparison and candidate knowledge shadow replay.

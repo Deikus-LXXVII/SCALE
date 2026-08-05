@@ -1,56 +1,67 @@
 # OpenCode Go in S.C.A.L.E.
 
-OpenCode Go is a separately metered model pool invoked **natively from Hermes**
-through the `opencode-go` provider. No dispatcher, loopback gateway, API
-client, protocol shim, or Codex `base_url` change is used: Hermes calls the
-`opencode-go/<model>` slug directly, the same way it calls any other provider.
+OpenCode Go is a separately metered model pool exposed inside Codex through
+OpenCodex 2.10+. OpenCodex accepts Codex Responses requests, translates model
+and tool traffic to the authenticated OpenCode Go provider, and injects the
+resulting `opencode-go/<model>` entries into the Codex catalog.
 
-## Invocation model
+## Runtime contract
 
-- SCALE roles route through `hermes/model-routing.json`: worker roles resolve
-  to `provider: opencode-go`, `model: deepseek-v4-flash` (or the route's
-  approved model), and `reasoning_effort: high`.
-- `hermes/scripts/scale-hermes-route.sh <role> <work-order>` reads that
-  registry and executes the work order as a native Hermes run with the mapped
-  provider/model/effort. Fallback is the named native route (Codex Luna xhigh
-  or Terra high), never a second external model.
-- Model calls are native Hermes calls: tool calling, sandbox, approvals, and
-  output handling stay inside the Hermes runtime. There is no intermediate
-  service between Hermes and OpenCode Go.
+- Native ChatGPT/Codex remains the default OpenCodex provider and uses direct
+  caller OAuth forwarding.
+- OpenCode Go credentials are read from the user's OpenCode credential store
+  and are never written to SCALE, telemetry, work orders, or Git.
+- Multi-agent mode is forced to V1 because parent-to-child task bodies can be
+  backend-encrypted in V2 and therefore unavailable to external providers.
+- Codex offers five ad-hoc spawn model slots. Every approved SCALE role is
+  still available through a named `.codex/agents/<role>.toml` card that pins
+  its exact model and reasoning effort.
+- Models without a normal production role receive a bounded
+  `scale_model_lab_*` custom-agent card. This keeps every currently verified
+  active OpenCode Go model natively spawnable without assigning an expensive
+  or weakly benchmarked model to routine work. Regenerate those cards with
+  `node scripts/scale-generate-model-lab-agents.mjs`; the operation is
+  idempotent.
+- A launchd-managed OpenCodex service keeps the local transport alive. One
+  native Luna fallback is allowed per external task.
 
-## Authentication
+## Installation and recovery
 
-Authenticate OpenCode Go once (`opencode auth login` / the Hermes
-`opencode-go` provider setup) and keep the credential in OpenCode's/Hermes'
-credential store. Never put credentials in SCALE, work orders, telemetry, or
-Git.
+```bash
+./scripts/scale-install-opencodex.sh --apply
+./scripts/scale-codex-recover.sh status
+./scripts/scale-codex-recover.sh restore
+./scripts/scale-codex-recover.sh reconnect
+```
+
+`restore` removes the loopback dependency and returns Codex to native
+ChatGPT routing even if the proxy process is dead. `reconnect` starts and
+health-checks OpenCodex, re-enables its transport, and refreshes the catalog.
 
 ## Routing policy
 
-| Work | Native owner | Fallback/boundary |
+| Work | Primary | Native fallback/authority |
 | --- | --- | --- |
-| Control plane and simple code | DeepSeek V4 Flash High | Luna xhigh; non-sensitive only |
-| Standard code | DeepSeek V4 Pro High | Terra High for sensitive/complex integration |
-| Critical/security/Git | Sol High or native QA | Never external final authority |
-| Web design | Kimi K3 max | Design packet only; Terra implements |
-| Frontend production | Terra High | Qwen 3.7 Plus is optional prototype input |
-| Routine/docs/research | DeepSeek Flash High or Luna | Bounded, privacy-gated context |
+| Control plane and simple code | DeepSeek V4 Flash High | Luna High |
+| Standard code and focused tests | DeepSeek V4 Pro High | Luna High; Terra/Sol own sensitive decisions |
+| Research/model operations | GLM 5.2 High | Luna High |
+| Prompt work | Qwen 3.7 Plus High | Luna High |
+| Critical/security/backend/Git | Native Sol at Medium or High | Never external final authority |
+| Web design | Kimi K3 Max | Terra High implements production UI |
+| Production frontend/domain integration | Terra High | Native authority |
 
-`library/model-registry.json` is the provider-neutral source of truth: routes
-use `execution: hermes-native` for every OpenCode Go assignment. The
-`opencode-go` provider is declared with `kind: native` and `runtime: hermes`.
-Never configure a custom `model_provider`, fake Codex provider, or the
-DeepSeek API.
+Every profile's first assistant message must declare its exact SCALE role,
+selected model, and reasoning effort. A mismatch is a routing failure, not a
+cosmetic issue.
 
 ## Validation
 
 ```bash
-node scripts/validate-scale-model-registry.mjs
+node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json"
 bash scripts/validate-scale-agents.sh
-bash scripts/validate-scale-library.sh
+ocx health --json
 ```
 
-Use the smallest per-profile context/step budget. One fallback escalation per
-task; the registry hard caps remain authoritative. `opencode/agents/*.md` are
-kept as canonical role descriptions for OpenCode Go and are not part of the
-Hermes execution path.
+Use one bounded work order, the smallest per-profile context/step budget, one
+fallback at most, and deterministic local validation. Never configure the
+DeepSeek API.

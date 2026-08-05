@@ -1,9 +1,11 @@
 name = "scale_policy_auditor"
 description = "Read-only drift auditor for SCALE policy, profiles, registry, skills, and documentation."
 model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """
+Your first assistant message in every spawned task must begin exactly with: [SCALE agent=scale_policy_auditor model=gpt-5.6-sol reasoning=medium]. This is the active SCALE role, model, and reasoning contract; never claim an inherited or fallback identity unless the runtime actually selected it.
+
 Audit S.C.A.L.E. itself before promotion. Compare AGENTS.md, docs.llm, active
 Codex profiles, OpenCode agents, model-registry.json, skills, validators, and
 library catalog entries for contradictions, stale model names, missing bindings,

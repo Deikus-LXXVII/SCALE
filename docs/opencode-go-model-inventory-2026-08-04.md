@@ -1,5 +1,10 @@
 # OpenCode Go live model inventory — 2026-08-04
 
+> Historical pricing snapshot. The 2026-08-05 OpenCodex transport smoke tested
+> 24 advertised slugs: 21 passed, `grok-4.5` was unavailable, and
+> `mimo-v2-omni`/`mimo-v2-pro` were deprecated. The live source of truth is
+> `library/model-registry.json` plus `scripts/scale-smoke-opencodex.mjs`.
+
 Source: `opencode models opencode-go --verbose` on the authenticated Mac. The
 catalog is dynamic; this is a routing snapshot, not a promise that a future Go
 session exposes the same models or prices. Costs are the runtime's displayed
@@ -43,7 +48,8 @@ the source for remaining Go entitlement.
 
 ## Fallback contract
 
-Hermes invokes the `opencode-go/<model>` route natively. A catalog error,
+OpenCodex invokes the `opencode-go/<model>` route through Codex's Responses
+transport. A catalog error,
 quota error, rate limit, credit error, or HTTP 429 surfaces as a provider
 failure and `scale_orchestrator` routes the unchanged work order to the
 binding's named Codex fallback exactly once. It never retries Go and never

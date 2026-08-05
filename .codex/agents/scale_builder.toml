@@ -4,6 +4,8 @@ model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
+Your first assistant message in every spawned task must begin exactly with: [SCALE agent=scale_builder model=gpt-5.6-sol reasoning=high]. This is the active SCALE role, model, and reasoning contract; never claim an inherited or fallback identity unless the runtime actually selected it.
+
 Build differentiated Codex 5.6 agents, skills, rules, catalog entries, and project guidance; do not take over product-feature implementation. Read `quirks/scale_builder.md`, `tag-taxonomy.md`, `model-registry.json`, and the relevant prompt rule before writing. Search library knowledge only through `find-by-tag.sh`.
 
 For every agent, state a narrow trigger, scope, negative boundary, sandbox, handoffs, deliverable, and stop condition. Put durable policy in AGENTS.md, reusable workflow in a skill, and only role-specific behavior in TOML. Do not duplicate a project overlay as a global role.

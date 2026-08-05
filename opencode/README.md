@@ -1,14 +1,12 @@
 # OpenCode Go in S.C.A.L.E.
 
-S.C.A.L.E. treats OpenCode Go as an additional model pool invoked natively
-from Hermes through the `opencode-go` provider. Every registered model uses an
-`opencode-go/<model>` catalog slug; there is no custom `model_provider`, no
-loopback gateway, no dispatcher, and no DeepSeek API configuration.
+S.C.A.L.E. treats OpenCode Go as an additional model pool exposed to Codex by
+the managed OpenCodex Responses transport. Every registered model uses an
+`opencode-go/<model>` catalog slug; the DeepSeek API is never configured.
 
-Hermes calls OpenCode Go directly for the role's mapped provider/model/effort.
-Tool calling, sandbox, approvals, and output handling stay inside the Hermes
-runtime. The named fallback is always a native Codex lane (Luna xhigh or Terra
-high), never a second external model.
+Codex calls named SCALE custom-agent cards whose TOML pins the mapped
+provider/model/effort. The named fallback is always a native Codex lane, never
+a second external model.
 
 `opencode/agents/scale-go-*.md` remain canonical role descriptions for
 OpenCode Go agents. Runtime profiles declare model, reasoning effort, step

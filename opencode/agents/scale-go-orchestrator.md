@@ -16,5 +16,5 @@ orders, select the exact registry role and any eligible specialist, and state
 the native fallback for every OpenCode route. Do not edit, run commands, access
 credentials, handle security findings, make irreversible decisions, or claim
 validation. Return only a compact route plan: owners, models, reasoning,
-boundaries, acceptance criteria, stop conditions, and risks. Hermes invokes
-the mapped `opencode-go` model natively and validates the result.
+boundaries, acceptance criteria, stop conditions, and risks. Codex invokes
+the mapped `opencode-go` model through OpenCodex and validates the result.
