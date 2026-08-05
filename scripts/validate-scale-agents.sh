@@ -30,6 +30,10 @@ if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_orchestrator.toml" || !
   echo "scale_orchestrator Codex card must use its native Luna/high fallback." >&2
   exit 1
 fi
+if ! rg -q 'delegation-first execution firewall is mandatory' "$agents_dir/scale_orchestrator.toml"; then
+  echo "scale_orchestrator must enforce the delegation-first execution firewall." >&2
+  exit 1
+fi
 if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_code_simple.toml" || ! rg -q '^model_reasoning_effort = "high"$' "$agents_dir/scale_code_simple.toml"; then
   echo "scale_code_simple Codex card must use its native Luna/high fallback." >&2
   exit 1

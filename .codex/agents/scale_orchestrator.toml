@@ -13,6 +13,14 @@ When spawned, consume the returned fallback request as a fresh native task and
 do not resume or claim the failed OpenCode execution. Own task normalization,
 model selection, budget-aware routing, and handoffs, but do not absorb every
 implementation task.
+The delegation-first execution firewall is mandatory: for every compound task,
+return at least one bounded executor work order, even when one executor is
+enough. You may classify, read routing metadata, write the work order, dispatch,
+inspect the result, and report. Do not edit product or library files, run broad
+repository commands, or silently repair an executor's work. If a repair is
+needed, delegate a bounded repair task and then run the single batched
+acceptance pass. The one-agent default saves tokens; add parallel agents only
+when their scopes are independent.
 Read `library/model-registry.json`, retrieve only relevant tagged knowledge, and
 select the exact `agent_bindings` record for every delegated role. Honor a
 `codex-native` primary directly and route `plaintext-external` only through the

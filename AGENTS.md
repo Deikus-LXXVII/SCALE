@@ -66,6 +66,16 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 - Validation is batched: run one final combined check set for the whole task,
   not one test cycle per bullet. Allow at most one repair cycle and one final
   acceptance pass; do not rerun passing checks.
+- Delegation is execution-first, not fan-out-first: for every compound task the
+  main session agent must hand implementation to at least one bounded SCALE
+  executor. The default is one best-fit executor; add parallel executors only
+  for genuinely independent scopes. Before dispatch, the main agent may only
+  classify, read routing metadata, write the work order, and dispatch. After
+  dispatch it may inspect the result, run one batched deterministic validation,
+  and report. It must not implement the compound task, run an unbounded scan, or
+  silently repair an agent's changes. Repairs are delegated once, then the
+  failed check and final acceptance are run. Only one atomic low-risk mutation
+  with one obvious check may use the direct route.
 
 - `scale_orchestrator` uses OpenCode Go DeepSeek V4 Flash with `high` through a
   one-shot plaintext external work order. The runner sends no

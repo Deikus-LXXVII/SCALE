@@ -8,6 +8,14 @@ description: Route non-trivial TwitchBot work through connected SCALE roles. Use
 Read `AGENTS.md`, then `$scale-orchestrator`; use `$scale-validate` for final
 acceptance. Keep the task brief and delegated context bounded.
 
+The main session agent is the coordinator for compound TwitchBot work. It must
+delegate implementation to at least one bounded executor before editing. One
+best-fit executor is the default to conserve tokens; use parallel executors only
+for independent scopes. Before dispatch it may classify, read routing metadata,
+write the work order, and dispatch. Afterwards it may inspect the result, run
+one batched deterministic validation pass, and report. It must not silently
+implement or repair delegated work; a repair is one more bounded delegated task.
+
 1. Invoke named `scale_orchestrator` for every compound task or bullet list.
    Only one atomic low-risk action with one obvious check may bypass it.
 2. Use bare `scale_*` for global responsibilities and `scale_telik_*` for

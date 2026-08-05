@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.8+codex.20260805213323] - 2026-08-05
+
+- Add a delegation-first execution firewall for session-root and SCALE Master
+  coordinators: compound work is handed to one bounded executor by default,
+  repairs remain delegated, and validation is batched.
+- Record the delegation policy in the model registry and validate its atomic
+  direct-route, independent-parallelism, and one-executor invariants.
+- Propagate the coordinator contract to the orchestrator skill, task brief,
+  TwitchBot integration, release checks, and focused regression tests without
+  changing OpenCode Go model routing.
+
 ## [0.1.8+codex.20260805020334] - 2026-08-05
 
 - Replace encrypted OpenCode Codex-child spawning with a bounded plaintext work-order runner that validates scope, budgets, privacy, binding identity, and native fallback ownership.

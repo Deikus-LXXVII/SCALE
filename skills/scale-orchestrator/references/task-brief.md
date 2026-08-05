@@ -31,6 +31,12 @@ Rules:
 
 - A bullet list is compound even when every bullet is clear.
 - Keep `agents` to the smallest useful set; a one-agent plan is valid.
+- Every compound brief must contain at least one executor. The main session
+  agent owns routing and acceptance, not implementation. Its normal pre-dispatch
+  actions are `classify → read routing metadata → write work order → dispatch`;
+  its post-dispatch actions are `inspect result → batched validation → report`.
+- Parallel executors are reserved for independent scopes. A repair is another
+  bounded delegated task, not a silent edit by the main agent.
 - Do not invent requirements. Put uncertain interpretations in `assumptions` or
   set `needs_user_input` to `true`.
 - Batch independent lint, typecheck, unit, schema, and smoke checks where the

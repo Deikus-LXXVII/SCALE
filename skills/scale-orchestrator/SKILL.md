@@ -18,6 +18,20 @@ go through `scale_orchestrator` as the SCALE Master, even when the wording is
 already clear. The Master may return a one-agent plan, so this gate does not
 force unnecessary specialist fan-out.
 
+### Delegation-first execution firewall
+
+The main session agent is an orchestrator for compound work, not its default
+implementer. It must dispatch at least one bounded executor after the Master
+gate. One best-fit executor is the token-saving default; parallel work is
+allowed only when scopes are independent. Before dispatch, the main agent may
+classify the request, read routing metadata, write the work order, and dispatch.
+After dispatch it may inspect the result, run one batched deterministic
+validation pass, and report. It must not edit product/library files, perform a
+broad unbounded scan, or silently repair delegated work. A failed check gets at
+most one delegated repair, followed by the failed check and one final
+acceptance pass. Only the single-atomic-low-risk direct-route exception may
+bypass this firewall.
+
 ### Plaintext OpenCode execution beside Codex
 
 Codex `thread_spawn` may encrypt the child task and carry provider-specific

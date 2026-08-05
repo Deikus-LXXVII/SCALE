@@ -19,6 +19,7 @@ jobs:
         run: |
           bash scripts/validate-scale-agents.sh
           node scripts/validate-scale-model-registry.mjs
+          node scripts/test-scale-delegation-policy.mjs
       - name: Validate library and candidate replay
         run: |
           bash scripts/validate-scale-library.sh

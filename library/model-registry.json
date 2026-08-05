@@ -24,6 +24,34 @@
       "max_planned_agents": 5,
       "max_plan_tokens": 1200
     },
+    "delegation_policy": {
+      "enabled": true,
+      "required_for_compound_tasks": true,
+      "coordinator_roles": ["session_root", "scale_orchestrator"],
+      "minimum_delegated_executors": 1,
+      "default_executor_count": 1,
+      "parallel_only_when_independent": true,
+      "orchestrator_may_implement": false,
+      "repair_requires_delegation": true,
+      "direct_route_requires_single_atomic_mutation": true,
+      "main_agent_pre_dispatch_actions": [
+        "classify",
+        "read_routing_metadata",
+        "write_work_order",
+        "dispatch"
+      ],
+      "main_agent_post_dispatch_actions": [
+        "inspect_result",
+        "run_batched_validation",
+        "report"
+      ],
+      "main_agent_forbidden_actions": [
+        "self_implement_compound_task",
+        "broad_unbounded_scan_before_dispatch",
+        "per_bullet_test_loop",
+        "silent_self_repair"
+      ]
+    },
     "validation_policy": {
       "default_passes": 1,
       "max_passes": 2,

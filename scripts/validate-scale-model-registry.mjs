@@ -54,8 +54,33 @@ requireValue(masterPolicy && typeof masterPolicy === "object", "runtime_policy.m
 for (const field of ["simple_max_actions", "max_planned_agents", "max_plan_tokens"]) {
   requireValue(Number.isInteger(masterPolicy?.[field]) && masterPolicy[field] > 0, `master_policy.${field} must be a positive integer`);
 }
+requireValue(masterPolicy?.simple_max_actions === 1, "master_policy.simple_max_actions must remain one for the atomic direct route");
 requireValue(masterPolicy?.required_for_compound_tasks === true, "master_policy must require compound tasks");
 requireValue(masterPolicy?.required_for_bullet_lists === true, "master_policy must require bullet lists");
+const delegationPolicy = registry.runtime_policy?.delegation_policy;
+requireValue(delegationPolicy && typeof delegationPolicy === "object", "runtime_policy.delegation_policy is missing");
+for (const field of ["minimum_delegated_executors", "default_executor_count"]) {
+  requireValue(Number.isInteger(delegationPolicy?.[field]) && delegationPolicy[field] > 0, `delegation_policy.${field} must be a positive integer`);
+}
+requireValue(delegationPolicy?.enabled === true, "delegation_policy must be enabled");
+requireValue(delegationPolicy?.required_for_compound_tasks === true, "delegation_policy must require compound tasks");
+requireValue(Array.isArray(delegationPolicy?.coordinator_roles) && delegationPolicy.coordinator_roles.includes("session_root") && delegationPolicy.coordinator_roles.includes("scale_orchestrator"), "delegation_policy must identify the session root and SCALE Master coordinators");
+requireValue(delegationPolicy?.minimum_delegated_executors <= masterPolicy?.max_planned_agents, "delegation_policy minimum exceeds master agent cap");
+requireValue(delegationPolicy?.default_executor_count >= delegationPolicy?.minimum_delegated_executors, "delegation_policy default executor count is below its minimum");
+requireValue(delegationPolicy?.default_executor_count <= masterPolicy?.max_planned_agents, "delegation_policy default executor count exceeds master agent cap");
+for (const field of ["parallel_only_when_independent", "orchestrator_may_implement", "repair_requires_delegation", "direct_route_requires_single_atomic_mutation"]) {
+  requireValue(typeof delegationPolicy?.[field] === "boolean", `delegation_policy.${field} must be boolean`);
+}
+requireValue(delegationPolicy?.parallel_only_when_independent === true, "delegation_policy must restrict parallel work to independent scopes");
+requireValue(delegationPolicy?.orchestrator_may_implement === false, "delegation_policy must forbid orchestrator implementation");
+requireValue(delegationPolicy?.repair_requires_delegation === true, "delegation_policy must require delegated repairs");
+requireValue(delegationPolicy?.direct_route_requires_single_atomic_mutation === true, "delegation_policy direct route must stay atomic");
+for (const field of ["main_agent_pre_dispatch_actions", "main_agent_post_dispatch_actions", "main_agent_forbidden_actions"]) {
+  requireValue(Array.isArray(delegationPolicy?.[field]) && delegationPolicy[field].length > 0, `delegation_policy.${field} must be a non-empty array`);
+}
+requireValue(delegationPolicy?.main_agent_pre_dispatch_actions?.includes("dispatch"), "delegation_policy pre-dispatch actions must include dispatch");
+requireValue(delegationPolicy?.main_agent_post_dispatch_actions?.includes("run_batched_validation"), "delegation_policy post-dispatch actions must include batched validation");
+requireValue(delegationPolicy?.main_agent_forbidden_actions?.includes("self_implement_compound_task"), "delegation_policy must forbid self-implementation of compound tasks");
 const validationPolicy = registry.runtime_policy?.validation_policy;
 requireValue(validationPolicy && typeof validationPolicy === "object", "runtime_policy.validation_policy is missing");
 for (const field of ["default_passes", "max_passes", "max_repair_cycles", "max_full_suite_runs"]) {

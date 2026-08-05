@@ -54,7 +54,7 @@ try {
 const requiredPaths = [
   ".codex-plugin/plugin.json", ".github/workflows/scale-validation.yml", "CHANGELOG.md", "library/model-registry.json", "library/find-by-tag.sh",
   "scripts/validate-scale-agents.sh", "scripts/validate-scale-library.sh", "scripts/validate-scale-knowledge.mjs", "scripts/validate-scale-knowledge.sh",
-  "scripts/validate-scale-model-registry.mjs", "scripts/validate-scale-install.sh",
+  "scripts/validate-scale-model-registry.mjs", "scripts/test-scale-delegation-policy.mjs", "scripts/validate-scale-install.sh",
   "scripts/scale-library-refresh.sh", "scripts/scale-telemetry-report.mjs", "scripts/scale-benchmark.mjs", "scripts/test-scale-benchmark.mjs", "scripts/scale-knowledge-shadow.mjs", "scripts/test-scale-knowledge-shadow.mjs", "scripts/validate-scale-release.mjs",
   "scripts/scale-plaintext-runner.mjs", "scripts/test-scale-plaintext-runner.mjs", "scripts/schemas/scale-plaintext-work-order.schema.json", "scripts/schemas/scale-fallback-request.schema.json"
 ];

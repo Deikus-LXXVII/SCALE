@@ -98,6 +98,13 @@ Use [model-routing.md](skills/scale-orchestrator/references/model-routing.md) fo
 
 Runtime budgets are enforced per profile (work-order bytes, context files/bytes, agent steps, timeout), with one fallback escalation per task and a bounded, evidenced orchestrator adjustment option; leaving the profile budget unchanged is the default. Telemetry is credential-free JSONL at the project-local ignored `.codex/scale-telemetry.jsonl` (written only by legacy Codex tooling).
 
+Compound work is delegation-first: the main session agent dispatches at least
+one bounded executor, normally exactly one best-fit role to conserve tokens. It
+may classify, route, inspect the result, and run one batched acceptance check;
+implementation and repair stay with delegated executors. Parallel fan-out is
+reserved for independent scopes, and the one-atomic-low-risk direct route is the
+only bypass.
+
 Use `scripts/scale-benchmark.mjs` for an offline-first direct-vs-SCALE comparison. It accepts the same fixed corpus and acceptance IDs for both lanes, reports success/first-pass/escalation/call/context/token/cost/time metrics, and defaults to practical acceptance thresholds. Recorded traces are preferred; live runner commands require explicit `--allow-run`.
 
 Normal tagged retrieval returns only `curated` knowledge. Use `library/find-by-tag.sh --include-candidates <tag>` only when deliberately shadow-evaluating a candidate; deprecated entries remain excluded.
