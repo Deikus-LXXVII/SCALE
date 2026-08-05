@@ -35,7 +35,7 @@ try {
   process.exit(1);
 }
 
-requireValue([1, 2, 3, 4].includes(registry.schema_version), "model registry must declare schema_version 1, 2, 3, or 4");
+requireValue([1, 2, 3, 4, 5].includes(registry.schema_version), "model registry must declare schema_version 1, 2, 3, 4, or 5");
 requireValue(Array.isArray(registry.providers) && registry.providers.length > 0, "model registry has no providers");
 requireValue(Array.isArray(registry.models) && registry.models.length > 0, "model registry has no models");
 requireValue(Array.isArray(registry.routes) && registry.routes.length > 0, "model registry has no routes");
@@ -66,6 +66,16 @@ requireValue(validationPolicy?.max_repair_cycles <= 1, "validation_policy.max_re
 requireValue(validationPolicy?.max_full_suite_runs <= 1, "validation_policy.max_full_suite_runs must not exceed one");
 requireValue(validationPolicy?.batch_independent_checks === true, "validation_policy must batch independent checks");
 requireValue(validationPolicy?.rerun_passing_checks === false, "validation_policy must disable rerunning passing checks");
+const plaintextPolicy = registry.runtime_policy?.plaintext_external_policy;
+requireValue(plaintextPolicy && typeof plaintextPolicy === "object", "runtime_policy.plaintext_external_policy is missing");
+requireValue(plaintextPolicy?.enabled === true, "plaintext external policy must be enabled");
+requireValue(plaintextPolicy?.no_previous_response === true, "plaintext external policy must forbid previous_response_id");
+requireValue(plaintextPolicy?.max_attempts === 1, "plaintext external policy must allow exactly one attempt");
+requireValue(plaintextPolicy?.automatic_native_fallback === false, "plaintext external policy must forbid automatic native fallback");
+requireValue(Number.isInteger(plaintextPolicy?.max_output_tokens) && plaintextPolicy.max_output_tokens > 0, "plaintext external policy needs a positive max_output_tokens");
+requireValue(Array.isArray(plaintextPolicy?.allowed_profiles) && plaintextPolicy.allowed_profiles.length > 0, "plaintext external policy needs allowed_profiles");
+requireValue(Array.isArray(plaintextPolicy?.allowed_profile_prefixes), "plaintext external policy needs allowed_profile_prefixes");
+requireValue(Array.isArray(plaintextPolicy?.analysis_only_profiles), "plaintext external policy needs analysis_only_profiles");
 
 const budgetFields = ["max_work_order_bytes", "max_context_files", "max_context_bytes", "max_agent_steps", "max_dispatch_ms"];
 const hardBudget = Object.fromEntries(budgetFields.map((field) => [field, registry.runtime_policy?.[field]]));
@@ -122,11 +132,11 @@ const validateReasoningLimit = (modelId, effort, owner) => {
 };
 
 const expectedRoutes = new Map([
-  ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "codex-native"]],
-  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "codex-native"]],
-  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "codex-native"]],
+  ["orchestration", ["scale_orchestrator", "opencode-go/deepseek-v4-flash", "high", "plaintext-external"]],
+  ["simple-code", ["scale_code_simple", "opencode-go/deepseek-v4-flash", "high", "plaintext-external"]],
+  ["standard-code", ["scale_code_standard", "opencode-go/deepseek-v4-pro", "high", "plaintext-external"]],
   ["critical-code", ["scale_code_critical", "gpt-5.6-sol", "high", "codex-native"]],
-  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "codex-native"]]
+  ["web-design", ["scale_webdesign", "opencode-go/kimi-k3", "max", "plaintext-external"]]
 ]);
 const routes = new Map();
 for (const route of registry.routes ?? []) {
@@ -137,8 +147,9 @@ for (const route of registry.routes ?? []) {
   requireValue(Boolean(model?.active), `route ${route.id} references an inactive or unknown model ${route.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(route.reasoning_effort), `route ${route.id} uses unsupported effort ${route.reasoning_effort} for ${route.model}`);
   validateReasoningLimit(route.model, route.reasoning_effort, `route ${route.id}`);
-  requireValue(route.execution === "codex-native", `route ${route.id} must use codex-native execution`);
-  requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `native route ${route.id} must use a native or configured catalog model`);
+  requireValue(["codex-native", "plaintext-external"].includes(route.execution), `route ${route.id} has unsupported execution ${route.execution}`);
+  if (route.execution === "plaintext-external") requireValue(model?.provider === "opencode-go", `plaintext route ${route.id} must use OpenCode Go`);
+  if (route.execution === "codex-native") requireValue(providers.get(model?.provider)?.kind === "native", `native route ${route.id} must use a native model`);
 }
 for (const [id, [profile, model, effort, execution]] of expectedRoutes) {
   const route = routes.get(id);
@@ -173,8 +184,9 @@ const validateEndpoint = (profile, kind, endpoint) => {
   requireValue(Boolean(model?.active), `${profile} ${kind} references inactive or unknown model ${endpoint?.model}`);
   requireValue(model?.approved_reasoning_efforts?.includes(endpoint?.reasoning_effort), `${profile} ${kind} uses unsupported effort ${endpoint?.reasoning_effort} for ${endpoint?.model}`);
   validateReasoningLimit(endpoint?.model, endpoint?.reasoning_effort, `${profile} ${kind}`);
-  requireValue(endpoint?.execution === "codex-native", `${profile} ${kind} must use codex-native execution`);
-  requireValue(["native", "external"].includes(providers.get(model?.provider)?.kind), `${profile} ${kind} must use a native or configured catalog model`);
+  requireValue(["codex-native", "plaintext-external"].includes(endpoint?.execution), `${profile} ${kind} has unsupported execution ${endpoint?.execution}`);
+  if (endpoint?.execution === "plaintext-external") requireValue(model?.provider === "opencode-go", `${profile} ${kind} plaintext execution must use OpenCode Go`);
+  if (endpoint?.execution === "codex-native") requireValue(providers.get(model?.provider)?.kind === "native", `${profile} ${kind} native execution must use a native model`);
 };
 
 const validateNativeFallback = (owner, fallback) => {
@@ -191,12 +203,13 @@ const validateNativeFallback = (owner, fallback) => {
 
 for (const route of routes.values()) {
   const model = models.get(route.model);
-  if (model?.provider === "opencode-go") {
+  if (route.execution === "plaintext-external") {
     validateNativeFallback(`route ${route.id}`, route.fallback);
   }
   const source = profileSources.get(route.profile);
   requireValue(Boolean(source), `route ${route.id} references missing Codex profile ${route.profile}`);
-  requireValue(source?.modelId === route.model && source?.effort === route.reasoning_effort, `native route ${route.id} must match Codex profile ${route.profile}`);
+  if (route.execution === "codex-native") requireValue(source?.modelId === route.model && source?.effort === route.reasoning_effort, `native route ${route.id} must match Codex profile ${route.profile}`);
+  if (route.execution === "plaintext-external") requireValue(source?.modelId === route.fallback?.model && source?.effort === route.fallback?.reasoning_effort, `plaintext route ${route.id} Codex card must match its native fallback`);
 }
 
 const bindings = new Set();
@@ -213,9 +226,12 @@ for (const binding of registry.agent_bindings ?? []) {
   const primary = binding?.primary;
   validateEndpoint(profile, "primary", primary);
   const source = profileSources.get(profile);
-  requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
-  if (models.get(primary?.model)?.provider === "opencode-go") validateNativeFallback(profile, binding.fallback);
-  if (binding?.fallback && models.get(primary?.model)?.provider !== "opencode-go") validateNativeFallback(profile, binding.fallback);
+  if (primary?.execution === "codex-native") requireValue(source?.modelId === primary.model && source?.effort === primary.reasoning_effort, `${profile} native primary must match its Codex profile model and reasoning`);
+  if (primary?.execution === "plaintext-external") {
+    validateNativeFallback(profile, binding.fallback);
+    requireValue(source?.modelId === binding.fallback?.model && source?.effort === binding.fallback?.reasoning_effort, `${profile} Codex card must match its native fallback because the primary is plaintext-external`);
+  }
+  if (binding?.fallback && primary?.execution !== "plaintext-external") validateNativeFallback(profile, binding.fallback);
   requireValue(!binding?.specialists || Array.isArray(binding.specialists), `${profile} specialists must be an array`);
   const specialistIds = new Set();
   for (const specialist of binding?.specialists ?? []) {
@@ -234,8 +250,8 @@ for (const profile of profileSources.keys()) {
 }
 for (const model of models.values()) {
   if (!model.active || model.provider !== "opencode-go") continue;
-  const covered = [...profileSources.values()].some((source) => source.modelId === model.id);
-  requireValue(covered, `active OpenCode Go model ${model.id} has no named Codex custom-agent card`);
+  const covered = [...bindingEntries.values()].some((binding) => binding.primary?.execution === "plaintext-external" && binding.primary?.model === model.id);
+  requireValue(covered, `active OpenCode Go model ${model.id} has no plaintext-external binding`);
 }
 for (const [profile, budget] of Object.entries(registry.runtime_policy?.agent_budgets ?? {})) {
   requireValue(bindings.has(profile), `runtime_policy.agent_budgets references unknown profile ${profile}`);

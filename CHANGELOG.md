@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8+codex.20260805020334] - 2026-08-05
+
+- Replace encrypted OpenCode Codex-child spawning with a bounded plaintext work-order runner that validates scope, budgets, privacy, binding identity, and native fallback ownership.
+- Add one-shot fallback requests with no retry or response resume, project overlay support, and focused transport/privacy tests.
+- Make recovery non-destructive by default: `runner-start` preserves the active model route; `native-restore` is explicit and requires a Codex restart.
+- Keep native fallback TOML identities truthful and derive external identity only from `response.model`.
+
 ## [0.1.8+codex.20260805002127] - 2026-08-05
 
 - Route named Codex custom agents to task-specific native Codex and OpenCode Go models through a managed OpenCodex Responses transport.

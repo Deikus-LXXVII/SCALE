@@ -58,18 +58,20 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 - The SCALE Master is mandatory for every compound task or task written as a
   bullet list. Only one atomic, low-risk action with an obvious acceptance
   check may bypass it. The Master may still select a single executor.
-- For the normal Master route, invoke the named `scale_orchestrator` Codex
-  profile. OpenCodex exposes its OpenCode Go DeepSeek V4 Flash binding in the
-  native Codex catalog and translates Responses/tool traffic. OpenAI remains
-  the default provider, and a Go failure routes once to the named native Codex
-  fallback.
+- For the normal non-sensitive Master route, create one context-complete JSON
+  work order for `scale_orchestrator` and execute it with
+  `scripts/scale-plaintext-runner.mjs`. Do not use Codex `thread_spawn` for an
+  `opencode-go/*` primary: encrypted child state cannot be replayed safely by
+  the external provider. The named TOML card is the native fallback only.
 - Validation is batched: run one final combined check set for the whole task,
   not one test cycle per bullet. Allow at most one repair cycle and one final
   acceptance pass; do not rerun passing checks.
 
-- `scale_orchestrator` uses OpenCode Go DeepSeek V4 Flash with `high` through
-  its model-pinned Codex custom-agent card. It writes bounded work orders, selects
-  `agent_bindings`, and receives deterministic fallbacks.
+- `scale_orchestrator` uses OpenCode Go DeepSeek V4 Flash with `high` through a
+  one-shot plaintext external work order. The runner sends no
+  `previous_response_id`, performs no retry, applies no patch, and returns a
+  machine-readable `fallback_required` object instead of silently invoking
+  Codex. The host starts that fallback as a fresh native task.
 - `gpt-5.6-sol` is hard-capped at `high` reasoning. No Sol profile, route,
   fallback, specialist, or project overlay may use `xhigh` or `max`; the
   registry validator enforces this limit.
@@ -81,12 +83,17 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
 - `library/model-registry.json` is the provider-neutral source of truth for
   approved providers, model IDs, efforts, and routes. It contains no
   credentials. Every OpenCode Go model uses an `opencode-go/<model>` catalog
-  slug through OpenCodex's Codex-compatible Responses transport; never
+  slug through OpenCodex's Codex-compatible Responses transport. OpenCode
+  bindings are marked `plaintext-external`; their TOML cards pin the native
+  fallback and must not be reported as external execution. Never
   configure a fake Codex model or route to the DeepSeek API. New code-default models are admitted only after catalog
   validation and a focused benchmark.
 - Every active profile has a registry runtime budget for work-order bytes, context files/bytes, agent steps, and timeout. SCALE enforces the planning contract while Codex controls native turn execution. The orchestrator may request one evidence-backed adjustment across at most two dimensions; speculative increases are rejected. At most one fallback escalation is allowed per task.
-- Every SCALE profile must begin its first assistant message with the exact identity line declared in its TOML: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. A profile must report a runtime mismatch instead of claiming the configured identity.
-- OpenCodex must run in multi-agent V1 mode for OpenCode Go children. Keep its background service healthy; `scripts/scale-codex-recover.sh restore` immediately removes the loopback transport dependency and returns Codex to native ChatGPT routing.
+- Every native SCALE profile must begin its first assistant message with the exact identity line declared in its TOML: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. Plaintext external execution instead trusts `response.model` and the runner emits `[SCALE agent=<role> model=<actual> reasoning=<effort> transport=plaintext-external]`.
+- OpenCodex is used as a one-request Responses gateway beside Codex's model
+  route, not as an encrypted Codex child transport. Keep its background service
+  healthy; `scripts/scale-codex-recover.sh runner-start` repairs it without
+  stopping a healthy proxy. `native-restore` is the explicit destructive path.
 - The internal-development lanes are deliberately separate: policy and privacy gates are read-only authority reports; model operations and benchmark roles provide admission evidence; knowledge evaluation gates candidate promotion; sync reports fleet health while `scale_git` remains the writer. Do not add a new agent when an existing owner can absorb the capability without widening its boundary.
 
 ## Collaboration rules

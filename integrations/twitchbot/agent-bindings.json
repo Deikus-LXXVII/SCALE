@@ -16,8 +16,8 @@
     "scale_telik_webdesign": { "model": "opencode-go/kimi-k3", "reasoning_effort": "max" }
   },
   "fallbacks": {
-    "scale_telik_persona": { "model": "gpt-5.6-luna", "reasoning_effort": "high" },
-    "scale_telik_status": { "model": "gpt-5.6-luna", "reasoning_effort": "high" },
-    "scale_telik_webdesign": { "model": "gpt-5.6-terra", "reasoning_effort": "high" }
+    "scale_telik_persona": { "profile": "scale_telik_optimizer", "model": "gpt-5.6-luna", "reasoning_effort": "high" },
+    "scale_telik_status": { "profile": "scale_telik_optimizer", "model": "gpt-5.6-luna", "reasoning_effort": "high" },
+    "scale_telik_webdesign": { "profile": "scale_telik_frontend", "model": "gpt-5.6-terra", "reasoning_effort": "high" }
   }
 }

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const registryPath = path.join(root, "library", "model-registry.json");
 const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
-const bindings = new Map(registry.agent_bindings.map((entry) => [entry.profile, entry.primary]));
+const bindings = new Map(registry.agent_bindings.map((entry) => [entry.profile, entry]));
 const profileDirs = [path.join(root, ".codex", "agents"), path.join(root, "library", "agents")];
 let updated = 0;
 
@@ -18,17 +18,22 @@ for (const directory of profileDirs) {
     const name = source.match(/^name = "([^"]+)"$/m)?.[1];
     const binding = bindings.get(name);
     if (!binding) throw new Error(`No registry binding for ${name} (${profilePath})`);
+    const endpoint = binding.primary.execution === "plaintext-external" ? binding.fallback : binding.primary;
+    if (!endpoint?.model || !endpoint?.reasoning_effort) throw new Error(`No native Codex endpoint for ${name} (${profilePath})`);
 
     source = source
-      .replace(/^model = "[^"]+"$/m, `model = "${binding.model}"`)
-      .replace(/^model_reasoning_effort = "[^"]+"$/m, `model_reasoning_effort = "${binding.reasoning_effort}"`);
+      .replace(/^model = "[^"]+"$/m, `model = "${endpoint.model}"`)
+      .replace(/^model_reasoning_effort = "[^"]+"$/m, `model_reasoning_effort = "${endpoint.reasoning_effort}"`);
 
-    const identity = `Your first assistant message in every spawned task must begin exactly with: [SCALE agent=${name} model=${binding.model} reasoning=${binding.reasoning_effort}]. This is the active SCALE role, model, and reasoning contract; never claim an inherited or fallback identity unless the runtime actually selected it.`;
+    const identity = `Your first assistant message in every spawned task must begin exactly with: [SCALE agent=${name} model=${endpoint.model} reasoning=${endpoint.reasoning_effort}]. This is the active SCALE role, model, and reasoning contract; never claim an inherited or fallback identity unless the runtime actually selected it.`;
     const identityPattern = /^Your first assistant message in every spawned task must begin exactly with: \[SCALE agent=.*$/m;
     if (identityPattern.test(source)) {
       source = source.replace(identityPattern, identity);
     } else {
       source = source.replace('developer_instructions = """\n', `developer_instructions = """\n${identity}\n\n`);
+    }
+    if (binding.primary.execution === "plaintext-external") {
+      source = source.replace(/^description = "Manual native Codex access card for the verified OpenCode Go model [^"]+\."$/m, `description = "Native Codex fallback card for the runner-only SCALE role ${name}."`);
     }
 
     fs.writeFileSync(profilePath, source);

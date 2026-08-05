@@ -1,9 +1,9 @@
 # OpenCode Go in S.C.A.L.E.
 
-OpenCode Go is a separately metered model pool exposed inside Codex through
-OpenCodex 2.10+. OpenCodex accepts Codex Responses requests, translates model
-and tool traffic to the authenticated OpenCode Go provider, and injects the
-resulting `opencode-go/<model>` entries into the Codex catalog.
+OpenCode Go is a separately metered model pool reached through OpenCodex 2.10+.
+SCALE uses it as a one-request plaintext gateway. It does not use OpenCode as a
+Codex `thread_spawn` child because encrypted task payloads and provider-specific
+reasoning history cannot be replayed reliably across providers.
 
 ## Runtime contract
 
@@ -11,19 +11,18 @@ resulting `opencode-go/<model>` entries into the Codex catalog.
   caller OAuth forwarding.
 - OpenCode Go credentials are read from the user's OpenCode credential store
   and are never written to SCALE, telemetry, work orders, or Git.
-- Multi-agent mode is forced to V1 because parent-to-child task bodies can be
-  backend-encrypted in V2 and therefore unavailable to external providers.
-- Codex offers five ad-hoc spawn model slots. Every approved SCALE role is
-  still available through a named `.codex/agents/<role>.toml` card that pins
-  its exact model and reasoning effort.
-- Models without a normal production role receive a bounded
-  `scale_model_lab_*` custom-agent card. This keeps every currently verified
-  active OpenCode Go model natively spawnable without assigning an expensive
-  or weakly benchmarked model to routine work. Regenerate those cards with
+- Each OpenCode role receives one schema-validated, context-complete work order.
+  The runner sends no hidden history, tools, or `previous_response_id`.
+- OpenCode output is a read-only analysis or unified-diff draft. Codex inspects
+  and applies it; the external model never claims tool execution.
+- Named `.codex/agents/<role>.toml` cards for an external primary pin its native
+  fallback, not the OpenCode model.
+- Models without a normal production role receive a bounded runner-only
+  `scale_model_lab_*` binding. Regenerate those bindings and fallback cards with
   `node scripts/scale-generate-model-lab-agents.mjs`; the operation is
   idempotent.
-- A launchd-managed OpenCodex service keeps the local transport alive. One
-  native Luna fallback is allowed per external task.
+- A launchd-managed OpenCodex service keeps the local gateway alive. A failure
+  produces a machine-readable request for one separate native fallback.
 
 ## Installation and recovery
 
@@ -31,12 +30,14 @@ resulting `opencode-go/<model>` entries into the Codex catalog.
 ./scripts/scale-install-opencodex.sh --apply
 ./scripts/scale-codex-recover.sh status
 ./scripts/scale-codex-recover.sh restore
-./scripts/scale-codex-recover.sh reconnect
+./scripts/scale-codex-recover.sh runner-start
 ```
 
-`restore` removes the loopback dependency and returns Codex to native
-ChatGPT routing even if the proxy process is dead. `reconnect` starts and
-health-checks OpenCodex, re-enables its transport, and refreshes the catalog.
+`runner-start`/`reconnect` starts and health-checks OpenCodex without stopping a
+healthy proxy or changing the model catalog. `restore` is now a no-op when the
+gateway is healthy and refuses destructive recovery when it is not. Use
+`native-restore` only when you explicitly accept removing OpenCode models and
+restarting Codex Desktop.
 
 ## Routing policy
 
@@ -51,8 +52,20 @@ health-checks OpenCodex, re-enables its transport, and refreshes the catalog.
 | Production frontend/domain integration | Terra High | Native authority |
 
 Every profile's first assistant message must declare its exact SCALE role,
-selected model, and reasoning effort. A mismatch is a routing failure, not a
-cosmetic issue.
+selected model, and reasoning effort. For plaintext execution the runner derives
+identity from `response.model`; model-authored banners are not trusted.
+
+## Plaintext work order
+
+```bash
+node scripts/scale-plaintext-runner.mjs \
+  --work-order .codex/.workorders/task.json \
+  --project-root "$PWD"
+```
+
+Exit 0 returns `completed`. Exit 75 returns `fallback_required` with the
+unchanged work order and exact native profile. Start that fallback as a new
+Codex task; never retry or resume the external response.
 
 ## Validation
 

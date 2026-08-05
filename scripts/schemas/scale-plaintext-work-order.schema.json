@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scale.local/schemas/scale-plaintext-work-order.schema.json",
+  "title": "SCALE plaintext external work order",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "execution_id",
+    "agent",
+    "model",
+    "reasoning_effort",
+    "objective",
+    "files",
+    "context",
+    "acceptance",
+    "output_mode",
+    "stop_condition",
+    "max_steps",
+    "max_output_tokens"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "execution_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,95}$" },
+    "agent": { "type": "string", "pattern": "^scale_[a-z0-9_]+$" },
+    "model": { "type": "string", "pattern": "^opencode-go/[a-z0-9._-]+$" },
+    "reasoning_effort": { "enum": ["none", "low", "medium", "high", "xhigh", "max"] },
+    "objective": { "type": "string", "minLength": 1, "maxLength": 8000 },
+    "files": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 },
+      "uniqueItems": true
+    },
+    "context": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 8000 }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": { "type": "string", "minLength": 1, "maxLength": 2000 }
+    },
+    "output_mode": { "enum": ["analysis", "patch"] },
+    "stop_condition": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "max_steps": { "type": "integer", "minimum": 1 },
+    "max_output_tokens": { "type": "integer", "minimum": 64, "maximum": 8192 }
+  }
+}

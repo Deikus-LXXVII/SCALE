@@ -1,6 +1,6 @@
 ---
 name: scale-orchestrator
-description: Route a multi-step software task through S.C.A.L.E. custom agents with explicit model, reasoning, sandbox, and validation ownership. Use when focused delegation, OpenCode Go DeepSeek V4 Flash work orders, or independent QA improves a Codex task.
+description: Route a multi-step software task through S.C.A.L.E. with explicit model, reasoning, sandbox, and validation ownership. Use native Codex children for native bindings and one-shot plaintext work orders for OpenCode Go bindings.
 ---
 
 # S.C.A.L.E. Orchestrator
@@ -18,23 +18,25 @@ go through `scale_orchestrator` as the SCALE Master, even when the wording is
 already clear. The Master may return a one-agent plan, so this gate does not
 force unnecessary specialist fan-out.
 
-### Native OpenCode execution in Codex
+### Plaintext OpenCode execution beside Codex
 
-Named Codex custom-agent cards pin their exact OpenCode Go or native Codex
-model. OpenCodex exposes OpenCode Go through Codex's Responses transport and
-keeps the canonical OpenAI provider as the default. Its managed background
-service is required while OpenCode models are selected; native recovery is
-`scripts/scale-codex-recover.sh restore`.
+Codex `thread_spawn` may encrypt the child task and carry provider-specific
+history. Therefore an OpenCode Go primary is never spawned as a Codex child.
+The host writes a bounded JSON work order and calls
+`scripts/scale-plaintext-runner.mjs`; the runner sends one context-complete
+Responses request and returns analysis or a patch draft for the host to inspect.
+Named TOML cards for those roles pin only their native fallback identity.
 
 1. Refresh a connected `.codex/scale-library-src` clone before retrieving knowledge; SessionStart normally handles this, but verify its state when the task depends on fresh knowledge.
 2. Classify the request before creating agents. If the caller already supplies an explicit SCALE profile, bounded files, acceptance criteria, a low-risk scope, and a stop condition, use the direct route once.
-3. For genuinely multi-model work, resolve the `scale_orchestrator` binding in `library/model-registry.json`. Its named Codex profile pins OpenCode Go DeepSeek V4 Flash High; native Luna high is its single fallback.
+3. Resolve the `scale_orchestrator` binding in `library/model-registry.json`. Its primary is plaintext-external OpenCode Go DeepSeek V4 Flash High; its named Codex profile is native Luna High fallback only.
 4. Write one concise work order with objective, scope/files, acceptance criteria, output format, and stop condition for the mapped role.
 5. The orchestrator may request one bounded budget adjustment only when the baseline is insufficient; hard caps and the one-fallback rule remain authoritative.
-6. An OpenCode Go provider failure routes the unchanged work order once to the named native fallback. Do not retry or silently upgrade. Kimi K3 produces a design packet only; `scale_frontend` on Terra implements it. `scale_security` and `scale_git` stay native.
-7. Require each spawned agent's first message to begin with its exact TOML identity line: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. Treat a mismatch as routing failure.
-8. Run read-only mapping, research, security, or QA work in parallel when their outputs do not depend on each other. Run dependent implementation and validation sequentially.
-9. When durable knowledge changes, require provenance, validation evidence, review/expiry metadata, and explicit conflict handling. Route it through `scale_builder` or `scale_research`, validate with `scale_qa`, then invoke `scale_git` to promote only the named library files to the canonical remote. A strong external result is evidence, not an automatic global promotion.
+6. For `plaintext-external`, serialize the work order using `scripts/schemas/scale-plaintext-work-order.schema.json`, then run `node scripts/scale-plaintext-runner.mjs --work-order <file> --project-root <project>`. Inspect its output; the runner never applies its patch draft.
+7. If the runner returns `fallback_required` (exit 75), spawn the named native fallback as a fresh task using the embedded unchanged work order. Do not resume the external response, retry, or silently upgrade. Kimi K3 produces a design packet only; `scale_frontend` on Terra implements it. `scale_security` and `scale_git` stay native.
+8. Require each native spawned agent's first message to match its TOML identity. For plaintext execution trust only the runner identity derived from `response.model`; do not trust a banner written by the model.
+9. Run read-only mapping, research, security, or QA work in parallel when their outputs do not depend on each other. Run dependent implementation and validation sequentially.
+10. When durable knowledge changes, require provenance, validation evidence, review/expiry metadata, and explicit conflict handling. Route it through `scale_builder` or `scale_research`, validate with `scale_qa`, then invoke `scale_git` to promote only the named library files to the canonical remote. A strong external result is evidence, not an automatic global promotion.
 
 ## Escalation
 

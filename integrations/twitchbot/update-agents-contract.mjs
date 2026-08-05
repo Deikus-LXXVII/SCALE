@@ -22,17 +22,23 @@ S.C.A.L.E. — обязательный способ выполнять нетр
 - Любая составная задача или задача в виде списка пунктов сначала проходит
   через именованный \`scale_orchestrator\` как SCALE Master. Исключение — одна
   атомарная low-risk правка с очевидной проверкой.
-- \`scale_orchestrator\` закреплён за
-  \`opencode-go/deepseek-v4-flash\` с \`high\`. OpenCodex 2.10+ публикует
-  OpenCode Go модели в нативном каталоге Codex и переводит Responses/tool
-  traffic; dispatcher, фиктивный provider и DeepSeek API не используются.
-- OpenCodex работает как launchd service на \`127.0.0.1:10100\` и сохраняет
-  native OpenAI provider как default. При сбое выполнить
-  \`.codex/scale-library-src/scripts/scale-codex-recover.sh restore\`; после
-  ремонта — \`reconnect\`.
-- Каждый SCALE агент обязан начать первое сообщение точной строкой из TOML:
+- Обычный non-sensitive SCALE Master выполняется как один plaintext work order
+  для \`scale_orchestrator\` через
+  \`.codex/scale-library-src/scripts/scale-plaintext-runner.mjs\`: DeepSeek V4
+  Flash High получает весь нужный контекст в одном запросе. Не использовать
+  Codex \`thread_spawn\` для \`opencode-go/*\`; TOML такого профиля — только
+  отдельный native fallback.
+- OpenCodex работает как launchd service на \`127.0.0.1:10100\`. При сбое
+  выполнить \`.codex/scale-library-src/scripts/scale-codex-recover.sh
+  runner-start\`; этот путь не останавливает здоровый gateway и не удаляет
+  каталог моделей. \`native-restore\` — только явная аварийная команда с
+  последующим перезапуском Codex.
+- Каждый native SCALE агент обязан начать первое сообщение точной строкой из TOML:
   \`[SCALE agent=<role> model=<model> reasoning=<effort>]\`. Несовпадение —
   ошибка маршрутизации, а не косметика.
+- Для plaintext OpenCode доверять только \`identity\`, которую runner строит из
+  \`response.model\`. При exit 75 запустить указанный fallback новой native
+  задачей; не retry и не продолжать внешний response.
 - Проверки выполняются пакетно после всей серии изменений: не запускать один и
   тот же suite после каждого пункта, повторять только упавшую проверку после
   исправления и затем один финальный acceptance check.

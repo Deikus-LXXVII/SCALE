@@ -1,8 +1,9 @@
 # S.C.A.L.E. safe hybrid routing
 
 The registry is authoritative. Native Codex profiles use Luna, Terra, and Sol;
-independent QA uses a separate Luna context. OpenCode Go models are catalogued and invoked by Codex through the
-managed OpenCodex Responses transport (`execution: codex-native`).
+independent QA uses a separate Luna context. OpenCode Go models are invoked as
+single context-complete requests through the managed OpenCodex Responses
+gateway (`execution: plaintext-external`), never by Codex `thread_spawn`.
 
 | Work | OpenCode Go in Codex | Native fallback/authority |
 | --- | --- | --- |
@@ -15,7 +16,8 @@ managed OpenCodex Responses transport (`execution: codex-native`).
 | Routine/docs/indexing | DeepSeek V4 Flash High | Luna High |
 
 Worker work requires one bounded, privacy-gated work order and one named
-fallback. Do not retry or silently substitute another Go model. Never send
+fallback. External output is a draft: the Codex host applies a returned patch
+only after inspection. Do not retry or silently substitute another Go model. Never send
 secrets, credentials, PII, production dumps, or security investigations.
 
 Per-profile budgets and registry hard caps still apply. The orchestrator may

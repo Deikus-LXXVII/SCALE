@@ -29,7 +29,7 @@ for (const model of labModels) {
   const existing = registry.agent_bindings.find((entry) => entry.profile === name);
   const binding = {
     profile: name,
-    primary: { execution: "codex-native", model: model.id, reasoning_effort: effort },
+    primary: { execution: "plaintext-external", model: model.id, reasoning_effort: effort },
     fallback: { profile: "scale_optimizer", model: "gpt-5.6-luna", reasoning_effort: "high" }
   };
   if (existing) Object.assign(existing, binding); else registry.agent_bindings.push(binding);
@@ -41,16 +41,16 @@ for (const model of labModels) {
     max_dispatch_ms: 600000
   };
 
-  const identity = `[SCALE agent=${name} model=${model.id} reasoning=${effort}]`;
+  const identity = `[SCALE agent=${name} model=gpt-5.6-luna reasoning=high]`;
   const profile = `name = "${name}"
-description = "Manual native Codex access card for the verified OpenCode Go model ${model.id}."
-model = "${model.id}"
-model_reasoning_effort = "${effort}"
+description = "Native Codex fallback card for the runner-only SCALE role ${name}."
+model = "gpt-5.6-luna"
+model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Your first assistant message in every spawned task must begin exactly with: ${identity}. This is the active SCALE role, model, and reasoning contract; report a runtime mismatch instead of claiming this identity.
 
-This is a manual model-access and compatibility lane, not an automatic routing role. Use it only when the caller explicitly requests this exact model or scale_model_ops assigns a bounded benchmark. Work only on named non-sensitive files with explicit acceptance criteria and a stop condition. You may use Codex tools and edit within the workspace, but never handle secrets, credentials, PII, production dumps, auth/security investigations, irreversible operations, Git promotion, or cross-project writes. Run the smallest deterministic check and return outcome, changed paths, evidence, and any protocol limitation. Stop rather than silently substituting another OpenCode model; the runtime may use the single native Luna fallback declared in the registry.
+This is the native fallback for a manual plaintext model-access lane, not an automatic routing role. Use it only when the runner returned fallback_required for this exact role or scale_model_ops assigns a bounded benchmark. Work only on named non-sensitive files with explicit acceptance criteria and a stop condition. Never claim the OpenCode model executed in this native task. Run the smallest deterministic check and return outcome, changed paths, evidence, and any protocol limitation.
 """
 `;
   fs.writeFileSync(path.join(root, ".codex", "agents", `${name}.toml`), profile);
@@ -70,4 +70,4 @@ for (const directory of [path.join(root, ".codex", "agents"), path.join(root, "l
 }
 
 fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
-console.log(`Generated ${labModels.length} manual model-lab agents; ${usedModels.size} models already have functional roles.`);
+console.log(`Generated ${labModels.length} plaintext model-lab bindings with native fallback cards; ${usedModels.size} models already have functional roles.`);

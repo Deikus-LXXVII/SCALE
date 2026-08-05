@@ -67,7 +67,8 @@ const assignments = {
   scale_sync: ["opencode-go/deepseek-v4-flash", "high"]
 };
 
-registry.description = "Canonical S.C.A.L.E. hybrid model policy. Codex is the session runtime; OpenCodex exposes the authenticated OpenCode Go catalog through Codex's native Responses transport while preserving native ChatGPT/Codex fallback authority.";
+registry.schema_version = 5;
+registry.description = "Canonical S.C.A.L.E. hybrid model policy. Codex owns orchestration and native fallbacks; bounded non-sensitive OpenCode Go work runs as one-shot plaintext external work orders so encrypted Codex thread_spawn state never crosses providers.";
 const goProvider = registry.providers.find((entry) => entry.id === "opencode-go");
 Object.assign(goProvider, {
   kind: "native",
@@ -99,7 +100,7 @@ for (const model of registry.models) {
 }
 
 for (const route of registry.routes) {
-  route.execution = "codex-native";
+  route.execution = route.model.startsWith("opencode-go/") ? "plaintext-external" : "codex-native";
   if (route.fallback) {
     route.fallback = route.id === "web-design"
       ? { profile: "scale_frontend", model: "gpt-5.6-terra", reasoning_effort: "high" }
@@ -119,7 +120,7 @@ for (const binding of registry.agent_bindings) {
   const assignment = assignments[binding.profile];
   if (!assignment && binding.profile?.startsWith("scale_model_lab_")) continue;
   if (!assignment) throw new Error(`Missing assignment for ${binding.profile}`);
-  binding.primary = { execution: "codex-native", model: assignment[0], reasoning_effort: assignment[1] };
+  binding.primary = { execution: assignment[0].startsWith("opencode-go/") ? "plaintext-external" : "codex-native", model: assignment[0], reasoning_effort: assignment[1] };
   if (assignment[0].startsWith("opencode-go/")) {
     binding.fallback = binding.profile === "scale_webdesign"
       ? { profile: "scale_frontend", model: "gpt-5.6-terra", reasoning_effort: "high" }
@@ -129,21 +130,23 @@ for (const binding of registry.agent_bindings) {
   }
 }
 
-registry.native_provider_policy = {
-  status: "codex-native-via-opencodex",
-  reason: "OpenCodex translates the Codex Responses protocol to OpenCode Go and returns the models in the native Codex catalog; named SCALE TOML profiles therefore pin external models for ordinary spawn_agent calls.",
-  safe_default: "OpenCodex keeps the canonical OpenAI provider as the default and forwards ChatGPT OAuth directly. The emergency recovery command removes the loopback base URL and restores an untouched native Codex path if the local service fails.",
-  multi_agent_mode: "v1",
-  limitation: "Codex exposes at most five ad-hoc model overrides; every approved SCALE role remains available through its named custom-agent TOML profile. V1 is required because V2 can encrypt parent-to-child task bodies for the native OpenAI backend."
+delete registry.native_provider_policy;
+registry.transport_policy = {
+  status: "plaintext-external-via-opencodex",
+  reason: "OpenCode Go receives one context-complete Responses request outside Codex thread_spawn.",
+  safe_default: "Native OpenAI remains the Codex child-agent path and native recovery never depends on continuing an external response.",
+  conversation_mode: "single-request",
+  limitation: "External output is analysis or a patch draft; the Codex host owns tools, application, and verification."
 };
 registry.change_protocol = [
   "Keep provider credentials outside S.C.A.L.E. and Git.",
-  "Use OpenCodex service mode with health checks; never point Codex at an unmanaged one-shot proxy.",
+  "Use OpenCodex service mode with health checks and one-shot plaintext work orders.",
   "DeepSeek means OpenCode Go through OpenCodex; never configure the DeepSeek API.",
-  "Keep the canonical OpenAI provider as the default and retain one named native Codex fallback at most per task.",
+  "Keep the canonical OpenAI provider as the default and retain one separate named native Codex fallback at most per task.",
+  "Never pass previous_response_id, retry, or resume an OpenCode result in a native fallback.",
   "Keep Sol at high or lower reasoning and preserve Terra for sensitive integration.",
-  "Every agent's first assistant message must identify its SCALE role, exact selected model, and reasoning effort."
+  "Derive external identity from response.model; native agents use the exact TOML identity line."
 ];
 
 fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
-console.log(`Updated ${Object.keys(assignments).length} SCALE bindings for Codex/OpenCodex native routing.`);
+console.log(`Updated ${Object.keys(assignments).length} SCALE bindings for Codex plus plaintext OpenCode routing.`);

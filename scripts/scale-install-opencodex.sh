@@ -14,14 +14,13 @@ fi
 
 if [[ "$apply" != true ]]; then
   node "$root/scripts/scale-configure-opencodex.mjs" --dry-run
-  printf '%s\n' 'Dry run only. Re-run with --apply to write ~/.opencodex, install the service, and sync Codex.'
+  printf '%s\n' 'Dry run only. Re-run with --apply to write ~/.opencodex and install the runner-only gateway service; native Codex routing stays unchanged.'
   exit 0
 fi
 
 node "$root/scripts/scale-configure-opencodex.mjs"
 ocx config validate
 ocx service install
-ocx v2 mode v1
 ocx ensure
 ocx sync
 healthy=false
@@ -34,4 +33,4 @@ if [[ "$healthy" != true ]]; then
   "$root/scripts/scale-codex-recover.sh" restore
   exit 1
 fi
-printf '%s\n' 'OpenCodex service installed. Restart Codex Desktop once to load the refreshed catalog and custom agents.'
+printf '%s\n' 'OpenCodex gateway installed and healthy. Keep it running while OpenCode models are selected; use the plaintext runner for external subwork.'

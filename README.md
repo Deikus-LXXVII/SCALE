@@ -13,8 +13,8 @@ project task → tagged retrieval → implementation/research → QA → Git pro
 
 ## Architecture
 
-- `.codex/agents/` — active Codex roles, each with an explicit model, reasoning effort, sandbox, and mandatory first-message identity. Named profiles can pin native Codex or OpenCode Go catalog models.
-- `opencode/agents/` — provider-side role descriptions retained for compatibility and benchmark fixtures; Codex-native SCALE spawning uses `.codex/agents/*.toml`.
+- `.codex/agents/` — native Codex roles and native fallback cards, each with an explicit model, reasoning effort, sandbox, and mandatory first-message identity.
+- `opencode/agents/` — provider-side role descriptions retained for compatibility and benchmark fixtures; active OpenCode work uses one-shot plaintext work orders rather than Codex child spawning.
 - `library/rules/` — reusable domain rules.
 - `library/books/` — cited research reports.
 - `library/agents/` — catalogued, differentiated role profiles and tagged design notes.
@@ -43,22 +43,26 @@ The initial commit and remote creation are intentionally not automated because t
 
 ## OpenCode Go in Codex
 
-SCALE uses OpenCodex 2.10+ as a managed Responses-compatible transport. It
-keeps native ChatGPT/Codex as the default provider, discovers the authenticated
-OpenCode Go catalog, and lets named Codex custom agents pin those models.
-Verified models without a functional production assignment get a restricted
-`scale_model_lab_*` profile, so the full active catalog remains natively
-spawnable while normal routing still selects only task-appropriate models.
+SCALE uses OpenCodex 2.10+ as a managed Responses-compatible gateway. It keeps
+native ChatGPT/Codex as the child-agent path and discovers the authenticated
+OpenCode Go catalog. Because Codex child tasks may be encrypted, OpenCode roles
+receive one context-complete JSON work order through
+`scripts/scale-plaintext-runner.mjs`. Their named TOML cards pin only the
+separate native fallback. Restricted `scale_model_lab_*` bindings expose the
+full active catalog through the same runner without assigning every model to
+production routing.
 
 ```bash
 ./scripts/scale-install-opencodex.sh --apply
 ./scripts/scale-codex-recover.sh status
 ```
 
-The install uses multi-agent V1 for readable parent-to-child work orders and a
-launchd-managed service. If the local service is unavailable, run
-`./scripts/scale-codex-recover.sh restore` to return immediately to native
-Codex, or `reconnect` after repairing OpenCodex.
+The install provides a launchd-managed service. The plaintext runner sends no
+conversation history or `previous_response_id`. Use
+`./scripts/scale-codex-recover.sh runner-start` (or the compatibility alias
+`reconnect`) after repairing OpenCodex; it does not stop a healthy proxy or
+remove the model catalog. `native-restore` is an explicit emergency path that
+removes OpenCode models and requires a Codex restart.
 
 ## Connect another Codex project
 
@@ -108,4 +112,4 @@ Normal tagged retrieval returns only `curated` knowledge. Use `library/find-by-t
 ./scripts/validate-scale-install.sh
 ```
 
-Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new model route. The configured DeepSeek identifier is `opencode-go/deepseek-v4-flash`; its routes use High reasoning, and QA still gates global promotion. OpenCodex owns the managed loopback transport while enabled, and `scripts/scale-codex-recover.sh restore` removes that dependency. Add models only after a live catalog and tool smoke test. Never commit provider credentials.
+Run `node scripts/validate-scale-model-registry.mjs --catalog "$HOME/.codex/models.json" --config "$HOME/.codex/config.toml"` to verify a machine before accepting a new model route. The configured DeepSeek identifier is `opencode-go/deepseek-v4-flash`; its routes use High reasoning, and QA still gates global promotion. OpenCode subwork uses `scripts/scale-plaintext-runner.mjs` with one context-complete request; its output is a draft and native fallback is a separate task. OpenCodex owns the managed loopback gateway while enabled, and `runner-start` repairs it without stopping healthy routing. Add models only after a live catalog and focused smoke test. Never commit provider credentials.

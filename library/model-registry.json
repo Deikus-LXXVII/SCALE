@@ -1,6 +1,6 @@
 {
-  "schema_version": 4,
-  "description": "Canonical S.C.A.L.E. hybrid model policy. Codex is the session runtime; OpenCodex exposes the authenticated OpenCode Go catalog through Codex's native Responses transport while preserving native ChatGPT/Codex fallback authority.",
+  "schema_version": 5,
+  "description": "Canonical S.C.A.L.E. hybrid model policy. Codex owns orchestration and native fallbacks; bounded non-sensitive OpenCode Go work runs as one-shot plaintext external work orders so encrypted Codex thread_spawn state never crosses providers.",
   "runtime_policy": {
     "telemetry_path": ".codex/scale-telemetry.jsonl",
     "max_work_order_bytes": 32000,
@@ -379,7 +379,47 @@
       ],
       "require_estimate": true
     },
-    "direct_route": "If the caller provides an explicit SCALE profile, bounded files, acceptance criteria, and a low-risk scope, dispatch that profile directly without an orchestration turn."
+    "direct_route": "If the caller provides an explicit SCALE profile, bounded files, acceptance criteria, and a low-risk scope, dispatch that profile directly without an orchestration turn.",
+    "plaintext_external_policy": {
+      "enabled": true,
+      "endpoint": "http://127.0.0.1:10100/v1",
+      "max_output_tokens": 8192,
+      "no_previous_response": true,
+      "max_attempts": 1,
+      "automatic_native_fallback": false,
+      "allowed_profiles": [
+        "scale_orchestrator",
+        "scale_cleaner",
+        "scale_code_simple",
+        "scale_code_standard",
+        "scale_docs",
+        "scale_environment",
+        "scale_indexer",
+        "scale_library",
+        "scale_prompt",
+        "scale_research",
+        "scale_test_engineer",
+        "scale_test_observer",
+        "scale_webdesign",
+        "scale_model_ops",
+        "scale_sync"
+      ],
+      "allowed_profile_prefixes": [
+        "scale_model_lab_opencode_go_",
+        "scale_telik_"
+      ],
+      "analysis_only_profiles": [
+        "scale_orchestrator",
+        "scale_environment",
+        "scale_prompt",
+        "scale_research",
+        "scale_test_observer",
+        "scale_webdesign",
+        "scale_model_ops",
+        "scale_sync"
+      ],
+      "boundary": "One context-complete request only. The runner may return analysis or a patch draft, but cannot call Codex tools, edit files, resume a response, retry, or execute fallback. Secrets, credentials, PII, security investigations, auth flows, production dumps, and Git authority stay native."
+    }
   },
   "providers": [
     {
@@ -731,7 +771,7 @@
     {
       "id": "orchestration",
       "profile": "scale_orchestrator",
-      "execution": "codex-native",
+      "execution": "plaintext-external",
       "model": "opencode-go/deepseek-v4-flash",
       "reasoning_effort": "high",
       "fallback": {
@@ -744,7 +784,7 @@
     {
       "id": "simple-code",
       "profile": "scale_code_simple",
-      "execution": "codex-native",
+      "execution": "plaintext-external",
       "model": "opencode-go/deepseek-v4-flash",
       "reasoning_effort": "high",
       "fallback": {
@@ -757,7 +797,7 @@
     {
       "id": "standard-code",
       "profile": "scale_code_standard",
-      "execution": "codex-native",
+      "execution": "plaintext-external",
       "model": "opencode-go/deepseek-v4-pro",
       "reasoning_effort": "high",
       "fallback": {
@@ -778,7 +818,7 @@
     {
       "id": "web-design",
       "profile": "scale_webdesign",
-      "execution": "codex-native",
+      "execution": "plaintext-external",
       "model": "opencode-go/kimi-k3",
       "reasoning_effort": "max",
       "fallback": {
@@ -793,7 +833,7 @@
     {
       "profile": "scale_orchestrator",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -838,7 +878,7 @@
     {
       "profile": "scale_cleaner",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -859,7 +899,7 @@
     {
       "profile": "scale_code_simple",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -872,7 +912,7 @@
     {
       "profile": "scale_code_standard",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-pro",
         "reasoning_effort": "high"
       },
@@ -885,7 +925,7 @@
     {
       "profile": "scale_docs",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -898,7 +938,7 @@
     {
       "profile": "scale_environment",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -927,7 +967,7 @@
     {
       "profile": "scale_indexer",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -940,7 +980,7 @@
     {
       "profile": "scale_library",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -969,7 +1009,7 @@
     {
       "profile": "scale_prompt",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/qwen3.7-plus",
         "reasoning_effort": "high"
       },
@@ -990,7 +1030,7 @@
     {
       "profile": "scale_research",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/glm-5.2",
         "reasoning_effort": "high"
       },
@@ -1019,7 +1059,7 @@
     {
       "profile": "scale_test_engineer",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-pro",
         "reasoning_effort": "high"
       },
@@ -1032,7 +1072,7 @@
     {
       "profile": "scale_test_observer",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -1045,7 +1085,7 @@
     {
       "profile": "scale_webdesign",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/kimi-k3",
         "reasoning_effort": "max"
       },
@@ -1074,7 +1114,7 @@
     {
       "profile": "scale_model_ops",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/glm-5.2",
         "reasoning_effort": "high"
       },
@@ -1103,7 +1143,7 @@
     {
       "profile": "scale_sync",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/deepseek-v4-flash",
         "reasoning_effort": "high"
       },
@@ -1116,7 +1156,7 @@
     {
       "profile": "scale_model_lab_opencode_go_gpt_5_6_luna",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/gpt-5.6-luna",
         "reasoning_effort": "high"
       },
@@ -1129,7 +1169,7 @@
     {
       "profile": "scale_model_lab_opencode_go_glm_5_1",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/glm-5.1",
         "reasoning_effort": "high"
       },
@@ -1142,7 +1182,7 @@
     {
       "profile": "scale_model_lab_opencode_go_hy3",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/hy3",
         "reasoning_effort": "high"
       },
@@ -1155,7 +1195,7 @@
     {
       "profile": "scale_model_lab_opencode_go_kimi_k2_6",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/kimi-k2.6",
         "reasoning_effort": "high"
       },
@@ -1168,7 +1208,7 @@
     {
       "profile": "scale_model_lab_opencode_go_kimi_k2_7_code",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/kimi-k2.7-code",
         "reasoning_effort": "none"
       },
@@ -1181,7 +1221,7 @@
     {
       "profile": "scale_model_lab_opencode_go_mimo_v2_5",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/mimo-v2.5",
         "reasoning_effort": "high"
       },
@@ -1194,7 +1234,7 @@
     {
       "profile": "scale_model_lab_opencode_go_mimo_v2_5_pro",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/mimo-v2.5-pro",
         "reasoning_effort": "high"
       },
@@ -1207,7 +1247,7 @@
     {
       "profile": "scale_model_lab_opencode_go_minimax_m2_7",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/minimax-m2.7",
         "reasoning_effort": "high"
       },
@@ -1220,7 +1260,7 @@
     {
       "profile": "scale_model_lab_opencode_go_minimax_m3",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/minimax-m3",
         "reasoning_effort": "high"
       },
@@ -1233,7 +1273,7 @@
     {
       "profile": "scale_model_lab_opencode_go_qwen3_6_plus",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/qwen3.6-plus",
         "reasoning_effort": "high"
       },
@@ -1246,7 +1286,7 @@
     {
       "profile": "scale_model_lab_opencode_go_qwen3_7_max",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/qwen3.7-max",
         "reasoning_effort": "high"
       },
@@ -1259,7 +1299,7 @@
     {
       "profile": "scale_model_lab_opencode_go_qwen3_8_max",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/qwen3.8-max",
         "reasoning_effort": "high"
       },
@@ -1272,7 +1312,7 @@
     {
       "profile": "scale_model_lab_opencode_go_glm_5",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/glm-5",
         "reasoning_effort": "high"
       },
@@ -1285,7 +1325,7 @@
     {
       "profile": "scale_model_lab_opencode_go_kimi_k2_5",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/kimi-k2.5",
         "reasoning_effort": "high"
       },
@@ -1298,7 +1338,7 @@
     {
       "profile": "scale_model_lab_opencode_go_minimax_m2_5",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/minimax-m2.5",
         "reasoning_effort": "high"
       },
@@ -1311,7 +1351,7 @@
     {
       "profile": "scale_model_lab_opencode_go_qwen3_5_plus",
       "primary": {
-        "execution": "codex-native",
+        "execution": "plaintext-external",
         "model": "opencode-go/qwen3.5-plus",
         "reasoning_effort": "high"
       },
@@ -1322,19 +1362,20 @@
       }
     }
   ],
-  "native_provider_policy": {
-    "status": "codex-native-via-opencodex",
-    "reason": "OpenCodex translates the Codex Responses protocol to OpenCode Go and returns the models in the native Codex catalog; named SCALE TOML profiles therefore pin external models for ordinary spawn_agent calls.",
-    "safe_default": "OpenCodex keeps the canonical OpenAI provider as the default and forwards ChatGPT OAuth directly. The emergency recovery command removes the loopback base URL and restores an untouched native Codex path if the local service fails.",
-    "multi_agent_mode": "v1",
-    "limitation": "Codex exposes at most five ad-hoc model overrides; every approved SCALE role remains available through its named custom-agent TOML profile. V1 is required because V2 can encrypt parent-to-child task bodies for the native OpenAI backend."
+  "transport_policy": {
+    "status": "plaintext-external-via-opencodex",
+    "reason": "OpenCode Go receives one context-complete Responses request outside Codex thread_spawn. This avoids encrypted task payloads and cross-provider reasoning history.",
+    "safe_default": "Native OpenAI remains the Codex child-agent path. OpenCodex failure produces a fallback request and never blocks native Codex recovery.",
+    "conversation_mode": "single-request",
+    "limitation": "The external model has no Codex tools or hidden session context. It returns analysis or a patch draft; the Codex host inspects and applies any mutation."
   },
   "change_protocol": [
     "Keep provider credentials outside S.C.A.L.E. and Git.",
     "Use OpenCodex service mode with health checks; never point Codex at an unmanaged one-shot proxy.",
     "DeepSeek means OpenCode Go through OpenCodex; never configure the DeepSeek API.",
-    "Keep the canonical OpenAI provider as the default and retain one named native Codex fallback at most per task.",
+    "Keep the canonical OpenAI provider as the default and execute OpenCode only through one-shot plaintext work orders.",
+    "Never pass previous_response_id, retry, or continue an OpenCode result inside a native fallback conversation.",
     "Keep Sol at high or lower reasoning and preserve Terra for sensitive integration.",
-    "Every agent's first assistant message must identify its SCALE role, exact selected model, and reasoning effort."
+    "Derive external identity from response.model; native agents use the exact TOML identity line."
   ]
 }

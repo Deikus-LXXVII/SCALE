@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scale.local/schemas/scale-fallback-request.schema.json",
+  "title": "SCALE native fallback request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "execution_id", "status", "reason", "fallback", "work_order", "resume_external_execution"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "execution_id": { "type": "string" },
+    "status": { "const": "fallback_required" },
+    "reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "message"],
+      "properties": {
+        "kind": { "enum": ["transport_error", "provider_error", "identity_mismatch", "invalid_response"] },
+        "message": { "type": "string" },
+        "http_status": { "type": "integer", "minimum": 100, "maximum": 599 }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "model", "reasoning_effort"],
+      "properties": {
+        "profile": { "type": "string" },
+        "model": { "type": "string" },
+        "reasoning_effort": { "type": "string" }
+      }
+    },
+    "work_order": { "$ref": "scale-plaintext-work-order.schema.json" },
+    "resume_external_execution": { "const": false }
+  }
+}
