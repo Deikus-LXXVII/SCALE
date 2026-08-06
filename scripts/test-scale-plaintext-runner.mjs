@@ -8,6 +8,7 @@ import { executeWorkOrder, validateWorkOrder, WorkOrderError } from "./scale-pla
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const registry = JSON.parse(fs.readFileSync(path.join(root, "library", "model-registry.json"), "utf8"));
+assert.strictEqual(registry.runtime_policy.agent_budgets.scale_webdesign.max_dispatch_ms, 30 * 60 * 1000, "scale_webdesign dispatch budget must be 1800000 ms (30 minutes)");
 const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "scale-plaintext-runner-"));
 fs.writeFileSync(path.join(projectRoot, "demo.js"), "export const value = 1;\n");
 

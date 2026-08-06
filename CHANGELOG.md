@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8+codex.20260806134450] - 2026-08-06
+
+- Extend the Kimi K3 `scale_webdesign` dispatch budget to the registry's
+  30-minute hard cap (1,800,000 ms) and lock it with a focused regression
+  assertion.
+
 ## [0.1.8+codex.20260805213323] - 2026-08-05
 
 - Add a delegation-first execution firewall for session-root and SCALE Master

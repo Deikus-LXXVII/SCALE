@@ -164,7 +164,7 @@
         "max_context_files": 8,
         "max_context_bytes": 80000,
         "max_agent_steps": 16,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_policy_auditor": {
         "max_work_order_bytes": 24000,
