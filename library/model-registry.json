@@ -516,6 +516,16 @@
       "use": "native low-cost fallback, orchestration, documentation, and bounded advisory work; xhigh is approved for deliberate high-context tasks"
     },
     {
+      "id": "gpt-5.3-codex-spark",
+      "provider": "codex",
+      "active": true,
+      "approved_reasoning_efforts": [
+        "low",
+        "medium"
+      ],
+      "use": "native fast model for bounded coding and granular UI iteration; not authority for high-context, sensitive, or critical work"
+    },
+    {
       "id": "opencode-go/deepseek-v4-flash",
       "provider": "opencode-go",
       "active": true,
@@ -818,7 +828,8 @@
     }
   ],
   "reasoning_limits": {
-    "gpt-5.6-sol": "high"
+    "gpt-5.6-sol": "high",
+    "gpt-5.3-codex-spark": "medium"
   },
   "routes": [
     {
@@ -841,11 +852,11 @@
       "model": "opencode-go/deepseek-v4-flash",
       "reasoning_effort": "high",
       "fallback": {
-        "profile": "scale_optimizer",
-        "model": "gpt-5.6-luna",
-        "reasoning_effort": "high"
+        "profile": "scale_code_simple",
+        "model": "gpt-5.3-codex-spark",
+        "reasoning_effort": "medium"
       },
-      "boundary": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance checks; native Luna high is the single fallback."
+      "boundary": "Default for one isolated, low-risk, non-sensitive implementation or granular UI iteration with explicit acceptance checks; native Spark medium is the single fallback."
     },
     {
       "id": "standard-code",
@@ -957,9 +968,9 @@
         "reasoning_effort": "high"
       },
       "fallback": {
-        "profile": "scale_optimizer",
-        "model": "gpt-5.6-luna",
-        "reasoning_effort": "high"
+        "profile": "scale_code_simple",
+        "model": "gpt-5.3-codex-spark",
+        "reasoning_effort": "medium"
       }
     },
     {
@@ -1130,9 +1141,9 @@
         "reasoning_effort": "high"
       },
       "fallback": {
-        "profile": "scale_optimizer",
-        "model": "gpt-5.6-luna",
-        "reasoning_effort": "high"
+        "profile": "scale_test_observer",
+        "model": "gpt-5.3-codex-spark",
+        "reasoning_effort": "low"
       }
     },
     {

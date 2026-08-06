@@ -106,7 +106,9 @@ const failed = await executeWorkOrder({
 });
 assert.equal(requestCount, 1, "runner must not retry");
 assert.equal(failed.status, "fallback_required");
-assert.equal(failed.fallback_request.fallback.model, "gpt-5.6-luna");
+assert.equal(failed.fallback_request.fallback.profile, "scale_code_simple");
+assert.equal(failed.fallback_request.fallback.model, "gpt-5.3-codex-spark");
+assert.equal(failed.fallback_request.fallback.reasoning_effort, "medium");
 assert.equal(failed.fallback_request.resume_external_execution, false);
 
 console.log(JSON.stringify({ ok: true, checks: 13, transport_requests: 2, retries: 0, automatic_fallbacks: 0 }));

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.8+codex.20260806142937] - 2026-08-06
+
+- Admit native `gpt-5.3-codex-spark` with SCALE-approved `low` and `medium`
+  reasoning for bounded, non-sensitive iteration. OpenAI documents Spark as a
+  separate fast, less-capable model with its own usage limits and a fit for
+  small, focused UI changes in a tight iteration loop ([speed guidance](https://learn.chatgpt.com/docs/agent-configuration/speed#codex-spark),
+  [granular UI guidance](https://learn.chatgpt.com/use-cases/make-granular-ui-changes#introduction)).
+- Route the `scale_code_simple` native fallback to Spark `medium` with
+  `workspace-write`; route passive `scale_test_observer` fallback to Spark
+  `low` with `read-only` sandboxing.
+- Retain native Luna for orchestration, shared/high-context fallback lanes,
+  research, model operations, QA, benchmark, knowledge, sync, and model-lab
+  work; preserve Sol/Terra authority and all OpenCode primary routes.
+
 ## [0.1.8+codex.20260806140429] - 2026-08-06
 
 - Add the registry-only `large-slow` timeout class for active max-capable

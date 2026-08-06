@@ -34,12 +34,12 @@ if ! rg -q 'delegation-first execution firewall is mandatory' "$agents_dir/scale
   echo "scale_orchestrator must enforce the delegation-first execution firewall." >&2
   exit 1
 fi
-if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_code_simple.toml" || ! rg -q '^model_reasoning_effort = "high"$' "$agents_dir/scale_code_simple.toml"; then
-  echo "scale_code_simple Codex card must use its native Luna/high fallback." >&2
+if ! rg -q '^model = "gpt-5.3-codex-spark"$' "$agents_dir/scale_code_simple.toml" || ! rg -q '^model_reasoning_effort = "medium"$' "$agents_dir/scale_code_simple.toml" || ! rg -q '^sandbox_mode = "workspace-write"$' "$agents_dir/scale_code_simple.toml"; then
+  echo "scale_code_simple Codex card must use its native Spark/medium/workspace-write fallback." >&2
   exit 1
 fi
-if ! rg -q '^model = "gpt-5.6-luna"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^model_reasoning_effort = "high"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/scale_test_observer.toml"; then
-  echo "scale_test_observer Codex card must use its native Luna/high/read-only fallback." >&2
+if ! rg -q '^model = "gpt-5.3-codex-spark"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^model_reasoning_effort = "low"$' "$agents_dir/scale_test_observer.toml" || ! rg -q '^sandbox_mode = "read-only"$' "$agents_dir/scale_test_observer.toml"; then
+  echo "scale_test_observer Codex card must use its native Spark/low/read-only fallback." >&2
   exit 1
 fi
 

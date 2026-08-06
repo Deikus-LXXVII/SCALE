@@ -67,6 +67,13 @@ const assignments = {
   scale_sync: ["opencode-go/deepseek-v4-flash", "high"]
 };
 
+const nativeFallbacks = {
+  scale_code_simple: { profile: "scale_code_simple", model: "gpt-5.3-codex-spark", reasoning_effort: "medium" },
+  scale_test_observer: { profile: "scale_test_observer", model: "gpt-5.3-codex-spark", reasoning_effort: "low" }
+};
+const nativeFallbackFor = (profile) => nativeFallbacks[profile]
+  ?? { profile: "scale_optimizer", model: "gpt-5.6-luna", reasoning_effort: "high" };
+
 registry.schema_version = 5;
 registry.description = "Canonical S.C.A.L.E. hybrid model policy. Codex owns orchestration and native fallbacks; bounded non-sensitive OpenCode Go work runs as one-shot plaintext external work orders so encrypted Codex thread_spawn state never crosses providers.";
 const goProvider = registry.providers.find((entry) => entry.id === "opencode-go");
@@ -104,12 +111,14 @@ for (const route of registry.routes) {
   if (route.fallback) {
     route.fallback = route.id === "web-design"
       ? { profile: "scale_frontend", model: "gpt-5.6-terra", reasoning_effort: "high" }
-      : { profile: "scale_optimizer", model: "gpt-5.6-luna", reasoning_effort: "high" };
+      : route.id === "simple-code"
+        ? nativeFallbackFor("scale_code_simple")
+        : { profile: "scale_optimizer", model: "gpt-5.6-luna", reasoning_effort: "high" };
   }
 }
 const routeBoundaries = {
   orchestration: "OpenCode Go DeepSeek V4 Flash creates the non-sensitive route plan; native Luna high is the single fallback when Go is unavailable.",
-  "simple-code": "Default for one isolated, low-risk, non-sensitive implementation with explicit acceptance checks; native Luna high is the single fallback.",
+  "simple-code": "Default for one isolated, low-risk, non-sensitive implementation or granular UI iteration with explicit acceptance checks; native Spark medium is the single fallback.",
   "standard-code": "Default for bounded non-sensitive multi-file implementation; native Luna high is the transport fallback while Terra/Sol retain sensitive authority.",
   "critical-code": "Default and final authority for critical changes. OpenCode may provide a read-only draft, never final authority.",
   "web-design": "Premium visual design brief and review only. Kimi K3 does not implement production web code; Terra is the native implementation fallback."
@@ -124,7 +133,7 @@ for (const binding of registry.agent_bindings) {
   if (assignment[0].startsWith("opencode-go/")) {
     binding.fallback = binding.profile === "scale_webdesign"
       ? { profile: "scale_frontend", model: "gpt-5.6-terra", reasoning_effort: "high" }
-      : { profile: "scale_optimizer", model: "gpt-5.6-luna", reasoning_effort: "high" };
+      : nativeFallbackFor(binding.profile);
   } else {
     delete binding.fallback;
   }
