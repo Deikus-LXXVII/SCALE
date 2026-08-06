@@ -104,6 +104,18 @@ requireValue(Array.isArray(plaintextPolicy?.analysis_only_profiles), "plaintext 
 
 const budgetFields = ["max_work_order_bytes", "max_context_files", "max_context_bytes", "max_agent_steps", "max_dispatch_ms"];
 const hardBudget = Object.fromEntries(budgetFields.map((field) => [field, registry.runtime_policy?.[field]]));
+const timeoutClasses = registry.runtime_policy?.timeout_classes;
+requireValue(timeoutClasses && typeof timeoutClasses === "object" && !Array.isArray(timeoutClasses), "runtime_policy.timeout_classes is missing");
+for (const [className, timeoutClass] of Object.entries(timeoutClasses ?? {})) {
+  requireValue(/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(className), `runtime_policy.timeout_classes has invalid class name ${className}`);
+  requireValue(timeoutClass && typeof timeoutClass === "object" && !Array.isArray(timeoutClass), `runtime_policy.timeout_classes.${className} must be an object`);
+  requireValue(Number.isInteger(timeoutClass?.max_dispatch_ms) && timeoutClass.max_dispatch_ms > 0, `runtime_policy.timeout_classes.${className}.max_dispatch_ms must be a positive integer`);
+  if (Number.isInteger(timeoutClass?.max_dispatch_ms)) requireValue(timeoutClass.max_dispatch_ms <= hardBudget.max_dispatch_ms, `runtime_policy.timeout_classes.${className}.max_dispatch_ms exceeds hard runtime cap ${hardBudget.max_dispatch_ms}`);
+  requireValue(typeof timeoutClass?.selection_signal === "string" && timeoutClass.selection_signal.length > 0, `runtime_policy.timeout_classes.${className}.selection_signal must be a non-empty string`);
+  requireValue(typeof timeoutClass?.rationale === "string" && timeoutClass.rationale.length > 0, `runtime_policy.timeout_classes.${className}.rationale must be a non-empty string`);
+}
+const largeSlowTimeout = timeoutClasses?.["large-slow"];
+requireValue(Boolean(largeSlowTimeout), "runtime_policy.timeout_classes.large-slow is required");
 const validateBudget = (budget, owner, allowMissing = false) => {
   if (!budget || typeof budget !== "object") {
     if (!allowMissing) requireValue(false, `${owner} is missing`);
@@ -142,6 +154,18 @@ for (const model of registry.models ?? []) {
   requireValue(providers.has(model.provider), `model ${model.id} references unknown provider ${model.provider}`);
   requireValue(model.active === true || model.active === false, `model ${model.id} needs explicit active flag`);
   requireValue(Array.isArray(model.approved_reasoning_efforts) && model.approved_reasoning_efforts.length > 0, `model ${model.id} needs approved_reasoning_efforts`);
+}
+for (const model of models.values()) {
+  const isMaxCapable = model.approved_reasoning_efforts?.includes("max");
+  if (model.latency_class !== undefined) {
+    requireValue(typeof model.latency_class === "string" && model.latency_class.length > 0, `model ${model.id} latency_class must be a non-empty string`);
+    requireValue(Boolean(timeoutClasses?.[model.latency_class]), `model ${model.id} references unknown timeout class ${model.latency_class}`);
+    requireValue(model.provider === "opencode-go", `model ${model.id} latency_class requires the opencode-go provider`);
+    requireValue(isMaxCapable, `model ${model.id} latency_class requires approved max reasoning`);
+  }
+  if (model.active && model.provider === "opencode-go" && isMaxCapable) {
+    requireValue(model.latency_class === "large-slow", `active max-capable OpenCode Go model ${model.id} must use latency_class large-slow`);
+  }
 }
 
 const reasoningRank = new Map([["none", 0], ["low", 1], ["medium", 2], ["high", 3], ["xhigh", 4], ["max", 5]]);
@@ -287,6 +311,18 @@ for (const profile of profileSources.keys()) {
   const budget = registry.runtime_policy?.agent_budgets?.[profile];
   requireValue(Boolean(budget), `runtime_policy.agent_budgets is missing profile ${profile}`);
   if (budget) validateBudget(budget, `runtime_policy.agent_budgets.${profile}`);
+}
+for (const binding of registry.agent_bindings ?? []) {
+  const primary = binding?.primary;
+  if (primary?.execution !== "plaintext-external") continue;
+  const model = models.get(primary.model);
+  const className = model?.latency_class;
+  if (!className) continue;
+  const timeoutClass = timeoutClasses?.[className];
+  const budget = registry.runtime_policy?.agent_budgets?.[binding.profile];
+  requireValue(Boolean(timeoutClass), `${binding.profile} references missing timeout class ${className}`);
+  requireValue(Boolean(budget), `${binding.profile} needs a runtime budget for timeout class ${className}`);
+  if (timeoutClass && budget) requireValue(budget.max_dispatch_ms === timeoutClass.max_dispatch_ms, `${binding.profile} must use timeout class ${className} max_dispatch_ms ${timeoutClass.max_dispatch_ms}`);
 }
 for (const route of routes.values()) {
   const binding = (registry.agent_bindings ?? []).find((entry) => entry?.profile === route.profile);

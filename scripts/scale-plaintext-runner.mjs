@@ -130,7 +130,13 @@ export function validateWorkOrder({ workOrder, registry, projectBindings = null,
   if (!canonicalBinding) assert(workOrder.output_mode === "analysis", "project OpenCode overlays are read-only analysis lanes");
   if (policy.analysis_only_profiles?.includes(workOrder.agent)) assert(workOrder.output_mode === "analysis", `${workOrder.agent} is an analysis-only lane`);
 
-  const budget = registry.runtime_policy?.agent_budgets?.[workOrder.agent] ?? registry.runtime_policy?.defaults;
+  const profileBudget = registry.runtime_policy?.agent_budgets?.[workOrder.agent];
+  let budget = profileBudget ?? registry.runtime_policy?.defaults;
+  if (!profileBudget && !canonicalBinding && model.latency_class) {
+    const timeoutClass = registry.runtime_policy?.timeout_classes?.[model.latency_class];
+    assert(timeoutClass && Number.isInteger(timeoutClass.max_dispatch_ms) && timeoutClass.max_dispatch_ms > 0, `model ${workOrder.model} references an invalid timeout class ${model.latency_class}`);
+    budget = { ...budget, max_dispatch_ms: timeoutClass.max_dispatch_ms };
+  }
   assert(rawBytes <= budget.max_work_order_bytes, `work order exceeds ${workOrder.agent} byte budget`);
   assert(workOrder.files.length <= budget.max_context_files, `files exceed ${workOrder.agent} context-file budget`);
   assert(workOrder.max_steps <= budget.max_agent_steps, `max_steps exceeds ${workOrder.agent} budget`);

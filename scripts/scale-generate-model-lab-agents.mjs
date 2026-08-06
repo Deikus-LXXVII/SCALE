@@ -21,6 +21,14 @@ const profileName = (model) => `scale_model_lab_${model.replace(/[^a-z0-9]+/gi, 
 const selectEffort = (model) => model.approved_reasoning_efforts.includes("high") ? "high"
   : model.approved_reasoning_efforts.includes("medium") ? "medium"
     : model.approved_reasoning_efforts[0];
+const dispatchTimeoutFor = (model) => {
+  if (!model.latency_class) return registry.runtime_policy.defaults.max_dispatch_ms;
+  const timeout = registry.runtime_policy.timeout_classes?.[model.latency_class]?.max_dispatch_ms;
+  if (!Number.isInteger(timeout) || timeout <= 0) {
+    throw new Error(`model ${model.id} references missing timeout class ${model.latency_class}`);
+  }
+  return timeout;
+};
 
 for (const model of labModels) {
   const name = profileName(model.id);
@@ -38,7 +46,7 @@ for (const model of labModels) {
     max_context_files: 6,
     max_context_bytes: 60000,
     max_agent_steps: 12,
-    max_dispatch_ms: 600000
+    max_dispatch_ms: dispatchTimeoutFor(model)
   };
 
   const identity = `[SCALE agent=${name} model=gpt-5.6-luna reasoning=high]`;

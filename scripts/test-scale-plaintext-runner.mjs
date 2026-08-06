@@ -8,7 +8,36 @@ import { executeWorkOrder, validateWorkOrder, WorkOrderError } from "./scale-pla
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const registry = JSON.parse(fs.readFileSync(path.join(root, "library", "model-registry.json"), "utf8"));
-assert.strictEqual(registry.runtime_policy.agent_budgets.scale_webdesign.max_dispatch_ms, 30 * 60 * 1000, "scale_webdesign dispatch budget must be 1800000 ms (30 minutes)");
+const largeSlowTimeout = registry.runtime_policy.timeout_classes["large-slow"];
+assert.equal(largeSlowTimeout.max_dispatch_ms, 30 * 60 * 1000, "large-slow timeout class must be 1800000 ms (30 minutes)");
+assert.match(largeSlowTimeout.selection_signal, /active OpenCode Go model.*approved_reasoning_efforts.*max/);
+assert.match(largeSlowTimeout.rationale, /registry-only/i);
+const largeSlowModels = registry.models.filter((model) => model.active && model.provider === "opencode-go" && model.approved_reasoning_efforts.includes("max"));
+assert.equal(largeSlowModels.length, 18, "all 18 active max-capable OpenCode Go models must be classified large-slow");
+assert(largeSlowModels.every((model) => model.latency_class === "large-slow"), "every active max-capable OpenCode Go model must declare latency_class large-slow");
+const largeSlowModelIds = new Set(largeSlowModels.map((model) => model.id));
+for (const modelId of ["opencode-go/deepseek-v4-flash", "opencode-go/hy3", "opencode-go/kimi-k2.7-code"]) {
+  assert.equal(registry.models.find((model) => model.id === modelId)?.latency_class, undefined, `${modelId} must remain outside large-slow`);
+}
+const largeSlowBindings = registry.agent_bindings.filter((binding) => binding.primary.execution === "plaintext-external" && largeSlowModelIds.has(binding.primary.model));
+assert.equal(largeSlowBindings.length, 20, "all 20 large-slow plaintext bindings must be covered");
+for (const binding of largeSlowBindings) {
+  assert.equal(registry.runtime_policy.agent_budgets[binding.profile].max_dispatch_ms, largeSlowTimeout.max_dispatch_ms, `${binding.profile} must use the large-slow timeout class`);
+}
+for (const [profile, timeout] of Object.entries({
+  scale_orchestrator: 600000,
+  scale_cleaner: 480000,
+  scale_code_simple: 600000,
+  scale_docs: 480000,
+  scale_environment: 480000,
+  scale_indexer: 480000,
+  scale_library: 480000,
+  scale_test_observer: 1800000,
+  scale_model_lab_opencode_go_hy3: 600000,
+  scale_model_lab_opencode_go_kimi_k2_7_code: 600000
+})) {
+  assert.equal(registry.runtime_policy.agent_budgets[profile].max_dispatch_ms, timeout, `${profile} fast/monitoring timeout must remain unchanged`);
+}
 const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "scale-plaintext-runner-"));
 fs.writeFileSync(path.join(projectRoot, "demo.js"), "export const value = 1;\n");
 
@@ -43,6 +72,7 @@ const overlayBindings = {
 };
 const overlayOrder = { ...baseWorkOrder, execution_id: "test-overlay-001", agent: "scale_telik_status", model: "opencode-go/deepseek-v4-pro", output_mode: "analysis" };
 const overlayValidated = validateWorkOrder({ workOrder: overlayOrder, registry, projectBindings: overlayBindings, projectRoot, rawBytes: Buffer.byteLength(JSON.stringify(overlayOrder)) });
+assert.equal(overlayValidated.budget.max_dispatch_ms, 1800000, "large-slow project overlays must inherit the class timeout");
 assert.equal(overlayValidated.binding.fallback.profile, "scale_telik_optimizer");
 assert.throws(() => validateWorkOrder({ workOrder: { ...overlayOrder, output_mode: "patch" }, registry, projectBindings: overlayBindings, projectRoot, rawBytes: 1000 }), WorkOrderError);
 
@@ -79,4 +109,4 @@ assert.equal(failed.status, "fallback_required");
 assert.equal(failed.fallback_request.fallback.model, "gpt-5.6-luna");
 assert.equal(failed.fallback_request.resume_external_execution, false);
 
-console.log(JSON.stringify({ ok: true, checks: 12, transport_requests: 2, retries: 0, automatic_fallbacks: 0 }));
+console.log(JSON.stringify({ ok: true, checks: 13, transport_requests: 2, retries: 0, automatic_fallbacks: 0 }));

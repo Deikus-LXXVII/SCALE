@@ -16,6 +16,13 @@
       "max_agent_steps": 16,
       "max_dispatch_ms": 600000
     },
+    "timeout_classes": {
+      "large-slow": {
+        "max_dispatch_ms": 1800000,
+        "selection_signal": "active OpenCode Go model with approved_reasoning_efforts including max",
+        "rationale": "Registry-only timeout policy for explicitly max-capable OpenCode Go models; it does not assert external model size or latency."
+      }
+    },
     "master_policy": {
       "enabled": true,
       "required_for_compound_tasks": true,
@@ -101,7 +108,7 @@
         "max_context_files": 10,
         "max_context_bytes": 100000,
         "max_agent_steps": 24,
-        "max_dispatch_ms": 900000
+        "max_dispatch_ms": 1800000
       },
       "scale_docs": {
         "max_work_order_bytes": 20000,
@@ -143,14 +150,14 @@
         "max_context_files": 12,
         "max_context_bytes": 120000,
         "max_agent_steps": 14,
-        "max_dispatch_ms": 900000
+        "max_dispatch_ms": 1800000
       },
       "scale_research": {
         "max_work_order_bytes": 28000,
         "max_context_files": 12,
         "max_context_bytes": 120000,
         "max_agent_steps": 18,
-        "max_dispatch_ms": 900000
+        "max_dispatch_ms": 1800000
       },
       "scale_test_observer": {
         "max_work_order_bytes": 24000,
@@ -185,7 +192,7 @@
         "max_context_files": 8,
         "max_context_bytes": 80000,
         "max_agent_steps": 16,
-        "max_dispatch_ms": 900000
+        "max_dispatch_ms": 1800000
       },
       "scale_benchmark": {
         "max_work_order_bytes": 28000,
@@ -276,21 +283,21 @@
         "max_context_files": 10,
         "max_context_bytes": 100000,
         "max_agent_steps": 24,
-        "max_dispatch_ms": 900000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_gpt_5_6_luna": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_glm_5_1": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_hy3": {
         "max_work_order_bytes": 20000,
@@ -304,7 +311,7 @@
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_kimi_k2_7_code": {
         "max_work_order_bytes": 20000,
@@ -318,77 +325,77 @@
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_mimo_v2_5_pro": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_minimax_m2_7": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_minimax_m3": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_qwen3_6_plus": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_qwen3_7_max": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_qwen3_8_max": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_glm_5": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_kimi_k2_5": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_minimax_m2_5": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       },
       "scale_model_lab_opencode_go_qwen3_5_plus": {
         "max_work_order_bytes": 20000,
         "max_context_files": 6,
         "max_context_bytes": 60000,
         "max_agent_steps": 12,
-        "max_dispatch_ms": 600000
+        "max_dispatch_ms": 1800000
       }
     },
     "orchestrator_adjustment": {
@@ -521,6 +528,7 @@
       "id": "opencode-go/deepseek-v4-pro",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "high",
         "max"
@@ -531,6 +539,7 @@
       "id": "opencode-go/gpt-5.6-luna",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -544,6 +553,7 @@
       "id": "opencode-go/glm-5.2",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "high",
         "max"
@@ -554,6 +564,7 @@
       "id": "opencode-go/qwen3.7-plus",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "high",
         "max"
@@ -564,6 +575,7 @@
       "id": "opencode-go/kimi-k3",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "max"
       ],
@@ -573,6 +585,7 @@
       "id": "opencode-go/glm-5.1",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -609,6 +622,7 @@
       "id": "opencode-go/kimi-k2.6",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -631,6 +645,7 @@
       "id": "opencode-go/mimo-v2.5",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -644,6 +659,7 @@
       "id": "opencode-go/mimo-v2.5-pro",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -657,6 +673,7 @@
       "id": "opencode-go/minimax-m2.7",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -670,6 +687,7 @@
       "id": "opencode-go/minimax-m3",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -683,6 +701,7 @@
       "id": "opencode-go/qwen3.6-plus",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "high",
         "max"
@@ -693,6 +712,7 @@
       "id": "opencode-go/qwen3.7-max",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "high",
         "max"
@@ -703,6 +723,7 @@
       "id": "opencode-go/qwen3.8-max",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "high",
         "max"
@@ -713,6 +734,7 @@
       "id": "opencode-go/glm-5",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -726,6 +748,7 @@
       "id": "opencode-go/kimi-k2.5",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -769,6 +792,7 @@
       "id": "opencode-go/minimax-m2.5",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",
@@ -782,6 +806,7 @@
       "id": "opencode-go/qwen3.5-plus",
       "provider": "opencode-go",
       "active": true,
+      "latency_class": "large-slow",
       "approved_reasoning_efforts": [
         "low",
         "medium",

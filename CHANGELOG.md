@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.8+codex.20260806140429] - 2026-08-06
+
+- Add the registry-only `large-slow` timeout class for active max-capable
+  OpenCode Go models, enforcing a 30-minute per-profile dispatch cap while
+  preserving fast lanes, native fallbacks, and existing routing.
+- Teach `scale_builder`, model-lab generation, and plaintext project overlays
+  to propagate the class timeout without changing the OpenCode transport.
+
 ## [0.1.8+codex.20260806134450] - 2026-08-06
 
 - Extend the Kimi K3 `scale_webdesign` dispatch budget to the registry's
