@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.8+codex.20260806143514] - 2026-08-06
+
+- Clarify the native Spark lane for small fixes, localized refactoring,
+  boilerplate generation, single-file analysis, fast iterations, and granular
+  UI changes while keeping the scope bounded and non-sensitive.
+- Keep Spark medium as the `scale_code_simple` fallback and Spark low as the
+  read-only observer fallback; Luna remains the shared high-context and QA
+  lane.
+
 ## [0.1.8+codex.20260806142937] - 2026-08-06
 
 - Admit native `gpt-5.3-codex-spark` with SCALE-approved `low` and `medium`

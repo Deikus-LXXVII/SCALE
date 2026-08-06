@@ -9,7 +9,7 @@ gateway (`execution: plaintext-external`), never by Codex `thread_spawn`.
 | Work | OpenCode Go in Codex | Native fallback/authority |
 | --- | --- | --- |
 | Control plane | DeepSeek V4 Flash High | Luna High |
-| Simple code / granular UI iteration | DeepSeek V4 Flash High | Spark Medium, workspace-write |
+| Small fixes, localized refactoring, boilerplate generation, single-file analysis, fast iterations, and granular UI changes | DeepSeek V4 Flash High | Spark Medium, workspace-write |
 | Standard implementation | DeepSeek V4 Pro High | Luna High; Terra/Sol own sensitive decisions |
 | Critical/security | None | Sol High |
 | Web design | Kimi K3 max design packet | Terra High implementation |

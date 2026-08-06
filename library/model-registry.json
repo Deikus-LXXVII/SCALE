@@ -523,7 +523,7 @@
         "low",
         "medium"
       ],
-      "use": "native fast model for bounded coding and granular UI iteration; not authority for high-context, sensitive, or critical work"
+      "use": "native fast model for bounded, non-sensitive small fixes, localized refactoring, boilerplate generation, single-file analysis, fast iterations, and granular UI changes; not authority for high-context, sensitive, or critical work"
     },
     {
       "id": "opencode-go/deepseek-v4-flash",

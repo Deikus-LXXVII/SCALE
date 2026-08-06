@@ -20,7 +20,7 @@ provenance:
 
 ## Routing boundary
 
-Use Spark only for bounded, non-sensitive simple-code or granular-UI iteration and passive test observation. Keep higher-context orchestration, standard multi-file work, independent QA authority, security, critical decisions, and sensitive integration on their existing native lanes.
+Use Spark only for bounded, non-sensitive small fixes, localized refactoring, boilerplate generation, single-file analysis, fast iterations, granular UI changes, or passive test observation. Keep higher-context orchestration, standard multi-file work, independent QA authority, security, critical decisions, and sensitive integration on their existing native lanes.
 
 ## Sources
 
