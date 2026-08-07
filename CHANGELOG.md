@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8+codex.20260807041750] - 2026-08-07
+
+- Use native Windows `mklink`/`mklink /D` links in MINGW/MSYS/CYGWIN
+  environments, verify the resulting reparse link, and fail instead of
+  accepting regular-file copies.
+
 ## [0.1.8+codex.20260807035947] - 2026-08-07
 
 - Canonicalize installer and materializer targets with Git Bash's Windows path

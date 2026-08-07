@@ -38,6 +38,11 @@ rg -qF 'if pwd -W >/dev/null 2>&1; then' "$root/scripts/scale-library-install.sh
 rg -qF 'target_root="$(portable_path "$target_input")"' "$root/scripts/scale-library-install.sh"
 rg -qF 'if pwd -W >/dev/null 2>&1; then' "$root/scripts/scale-library-materialize.sh"
 rg -qF 'target_root="$(portable_path "$target_input")"' "$root/scripts/scale-library-materialize.sh"
+rg -qF 'source_windows="$(cygpath -w "$source")"' "$root/scripts/scale-library-materialize.sh"
+rg -qF 'MSYS_NO_PATHCONV=1 cmd.exe /c mklink /D' "$root/scripts/scale-library-materialize.sh"
+rg -qF 'MSYS_NO_PATHCONV=1 cmd.exe /c mklink "$destination_windows" "$source_windows"' "$root/scripts/scale-library-materialize.sh"
+rg -qF 'ln -sfn "$relative_target" "$destination"' "$root/scripts/scale-library-materialize.sh"
+rg -qF 'verify_link "$destination"' "$root/scripts/scale-library-materialize.sh"
 [[ -L "$target_repo/.codex/agents/scale_architect.toml" ]]
 [[ ! -L "$target_repo/.codex/agents/scale_docs.toml" ]]
 [[ -L "$target_repo/.agents/skills/scale-orchestrator" ]]
