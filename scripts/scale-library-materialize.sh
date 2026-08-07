@@ -3,6 +3,15 @@ set -euo pipefail
 
 target_input=""
 
+portable_path() (
+  cd "$1"
+  if pwd -W >/dev/null 2>&1; then
+    pwd -W
+  else
+    pwd
+  fi
+)
+
 usage() {
   printf '%s\n' 'Usage: scale-library-materialize.sh [--target <project-dir>]'
 }
@@ -20,9 +29,15 @@ if [[ -n "$target_input" ]]; then
     printf 'S.C.A.L.E.: target is not a directory: %s\n' "$target_input" >&2
     exit 2
   fi
-  target_root="$(cd "$target_input" && pwd)"
+  target_root="$(portable_path "$target_input")"
 else
-  target_root="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || pwd)"
+  current_root="$(portable_path "$PWD")"
+  git_root="$(git -C "$current_root" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "$git_root" ]]; then
+    target_root="$(portable_path "$git_root")"
+  else
+    target_root="$current_root"
+  fi
 fi
 
 clone_root="$target_root/.codex/scale-library-src"

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.8+codex.20260807035947] - 2026-08-07
+
+- Canonicalize installer and materializer targets with Git Bash's Windows path
+  form (`pwd -W`) when available, while retaining portable POSIX fallback.
+
 ## [0.1.8+codex.20260807035311] - 2026-08-07
 
 - Make Git Bash/MSYS sparse-checkout installation path-safe with

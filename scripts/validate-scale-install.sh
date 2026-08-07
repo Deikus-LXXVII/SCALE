@@ -34,6 +34,10 @@ printf '%s\n' '{"description":"project-owned hooks","hooks":{}}' > "$target_repo
 
 bash "$root/scripts/scale-library-install.sh" --target "$target_repo" --remote "$source_repo" >/dev/null
 
+rg -qF 'if pwd -W >/dev/null 2>&1; then' "$root/scripts/scale-library-install.sh"
+rg -qF 'target_root="$(portable_path "$target_input")"' "$root/scripts/scale-library-install.sh"
+rg -qF 'if pwd -W >/dev/null 2>&1; then' "$root/scripts/scale-library-materialize.sh"
+rg -qF 'target_root="$(portable_path "$target_input")"' "$root/scripts/scale-library-materialize.sh"
 [[ -L "$target_repo/.codex/agents/scale_architect.toml" ]]
 [[ ! -L "$target_repo/.codex/agents/scale_docs.toml" ]]
 [[ -L "$target_repo/.agents/skills/scale-orchestrator" ]]

@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-canonical_root="$(cd "$script_dir/.." && pwd)"
+portable_path() (
+  cd "$1"
+  if pwd -W >/dev/null 2>&1; then
+    pwd -W
+  else
+    pwd
+  fi
+)
+
+script_dir="$(portable_path "$(dirname "${BASH_SOURCE[0]}")")"
+canonical_root="$(portable_path "$script_dir/..")"
 target_input=""
 remote_url=""
 branch="main"
@@ -30,7 +39,7 @@ if [[ -z "$target_input" || ! -d "$target_input" ]]; then
   exit 2
 fi
 
-target_root="$(cd "$target_input" && pwd)"
+target_root="$(portable_path "$target_input")"
 if [[ "$target_root" == "$canonical_root" ]]; then
   printf '%s\n' 'Refusing to install the canonical library into itself.' >&2
   exit 2
