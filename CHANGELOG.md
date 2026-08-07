@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8+codex.20260807035311] - 2026-08-07
+
+- Make Git Bash/MSYS sparse-checkout installation path-safe with
+  `MSYS_NO_PATHCONV=1`, preserving the `/scripts/` materialization helper and
+  adding focused regression coverage.
+
 ## [0.1.8+codex.20260806143514] - 2026-08-06
 
 - Clarify the native Spark lane for small fixes, localized refactoring,

@@ -42,7 +42,8 @@ bash "$root/scripts/scale-library-install.sh" --target "$target_repo" --remote "
 [[ -L "$target_repo/.opencode/agents/scale-go-monitor.md" ]]
 rg -q 'project-owned hooks' "$target_repo/.codex/hooks.json"
 
-git -C "$target_repo/.codex/scale-library-src" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/AGENTS.md'
+MSYS_NO_PATHCONV=1 git -C "$target_repo/.codex/scale-library-src" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/AGENTS.md'
+rg -q 'MSYS_NO_PATHCONV=1 git -C "\$clone_root" sparse-checkout set' "$root/scripts/scale-library-install.sh"
 rm "$target_repo/.opencode/agents/scale-go-explorer.md"
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
 [[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
