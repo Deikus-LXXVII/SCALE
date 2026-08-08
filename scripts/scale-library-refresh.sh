@@ -108,6 +108,13 @@ if [[ "$(git -C "$library_repo" config --bool core.sparseCheckout 2>/dev/null ||
       exit 0
     fi
   fi
+  if ! printf '%s\n' "$sparse_paths" | rg -qxF '/integrations/'; then
+    if ! git -C "$library_repo" sparse-checkout add '/integrations/'; then
+      write_health 'failed' 'sparse-checkout-extension-failed' 'preserved'
+      printf '%s\n' 'S.C.A.L.E.: could not extend sparse checkout for integrations; continuing with the current managed snapshot.'
+      exit 0
+    fi
+  fi
 fi
 
 if ! git -C "$library_repo" fetch --quiet origin; then

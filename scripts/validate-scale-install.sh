@@ -52,7 +52,7 @@ rg -qF 'verify_link "$destination"' "$root/scripts/scale-library-materialize.sh"
 rg -q 'project-owned hooks' "$target_repo/.codex/hooks.json"
 
 MSYS_NO_PATHCONV=1 git -C "$target_repo/.codex/scale-library-src" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/AGENTS.md'
-rg -q 'MSYS_NO_PATHCONV=1 git -C "\$clone_root" sparse-checkout set' "$root/scripts/scale-library-install.sh"
+rg -q 'MSYS_NO_PATHCONV=1 git -C "\$clone_root" sparse-checkout set.*integrations/' "$root/scripts/scale-library-install.sh"
 rm "$target_repo/.opencode/agents/scale-go-explorer.md"
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
 [[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
