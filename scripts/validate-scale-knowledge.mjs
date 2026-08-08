@@ -42,7 +42,7 @@ const dateField = (frontmatter, name, file) => {
 
 for (const file of files) {
   const relative = path.relative(libraryRoot, file);
-  const source = fs.readFileSync(file, "utf8");
+  const source = fs.readFileSync(file, "utf8").replace(/\r\n?/g, "\n");
   const end = source.indexOf("\n---", 4);
   if (!source.startsWith("---\n") || end === -1) {
     failures.push(`${relative}: missing or unclosed YAML frontmatter`);
