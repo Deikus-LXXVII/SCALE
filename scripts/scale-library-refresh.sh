@@ -101,14 +101,14 @@ fi
 
 if [[ "$(git -C "$library_repo" config --bool core.sparseCheckout 2>/dev/null || true)" == "true" ]]; then
   sparse_paths="$(git -C "$library_repo" sparse-checkout list 2>/dev/null || true)"
-  if ! printf '%s\n' "$sparse_paths" | rg -qxF -e 'opencode/' -e '/opencode/'; then
+  if ! printf '%s\n' "$sparse_paths" | rg -qx -- '^/?opencode/$'; then
     if ! MSYS_NO_PATHCONV=1 git -C "$library_repo" sparse-checkout add 'opencode/'; then
       write_health 'failed' 'sparse-checkout-extension-failed' 'preserved'
       printf '%s\n' 'S.C.A.L.E.: could not extend sparse checkout for OpenCode agents; continuing with the current managed snapshot.'
       exit 0
     fi
   fi
-  if ! printf '%s\n' "$sparse_paths" | rg -qxF -e 'integrations/' -e '/integrations/'; then
+  if ! printf '%s\n' "$sparse_paths" | rg -qx -- '^/?integrations/$'; then
     if ! MSYS_NO_PATHCONV=1 git -C "$library_repo" sparse-checkout add 'integrations/'; then
       write_health 'failed' 'sparse-checkout-extension-failed' 'preserved'
       printf '%s\n' 'S.C.A.L.E.: could not extend sparse checkout for integrations; continuing with the current managed snapshot.'
