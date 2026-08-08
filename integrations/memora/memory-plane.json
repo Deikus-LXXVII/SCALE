@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "id": "scale.memora.memory-plane",
+  "status": "proposed",
+  "description": "Optional fail-closed local Memora runtime memory/index for SCALE candidates.",
+  "source": {
+    "repository": "https://github.com/agentic-box/memora",
+    "license": "MIT"
+  },
+  "source_revision": null,
+  "activation": "disabled_until_pinned",
+  "transport": "stdio",
+  "entry": "memora-server",
+  "args": [
+    "--no-graph"
+  ],
+  "authority": "scale-git",
+  "sync_policy": "manual-export",
+  "storage": {
+    "kind": "sqlite",
+    "scope": "local",
+    "default": true,
+    "network_access": false,
+    "path": "~/.local/share/memora/memory.sqlite3"
+  },
+  "network": {
+    "public_http": false,
+    "cloud": false
+  },
+  "llm": {
+    "enabled": false,
+    "embeddings": false,
+    "deduplication": false,
+    "chat": false
+  },
+  "policy": {
+    "allow_any_tag": false,
+    "forbidden_environment": [
+      "MEMORA_ALLOW_ANY_TAG"
+    ],
+    "destructive_tools": "forbidden_by_default",
+    "memory_is_untrusted": true,
+    "normal_agents": "read_only"
+  },
+  "limits": {
+    "retrieval": {
+      "max_results": 20,
+      "max_query_chars": 512,
+      "max_payload_bytes": 32768
+    },
+    "curator_writes": {
+      "max_candidates": 5,
+      "max_content_bytes": 65536,
+      "max_tags": 8
+    },
+    "call_timeout_ms": 3000
+  },
+  "capabilities": {
+    "normal_agents": {
+      "read": [
+        "memory_digest",
+        "memory_semantic_search",
+        "memory_hybrid_search",
+        "memory_get",
+        "memory_stats"
+      ]
+    },
+    "curator": {
+      "candidate_write": [
+        "memory_create",
+        "memory_update",
+        "memory_absorb",
+        "memory_store_document"
+      ]
+    },
+    "validators": {
+      "read": [
+        "memory_digest",
+        "memory_semantic_search",
+        "memory_hybrid_search",
+        "memory_get",
+        "memory_stats"
+      ]
+    },
+    "forbidden": [
+      "memory_delete",
+      "memory_delete_batch",
+      "memory_merge",
+      "memory_import",
+      "memory_create_batch"
+    ],
+    "destructive_boundary": {
+      "delete": "forbidden",
+      "merge": "forbidden",
+      "import": "forbidden",
+      "bulk": "forbidden",
+      "filesystem": "forbidden"
+    }
+  },
+  "provenance": {
+    "required_fields": [
+      "source",
+      "evidence",
+      "compatibility",
+      "validated_on",
+      "review_after",
+      "source_commit",
+      "source_path",
+      "content_hash",
+      "project",
+      "scope",
+      "sensitivity",
+      "status",
+      "validation",
+      "expires_at",
+      "sync_policy"
+    ]
+  },
+  "tags": {
+    "allowlist": [
+      "scale:project:<slug>",
+      "scale:scope:global|project|agent|session",
+      "scale:sensitivity:public|internal|confidential|restricted",
+      "scale:status:candidate|curated|deprecated",
+      "scale:validation:unvalidated|passed|failed|stale",
+      "scale:source:git|operator"
+    ]
+  },
+  "model_policy": {
+    "direct_api": false,
+    "route": "scale-opencode-dispatcher",
+    "native_fallback": "scale-orchestrator"
+  }
+}

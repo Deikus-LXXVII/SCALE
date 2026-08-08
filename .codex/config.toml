@@ -22,3 +22,7 @@ enabled = true
 [[skills.config]]
 path = "./skills/scale-validate"
 enabled = true
+
+[[skills.config]]
+path = "./skills/memora-memory-plane"
+enabled = true
