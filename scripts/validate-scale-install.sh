@@ -50,6 +50,7 @@ rg -qF 'verify_link "$destination"' "$root/scripts/scale-library-materialize.sh"
 [[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
 [[ -L "$target_repo/.opencode/agents/scale-go-monitor.md" ]]
 rg -q 'project-owned hooks' "$target_repo/.codex/hooks.json"
+rg -qxF '.agents/skills/memora-memory-plane' "$target_repo/.gitignore"
 
 MSYS_NO_PATHCONV=1 git -C "$target_repo/.codex/scale-library-src" sparse-checkout set --no-cone '/.codex/agents/' '/library/' '/skills/' '/scripts/' '/AGENTS.md'
 rg -q 'MSYS_NO_PATHCONV=1 git -C "\$clone_root" sparse-checkout set.*integrations/' "$root/scripts/scale-library-install.sh"

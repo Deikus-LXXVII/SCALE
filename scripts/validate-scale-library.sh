@@ -12,12 +12,12 @@ fi
 for entry in "$root"/library/rules/*.md "$root"/library/books/*.md; do
   [[ -f "$entry" ]] || continue
   [[ "$(basename "$entry")" == "README.md" ]] && continue
-  if ! awk 'NR == 1 { in_frontmatter = ($0 == "---") } in_frontmatter && /^description:/ { description = 1 } in_frontmatter && /^tags: \[/ { tags = $0 } NR > 1 && $0 == "---" { exit !(description && tags) }' "$entry"; then
+  if ! awk '{ sub(/\r$/, "") } NR == 1 { in_frontmatter = ($0 == "---") } in_frontmatter && /^description:/ { description = 1 } in_frontmatter && /^tags: \[/ { tags = $0 } NR > 1 && $0 == "---" { exit !(description && tags) }' "$entry"; then
     printf 'Invalid library frontmatter: %s\n' "$entry" >&2
     status=1
     continue
   fi
-  tag_line="$(awk '/^tags: \[/ { print; exit }' "$entry")"
+  tag_line="$(awk '{ sub(/\r$/, "") } /^tags: \[/ { print; exit }' "$entry")"
   tag_values="${tag_line#tags: [}"
   tag_values="${tag_values%]}"
   IFS=',' read -r -a tag_list <<< "$tag_values"
@@ -45,12 +45,12 @@ for profile in "$root"/opencode/agents/scale-go-*.md; do
     printf 'Invalid OpenCode Go model policy: %s\n' "$profile" >&2
     status=1
   fi
-  if rg -q '^model: opencode-go/kimi-k3$' "$profile"; then
-    if ! rg -q '^reasoningEffort: max$' "$profile"; then
+  if rg -q '^model: opencode-go/kimi-k3\r?$' "$profile"; then
+    if ! rg -q '^reasoningEffort: max\r?$' "$profile"; then
       printf 'Kimi K3 must use max reasoning: %s\n' "$profile" >&2
       status=1
     fi
-  elif ! rg -q '^reasoningEffort: high$' "$profile"; then
+  elif ! rg -q '^reasoningEffort: high\r?$' "$profile"; then
     printf 'Invalid OpenCode Go reasoning policy: %s\n' "$profile" >&2
     status=1
   fi
