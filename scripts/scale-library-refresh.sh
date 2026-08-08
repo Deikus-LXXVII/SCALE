@@ -115,6 +115,13 @@ if [[ "$(git -C "$library_repo" config --bool core.sparseCheckout 2>/dev/null ||
       exit 0
     fi
   fi
+  if ! printf '%s\n' "$sparse_paths" | rg -qx -- '^/?\.codex/config\.toml$'; then
+    if ! MSYS_NO_PATHCONV=1 git -C "$library_repo" sparse-checkout add '.codex/config.toml'; then
+      write_health 'failed' 'sparse-checkout-extension-failed' 'preserved'
+      printf '%s\n' 'S.C.A.L.E.: could not extend sparse checkout for Codex config; continuing with the current managed snapshot.'
+      exit 0
+    fi
+  fi
 fi
 
 if ! git -C "$library_repo" fetch --quiet origin; then

@@ -58,6 +58,7 @@ rm "$target_repo/.opencode/agents/scale-go-explorer.md"
 (cd "$target_repo" && bash "$target_repo/.codex/scale-library-src/scripts/scale-library-refresh.sh" --hook >/dev/null)
 [[ -L "$target_repo/.opencode/agents/scale-go-explorer.md" ]]
 [[ -f "$target_repo/.codex/scale-library-src/integrations/memora/memory-plane.json" ]]
+[[ -f "$target_repo/.codex/scale-library-src/.codex/config.toml" ]]
 
 mkdir -p "$source_repo/skills/scale-fixture"
 cat > "$source_repo/skills/scale-fixture/SKILL.md" <<'EOF'

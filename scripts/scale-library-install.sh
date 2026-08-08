@@ -68,7 +68,7 @@ fi
 
 if [[ ! -d "$clone_root/.git" ]]; then
   git clone --depth 1 --filter=blob:none --sparse --branch "$branch" "$remote_url" "$clone_root"
-  MSYS_NO_PATHCONV=1 git -C "$clone_root" sparse-checkout set --no-cone '.codex/agents/' 'library/' 'skills/' 'scripts/' 'opencode/' 'integrations/' 'AGENTS.md'
+  MSYS_NO_PATHCONV=1 git -C "$clone_root" sparse-checkout set --no-cone '.codex/agents/' '.codex/config.toml' 'library/' 'skills/' 'scripts/' 'opencode/' 'integrations/' 'AGENTS.md'
 else
   git -C "$clone_root" pull --ff-only
 fi
