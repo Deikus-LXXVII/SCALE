@@ -34,7 +34,7 @@ for (const directory of ["rules", "books", "agents"]) {
   const absolute = path.join(libraryRoot, directory);
   for (const name of fs.readdirSync(absolute).filter((item) => item.endsWith(".md") && item !== "README.md").sort()) {
     const file = path.join(absolute, name);
-    const source = fs.readFileSync(file, "utf8");
+    const source = fs.readFileSync(file, "utf8").replace(/\r\n?/g, "\n");
     const end = source.indexOf("\n---", 4);
     if (!source.startsWith("---\n") || end === -1) throw new Error(`Missing frontmatter: ${file}`);
     const frontmatter = source.slice(4, end);

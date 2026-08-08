@@ -24,7 +24,7 @@ try {
   write("cycle-b.md", entry("cycle b", "candidate", "supersedes: [agents/cycle-a.md]\nsuperseded_by: [agents/cycle-a.md]\n"));
   let rejected = false;
   let rejection = "";
-  try { execFileSync(process.execPath, [path.join(root, "scripts", "validate-scale-knowledge.mjs"), "--library-root", path.join(fixture, "library"), "--as-of", "2026-08-04"], { stdio: "pipe" }); } catch (error) { rejected = true; rejection = error.stderr?.toString() ?? ""; }
+  try { execFileSync(process.execPath, [path.join(root, "scripts", "validate-scale-knowledge.mjs"), "--library-root", path.join(fixture, "library"), "--as-of", "2026-08-04"], { stdio: "pipe" }); } catch (error) { rejected = true; rejection = [error.stderr, error.stdout, error.message].filter((part) => part !== undefined && part !== null).map((part) => part.toString()).join("\n"); }
   if (!rejected || !rejection.includes("provenance.evidence") || !rejection.includes("conflicts_with") || !rejection.includes("supersession cycle")) throw new Error("knowledge validator missed evidence, reciprocal conflict, or supersession cycle guard");
   console.log("Validated candidate shadow replay, metadata-only manifest, and relation guards.");
 } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
