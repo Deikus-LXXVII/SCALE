@@ -4,6 +4,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -13,7 +14,7 @@ const option = (name, fallback) => {
   if (!value || value.startsWith("--")) throw new Error(`Missing value for ${name}`);
   return value;
 };
-const root = path.resolve(option("--root", path.resolve(path.dirname(new URL(import.meta.url).pathname), "..")));
+const root = path.resolve(option("--root", path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")));
 const failures = [];
 const checks = [];
 const requireValue = (condition, message) => { if (!condition) failures.push(message); };

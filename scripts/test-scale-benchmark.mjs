@@ -4,8 +4,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "scale-benchmark-"));
 try {
   const corpus = path.join(fixture, "tasks.json");
