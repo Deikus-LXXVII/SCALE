@@ -6,7 +6,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const args = process.argv.slice(2);
 const option = (name, fallback = undefined) => {
   const index = args.indexOf(name);

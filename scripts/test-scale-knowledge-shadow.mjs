@@ -6,7 +6,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const root = fileURLToPath(new URL("../", import.meta.url));
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "scale-knowledge-shadow-"));
 const write = (name, body) => fs.writeFileSync(path.join(fixture, "library", "agents", name), body);
 const entry = (description, status, relations = "", evidence = "fixture evidence") => `---\ndescription: "${description}"\ntags: [fixture]\nstatus: ${status}\nprovenance:\n  source: "fixture"\n  evidence: "${evidence}"\n  compatibility: "fixture"\n  validated_on: "2026-08-04"\n  review_after: "2099-01-01"\n${relations}---\n# Fixture\n`;
