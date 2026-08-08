@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../", import.meta.url));
+const toPosixPath = (value) => value.replace(/\\/g, "/");
 const args = process.argv.slice(2);
 const option = (name, fallback = undefined) => {
   const index = args.indexOf(name);
@@ -39,8 +40,8 @@ for (const directory of ["rules", "books", "agents"]) {
     if (!source.startsWith("---\n") || end === -1) throw new Error(`Missing frontmatter: ${file}`);
     const frontmatter = source.slice(4, end);
     entries.push({
-      path: path.relative(libraryRoot, file), status: field(frontmatter, "status") || "curated", tags: list(frontmatter, "tags"),
-      conflicts_with: list(frontmatter, "conflicts_with"), supersedes: list(frontmatter, "supersedes"), superseded_by: list(frontmatter, "superseded_by"),
+      path: toPosixPath(path.relative(libraryRoot, file)), status: field(frontmatter, "status") || "curated", tags: list(frontmatter, "tags"),
+      conflicts_with: list(frontmatter, "conflicts_with").map(toPosixPath), supersedes: list(frontmatter, "supersedes").map(toPosixPath), superseded_by: list(frontmatter, "superseded_by").map(toPosixPath),
       evidence_declared: Boolean(field(frontmatter, "evidence")), bytes: Buffer.byteLength(source), sha256: crypto.createHash("sha256").update(source).digest("hex"),
     });
   }

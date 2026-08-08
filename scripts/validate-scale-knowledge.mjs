@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
   const index = args.indexOf(name);
@@ -27,6 +27,7 @@ const field = (frontmatter, name) => {
   const match = frontmatter.match(new RegExp(`^\\s*${name}:\\s*(?:"([^"]*)"|'([^']*)'|([^\\n]+))\\s*$`, "m"));
   return (match?.[1] ?? match?.[2] ?? match?.[3])?.trim();
 };
+const toPosixPath = (value) => value.replace(/\\/g, "/");
 const listField = (frontmatter, name) => {
   const value = frontmatter.match(new RegExp(`^${name}:\\s*\\[([^\\]]*)\\]\\s*$`, "m"))?.[1];
   return value === undefined ? [] : value.split(",").map((entry) => entry.trim().replace(/^['"]|['"]$/g, "")).filter(Boolean);
@@ -41,7 +42,7 @@ const dateField = (frontmatter, name, file) => {
 };
 
 for (const file of files) {
-  const relative = path.relative(libraryRoot, file);
+  const relative = toPosixPath(path.relative(libraryRoot, file));
   const source = fs.readFileSync(file, "utf8").replace(/\r\n?/g, "\n");
   const end = source.indexOf("\n---", 4);
   if (!source.startsWith("---\n") || end === -1) {
@@ -65,7 +66,7 @@ for (const file of files) {
   const reviewAfter = dateField(frontmatter, "review_after", relative);
   if (validatedOn && reviewAfter && reviewAfter < validatedOn) failures.push(`${relative}: review_after precedes validated_on`);
   if (reviewAfter && reviewAfter < asOf && status !== "deprecated") failures.push(`${relative}: knowledge is expired as of ${asOf}; review_after=${reviewAfter}`);
-  entries.push({ relative, canonicalPath: fs.realpathSync(file), description, conflicts: listField(frontmatter, "conflicts_with"), supersedes: listField(frontmatter, "supersedes"), supersededBy: listField(frontmatter, "superseded_by") });
+  entries.push({ relative, canonicalPath: fs.realpathSync(file), description, conflicts: listField(frontmatter, "conflicts_with").map(toPosixPath), supersedes: listField(frontmatter, "supersedes").map(toPosixPath), supersededBy: listField(frontmatter, "superseded_by").map(toPosixPath) });
 }
 
 const byDescription = new Map();
