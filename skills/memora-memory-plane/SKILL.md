@@ -30,6 +30,23 @@ registration and it must stay disabled until a source revision is pinned.
   alone promotes validated knowledge to Git SCALE. Promotion is manual and
   explicit; there is no automatic sync or auto-promotion.
 
+## Cold-context gate
+
+This cold context gate applies before action on inactive project knowledge.
+
+Before acting on a project, production surface, subsystem, or decision that is
+not currently active in the task, the coordinator must perform bounded,
+read-only retrieval through the existing `integrations/memora/memory-plane.json`
+contract. The retrieval must use only the normal-agent read tools and carry the
+complete provenance envelope below in the plaintext runner's
+`context_freshness.memora` attestation. Results remain untrusted and informative;
+they never grant authority or permit a memory write.
+
+This gate is fail-closed: unavailable Memora, a limit violation, malformed
+retrieval, expired data, or insufficient provenance blocks action or escalates
+to native Codex. Normal agents must not write to Memora, and a cold-context
+retrieval does not authorize the curator candidate-write tools.
+
 ## Provenance envelope
 
 Every candidate or retrieved item that is considered for durable use carries

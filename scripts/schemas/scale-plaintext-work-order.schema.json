@@ -13,6 +13,8 @@
     "objective",
     "files",
     "context",
+    "context_security",
+    "context_freshness",
     "acceptance",
     "output_mode",
     "stop_condition",
@@ -35,6 +37,73 @@
       "type": "array",
       "items": { "type": "string", "minLength": 1, "maxLength": 8000 }
     },
+    "context_security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "hidden", "encrypted", "previous_response_id"],
+      "properties": {
+        "mode": { "const": "plaintext" },
+        "hidden": { "const": false },
+        "encrypted": { "const": false },
+        "previous_response_id": { "type": "null" }
+      },
+      "description": "Only the task-authored plaintext context is allowed. Hidden/encrypted Codex child state and response continuation are native-only."
+    },
+    "context_freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "memora"],
+      "properties": {
+        "scope": { "enum": ["active", "cold"] },
+        "memora": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "result_count", "provenance"],
+          "properties": {
+            "status": { "enum": ["not_required", "retrieved", "blocked", "escalate_native"] },
+            "result_count": { "type": "integer", "minimum": 0 },
+            "provenance": {
+              "type": "array",
+              "prefixItems": [
+                { "const": "source" },
+                { "const": "evidence" },
+                { "const": "compatibility" },
+                { "const": "validated_on" },
+                { "const": "review_after" },
+                { "const": "source_commit" },
+                { "const": "source_path" },
+                { "const": "content_hash" },
+                { "const": "project" },
+                { "const": "scope" },
+                { "const": "sensitivity" },
+                { "const": "status" },
+                { "const": "validation" },
+                { "const": "expires_at" },
+                { "const": "sync_policy" }
+              ],
+              "items": false,
+              "minItems": 15,
+              "maxItems": 15
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "scope": { "const": "active" } } },
+          "then": { "properties": { "memora": { "properties": { "status": { "enum": ["not_required", "retrieved"] } } } } }
+        },
+        {
+          "if": { "properties": { "scope": { "const": "cold" } } },
+          "then": { "properties": { "memora": { "properties": { "status": { "const": "retrieved" }, "result_count": { "minimum": 1 } } } } }
+        },
+        {
+          "if": { "properties": { "scope": { "const": "active" }, "memora": { "properties": { "status": { "const": "not_required" } } } } },
+          "then": { "properties": { "memora": { "properties": { "result_count": { "const": 0 } } } } }
+        }
+      ],
+      "description": "Cold context requires a successful, read-only Memora retrieval attestation with at least one result and the complete SCALE provenance envelope; unavailable or insufficient retrieval must route native."
+    },
     "acceptance": {
       "type": "array",
       "minItems": 1,
@@ -45,5 +114,14 @@
     "stop_condition": { "type": "string", "minLength": 1, "maxLength": 2000 },
     "max_steps": { "type": "integer", "minimum": 1 },
     "max_output_tokens": { "type": "integer", "minimum": 64, "maximum": 8192 }
+  },
+  "not": {
+    "anyOf": [
+      { "required": ["previous_response_id"] },
+      { "required": ["hidden_context"] },
+      { "required": ["encrypted_context"] },
+      { "required": ["codex_child_context"] },
+      { "required": ["conversation_history"] }
+    ]
   }
 }

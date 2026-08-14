@@ -24,9 +24,12 @@ default implementer merely because it can read files or call tools directly.
    write the work order, and dispatch. After dispatch it may inspect the result,
    run one batched deterministic validation pass, and report.
 4. Do not self-implement compound work, run a broad unbounded scan before
-   dispatch, or silently repair delegated changes. A failed check gets at most
-   one bounded repair task, followed by the failed check and one final acceptance
-   pass.
+   dispatch, or silently repair delegated changes. Repairs remain explicitly
+   delegated and each changed acceptance check is batch-validated. Continue
+   only while the task budget and acceptance contract permit progress; stop on
+   acceptance, cancellation, budget exhaustion, repeated no-progress, unsafe
+   boundary, or native escalation, and emit repair stop telemetry. Repair pass
+   count is not a termination condition.
 5. A direct route is allowed only for one atomic, low-risk mutation with one
    obvious acceptance check and one mutation surface.
 

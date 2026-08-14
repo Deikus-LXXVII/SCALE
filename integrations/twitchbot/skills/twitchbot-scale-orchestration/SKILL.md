@@ -32,9 +32,11 @@ implement or repair delegated work; a repair is one more bounded delegated task.
    injection-defense, and Git authority native.
 6. Give each work order an objective, exact scope, acceptance criteria, output
    format, and stop condition. At most one fallback is allowed.
-7. Run one batched deterministic validation pass. After one repair, rerun only
-   the failed check and perform one final acceptance pass; never rerun passing
-   checks without invalidating changes.
+7. Run batched deterministic validation. Repairs remain delegated and may
+   continue only while token budget and validated acceptance progress permit;
+   stop on acceptance, cancellation, budget exhaustion, repeated no-progress,
+   unsafe boundary, or native escalation, and emit stop telemetry. Never rerun
+   passing checks without invalidating changes.
 8. If the runner exits 75, start the returned native fallback as a fresh task;
    do not retry or resume the OpenCode response. If OpenCodex itself fails, use
    `.codex/scale-library-src/scripts/scale-codex-recover.sh runner-start` so the

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { executeWorkOrder, validateWorkOrder, WorkOrderError } from "./scale-plaintext-runner.mjs";
+import { executeWorkOrder, validateWorkOrder, WorkOrderError, SCALE_PROVENANCE_FIELDS } from "./scale-plaintext-runner.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const registry = JSON.parse(fs.readFileSync(path.join(root, "library", "model-registry.json"), "utf8"));
@@ -40,6 +40,10 @@ for (const [profile, timeout] of Object.entries({
 }
 const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "scale-plaintext-runner-"));
 fs.writeFileSync(path.join(projectRoot, "demo.js"), "export const value = 1;\n");
+fs.writeFileSync(path.join(projectRoot, "hidden-context.txt"), "previous_response_id: resp_hidden\n");
+fs.mkdirSync(path.join(projectRoot, ".codex", "sessions"), { recursive: true });
+fs.writeFileSync(path.join(projectRoot, ".codex", "sessions", "task.json"), "{}\n");
+fs.writeFileSync(path.join(projectRoot, ".codex", "config.toml"), "model = \"codex-auto-review\"\n");
 
 const baseWorkOrder = {
   schema_version: 1,
@@ -50,6 +54,8 @@ const baseWorkOrder = {
   objective: "Change the exported value from 1 to 2.",
   files: ["demo.js"],
   context: ["Keep the public export name."],
+  context_security: { mode: "plaintext", hidden: false, encrypted: false, previous_response_id: null },
+  context_freshness: { scope: "active", memora: { status: "not_required", result_count: 0, provenance: [...SCALE_PROVENANCE_FIELDS] } },
   acceptance: ["The unified diff changes only demo.js."],
   output_mode: "patch",
   stop_condition: "Stop after emitting one unified diff.",
@@ -60,8 +66,25 @@ const baseWorkOrder = {
 const validate = (workOrder) => validateWorkOrder({ workOrder, registry, projectRoot, rawBytes: Buffer.byteLength(JSON.stringify(workOrder)) });
 const validated = validate(baseWorkOrder);
 assert.equal(validated.files[0].content, "export const value = 1;\n");
+const { context_freshness: _contextFreshness, ...withoutFreshness } = baseWorkOrder;
+assert.throws(() => validate(withoutFreshness), WorkOrderError, "context freshness attestation is required");
 
 assert.throws(() => validate({ ...baseWorkOrder, objective: "Use password=supersecret123 for the test." }), WorkOrderError);
+assert.throws(() => validate({ ...baseWorkOrder, context_security: { mode: "plaintext", hidden: true, encrypted: false, previous_response_id: null } }), WorkOrderError);
+assert.throws(() => validate({ ...baseWorkOrder, context_security: { mode: "plaintext", hidden: false, encrypted: true, previous_response_id: null } }), WorkOrderError);
+assert.throws(() => validate({ ...baseWorkOrder, context_security: { mode: "plaintext", hidden: false, encrypted: false, previous_response_id: "resp_hidden" } }), WorkOrderError);
+assert.throws(() => validate({ ...baseWorkOrder, previous_response_id: "resp_hidden" }), WorkOrderError);
+assert.throws(() => validate({ ...baseWorkOrder, context: ["encrypted_context: opaque-codex-state"] }), WorkOrderError);
+assert.throws(() => validate({ ...baseWorkOrder, files: ["hidden-context.txt"] }), WorkOrderError, "hidden context in file contents must route native");
+assert.throws(() => validate({ ...baseWorkOrder, files: [".codex/sessions/task.json"] }), WorkOrderError, "Codex session artifacts must route native");
+assert.throws(() => validate({ ...baseWorkOrder, files: [".codex\\sessions\\task.json"] }), WorkOrderError, "Windows-style Codex session paths must route native");
+assert.doesNotThrow(() => validate({ ...baseWorkOrder, files: [".codex/config.toml"] }), "ordinary Codex config files remain allowed");
+assert.doesNotThrow(() => validate({ ...baseWorkOrder, context_freshness: { scope: "active", memora: { status: "retrieved", result_count: 1, provenance: [...SCALE_PROVENANCE_FIELDS] } } }));
+const coldFreshness = { scope: "cold", memora: { status: "retrieved", result_count: 1, provenance: [...SCALE_PROVENANCE_FIELDS] } };
+assert.doesNotThrow(() => validate({ ...baseWorkOrder, execution_id: "test-cold-001", context_freshness: coldFreshness }), "cold context with complete Memora attestation must pass");
+assert.throws(() => validate({ ...baseWorkOrder, execution_id: "test-cold-missing", context_freshness: { scope: "cold" } }), WorkOrderError, "cold context without Memora attestation must fail closed");
+assert.throws(() => validate({ ...baseWorkOrder, execution_id: "test-cold-blocked", context_freshness: { scope: "cold", memora: { status: "blocked", result_count: 0, provenance: [...SCALE_PROVENANCE_FIELDS] } } }), WorkOrderError, "blocked cold retrieval must route native");
+assert.throws(() => validate({ ...baseWorkOrder, execution_id: "test-cold-provenance", context_freshness: { scope: "cold", memora: { status: "retrieved", result_count: 1, provenance: SCALE_PROVENANCE_FIELDS.slice(1) } } }), WorkOrderError, "cold retrieval with insufficient provenance must fail closed");
 assert.throws(() => validate({ ...baseWorkOrder, files: ["../outside.js"] }), WorkOrderError);
 assert.throws(() => validate({ ...baseWorkOrder, model: "opencode-go/deepseek-v4-pro" }), WorkOrderError);
 assert.throws(() => validate({ ...baseWorkOrder, max_steps: 999 }), WorkOrderError);

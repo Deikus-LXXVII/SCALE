@@ -20,7 +20,7 @@ compact plan, not production changes and not a second user-facing answer.
   "validation_plan": {
     "batch_commands": ["one combined focused command"],
     "max_passes": 2,
-    "repair_cycle": "rerun only failed checks, then one final acceptance pass"
+    "repair_cycle": "delegate repairs until acceptance, cancellation, budget exhaustion, repeated no-progress, unsafe boundary, or native escalation; batch changed checks and emit stop telemetry"
   },
   "stop_condition": "...",
   "confidence": 0.0
@@ -41,6 +41,7 @@ Rules:
   set `needs_user_input` to `true`.
 - Batch independent lint, typecheck, unit, schema, and smoke checks where the
   repository permits it. Do not rerun a passing check for another bullet.
-- The default is one validation pass and at most one repair cycle. Critical
-  tasks may add one final acceptance command, but still must not repeat the
-  full suite per subtask.
+- Repairs are not capped by pass count. Every repair remains delegated and
+  token-disciplined; batch changed checks after each repair and stop on the
+  documented acceptance, cancellation, budget, no-progress, unsafe-boundary,
+  or native-escalation condition. Never repeat the full suite per subtask.

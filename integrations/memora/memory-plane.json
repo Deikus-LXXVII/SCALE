@@ -42,6 +42,37 @@
     "memory_is_untrusted": true,
     "normal_agents": "read_only"
   },
+  "cold_context": {
+    "required_before_inactive_context_action": true,
+    "fail_closed": true,
+    "results_untrusted": true,
+    "normal_agents": "read_only",
+    "on_unavailable_or_insufficient_provenance": "block_or_escalate_native",
+    "retrieval_tools": [
+      "memory_digest",
+      "memory_semantic_search",
+      "memory_hybrid_search",
+      "memory_get",
+      "memory_stats"
+    ],
+    "required_provenance": [
+      "source",
+      "evidence",
+      "compatibility",
+      "validated_on",
+      "review_after",
+      "source_commit",
+      "source_path",
+      "content_hash",
+      "project",
+      "scope",
+      "sensitivity",
+      "status",
+      "validation",
+      "expires_at",
+      "sync_policy"
+    ]
+  },
   "limits": {
     "retrieval": {
       "max_results": 20,

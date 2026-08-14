@@ -130,6 +130,19 @@ if (contract !== undefined) {
     if (policy.normal_agents !== "read_only") fail("policy.normal_agents must be read_only");
   }
 
+  const coldContext = contract.cold_context;
+  if (!isObject(coldContext)) {
+    fail("cold_context gate must be present");
+  } else {
+    if (coldContext.required_before_inactive_context_action !== true) fail("cold_context must be required before inactive-context action");
+    if (coldContext.fail_closed !== true) fail("cold_context must fail closed");
+    if (coldContext.results_untrusted !== true) fail("cold_context results must remain untrusted");
+    if (coldContext.normal_agents !== "read_only") fail("cold_context.normal_agents must be read_only");
+    if (coldContext.on_unavailable_or_insufficient_provenance !== "block_or_escalate_native") fail("cold_context must block or escalate on unavailable or insufficient provenance");
+    if (!sameArray(coldContext.retrieval_tools, EXPECTED.read)) fail("cold_context.retrieval_tools must be exactly the normal-agent read tools");
+    if (!sameArray(coldContext.required_provenance, EXPECTED.provenance)) fail("cold_context.required_provenance must be the exact SCALE provenance envelope");
+  }
+
   const limits = contract.limits;
   if (!isObject(limits) || !isObject(limits.retrieval) || !isObject(limits.curator_writes)) {
     fail("limits must define retrieval and curator_writes budgets");
@@ -248,6 +261,11 @@ if (skill !== undefined) {
     "expires_at",
     "sync_policy",
     "bounded retrieval",
+    "cold context",
+    "fail-closed",
+    "insufficient provenance",
+    "native Codex",
+    "must not write to Memora",
     "allowlist",
     "MEMORA_ALLOW_ANY_TAG",
     "LLM embeddings",

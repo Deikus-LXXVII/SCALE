@@ -18,9 +18,16 @@ as a reason to replace all Codex roles.
 
 1. Start with the role's native `primary` in `model-registry.json`.
 2. Use an OpenCode Go `specialist` only if its `use_when` condition is true,
-   the request is non-sensitive, and its result is bounded by a work order.
+   the request is non-sensitive, its result is bounded by a work order, and
+   the work order contains only coordinator-authored plaintext context. Hidden
+   or encrypted Codex child state is native-only; if it is essential, route to
+   native Codex instead.
 3. A Go failure or quota signal returns exactly one stated native fallback. Do
    not retry Go or silently select a more expensive Go model.
+   The runner sends no `previous_response_id` and rejects continuation metadata.
+   Before acting on cold project, production-surface, subsystem, or decision
+   context, require bounded read-only Memora retrieval; unavailable or
+   insufficiently proven context blocks or escalates native.
 4. Sol remains final authority for security, critical decisions, and promotion;
    Sol is hard-capped at `high` reasoning. Never assign `xhigh` or `max` to a
    Sol profile, route, fallback, or overlay;

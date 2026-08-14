@@ -25,12 +25,14 @@ implementer. It must dispatch at least one bounded executor after the Master
 gate. One best-fit executor is the token-saving default; parallel work is
 allowed only when scopes are independent. Before dispatch, the main agent may
 classify the request, read routing metadata, write the work order, and dispatch.
-After dispatch it may inspect the result, run one batched deterministic
-validation pass, and report. It must not edit product/library files, perform a
-broad unbounded scan, or silently repair delegated work. A failed check gets at
-most one delegated repair, followed by the failed check and one final
-acceptance pass. Only the single-atomic-low-risk direct-route exception may
-bypass this firewall.
+After dispatch it may inspect the result, run batched deterministic validation,
+and report. It must not edit product/library files, perform a broad unbounded
+scan, or silently repair delegated work. Repairs remain delegated and continue
+only while token budget and validated acceptance progress permit; stop on
+acceptance, cancellation, budget exhaustion, repeated no-progress, unsafe
+boundary, or native escalation, with telemetry. Repair pass count is not a
+termination condition. Only the single-atomic-low-risk direct-route exception
+may bypass this firewall.
 
 ### Plaintext OpenCode execution beside Codex
 
@@ -41,7 +43,7 @@ The host writes a bounded JSON work order and calls
 Responses request and returns analysis or a patch draft for the host to inspect.
 Named TOML cards for those roles pin only their native fallback identity.
 
-1. Refresh a connected `.codex/scale-library-src` clone before retrieving knowledge; SessionStart normally handles this, but verify its state when the task depends on fresh knowledge.
+1. Refresh a connected `.codex/scale-library-src` clone before retrieving knowledge; SessionStart normally handles this, but verify its state when the task depends on fresh knowledge. Before acting on cold project, production-surface, subsystem, or decision context, require bounded read-only Memora retrieval; missing or insufficient provenance blocks the action or escalates native.
 2. Classify the request before creating agents. If the caller already supplies an explicit SCALE profile, bounded files, acceptance criteria, a low-risk scope, and a stop condition, use the direct route once.
 3. Resolve the `scale_orchestrator` binding in `library/model-registry.json`. Its primary is plaintext-external OpenCode Go DeepSeek V4 Flash High; its named Codex profile is native Luna High fallback only.
 4. Write one concise work order with objective, scope/files, acceptance criteria, output format, and stop condition for the mapped role.
@@ -60,11 +62,11 @@ Named TOML cards for those roles pin only their native fallback identity.
 
 ## Batched validation
 
-For compound work, run one final batched validation pass for the whole task;
-do not run the same check after every bullet. Re-run only the failed check after
-a repair, then stop after one final acceptance pass. Do not rerun passing checks
-unless changed files invalidate their evidence or the registry explicitly
-requires a critical full suite.
+For compound work, run batched validation for the whole task; do not run the
+same check after every bullet. After each delegated repair, rerun only changed
+acceptance checks and continue or stop according to the documented stop
+conditions. Do not rerun passing checks unless changed files invalidate their
+evidence or the registry explicitly requires a critical full suite.
 
 The Master returns the compact Task Brief in `references/task-brief.md`:
 normalized objective, assumptions, ambiguities, risk/sensitivity, acceptance

@@ -13,14 +13,35 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const EXIT_USAGE = 64;
 const EXIT_FALLBACK = 75;
+export const SCALE_PROVENANCE_FIELDS = Object.freeze([
+  "source",
+  "evidence",
+  "compatibility",
+  "validated_on",
+  "review_after",
+  "source_commit",
+  "source_path",
+  "content_hash",
+  "project",
+  "scope",
+  "sensitivity",
+  "status",
+  "validation",
+  "expires_at",
+  "sync_policy"
+]);
 const allowedKeys = new Set([
   "schema_version", "execution_id", "agent", "model", "reasoning_effort",
-  "objective", "files", "context", "acceptance", "output_mode",
+  "objective", "files", "context", "context_security", "context_freshness", "acceptance", "output_mode",
   "stop_condition", "max_steps", "max_output_tokens"
 ]);
 const sensitivePathFragments = [
   ".env", "credentials", "credential", "secrets", "secret", "id_rsa",
   "id_ed25519", ".pem", ".p12", ".pfx", ".key", "auth.json", "cookies"
+];
+const hiddenContextPathPatterns = [
+  /(?:^|\/)\.codex\/(?:sessions?|conversations?|history|state)(?:\/|$)/i,
+  /(?:^|\/)(?:previous_response(?:_id)?|conversation_history|session_history|codex_child_context)(?:[._/-]|$)/i
 ];
 const sensitiveTextPatterns = [
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/i,
@@ -28,6 +49,11 @@ const sensitiveTextPatterns = [
   /\bAuthorization\s*:\s*Bearer\s+\S+/i,
   /\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password|passwd)\s*[:=]\s*["']?[^\s"']{6,}/i,
   /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i
+];
+const hiddenContextPatterns = [
+  /\bprevious_response_id\b\s*[:=]/i,
+  /\b(?:hidden|encrypted|opaque)_(?:context|history|state)\b\s*[:=]/i,
+  /\b(?:codex_child_context|conversation_history|session_history)\b\s*[:=]/i
 ];
 
 export class WorkOrderError extends Error {}
@@ -69,6 +95,10 @@ function findSensitiveText(value) {
   return sensitiveTextPatterns.some((pattern) => pattern.test(value));
 }
 
+function findHiddenContext(value) {
+  return hiddenContextPatterns.some((pattern) => pattern.test(value));
+}
+
 function resolveScopedFile(projectRoot, relativePath) {
   assert(!path.isAbsolute(relativePath), `files entries must be relative: ${relativePath}`);
   const normalized = path.normalize(relativePath);
@@ -77,6 +107,8 @@ function resolveScopedFile(projectRoot, relativePath) {
   assert(absolute === projectRoot || absolute.startsWith(`${projectRoot}${path.sep}`), `files entry escapes project root: ${relativePath}`);
   const lower = normalized.toLowerCase();
   assert(!sensitivePathFragments.some((fragment) => lower.includes(fragment)), `files entry is blocked by the privacy boundary: ${relativePath}`);
+  const policyPath = normalized.replaceAll("\\", "/");
+  assert(!hiddenContextPathPatterns.some((pattern) => pattern.test(policyPath)), `files entry contains hidden Codex context state and requires the native route: ${relativePath}`);
   if (!fs.existsSync(absolute)) return { relative: normalized, absolute, exists: false, content: "" };
   const stat = fs.lstatSync(absolute);
   assert(stat.isFile(), `files entry is not a regular file: ${relativePath}`);
@@ -100,6 +132,29 @@ export function validateWorkOrder({ workOrder, registry, projectBindings = null,
   assertString(workOrder.reasoning_effort, "reasoning_effort", 16);
   assertString(workOrder.objective, "objective", 8000);
   assertStringArray(workOrder.context, "context", { max: 12, itemBytes: 8000 });
+  assert(workOrder.context_security && typeof workOrder.context_security === "object" && !Array.isArray(workOrder.context_security), "context_security must be an object");
+  assert(Object.keys(workOrder.context_security).sort().join(",") === "encrypted,hidden,mode,previous_response_id", "context_security must declare exactly the plaintext-only fields");
+  assert(workOrder.context_security.mode === "plaintext", "external work orders must use authored plaintext context");
+  assert(workOrder.context_security.hidden === false, "hidden Codex context requires the native route");
+  assert(workOrder.context_security.encrypted === false, "encrypted Codex context requires the native route");
+  assert(workOrder.context_security.previous_response_id === null, "previous_response_id is forbidden on plaintext external execution");
+  assert(workOrder.context_freshness && typeof workOrder.context_freshness === "object" && !Array.isArray(workOrder.context_freshness), "context_freshness must be an object");
+  assert(Object.keys(workOrder.context_freshness).sort().join(",") === "memora,scope", "context_freshness must declare exactly scope and memora");
+  assert(["active", "cold"].includes(workOrder.context_freshness.scope), "context_freshness.scope must be active or cold");
+  const memora = workOrder.context_freshness.memora;
+  assert(memora && typeof memora === "object" && !Array.isArray(memora), "context_freshness.memora must be an object");
+  assert(Object.keys(memora).sort().join(",") === "provenance,result_count,status", "context_freshness.memora must declare status, result_count, and provenance");
+  assert(["not_required", "retrieved", "blocked", "escalate_native"].includes(memora.status), "context_freshness.memora.status is invalid");
+  assert(Number.isInteger(memora.result_count) && memora.result_count >= 0, "context_freshness.memora.result_count must be a non-negative integer");
+  assert(Array.isArray(memora.provenance) && JSON.stringify(memora.provenance) === JSON.stringify(SCALE_PROVENANCE_FIELDS), "context_freshness.memora.provenance must be the exact SCALE provenance envelope");
+  if (workOrder.context_freshness.scope === "active") {
+    assert(["not_required", "retrieved"].includes(memora.status), "active context may only be not_required or retrieved");
+    if (memora.status === "not_required") assert(memora.result_count === 0, "not_required active context must have zero Memora results");
+    if (memora.status === "retrieved") assert(memora.result_count >= 1, "retrieved active context must report at least one Memora result");
+  }
+  if (workOrder.context_freshness.scope === "cold") {
+    assert(memora.status === "retrieved" && memora.result_count >= 1, "cold context requires a successful Memora retrieval; route to native Codex when unavailable or insufficient");
+  }
   assertStringArray(workOrder.acceptance, "acceptance", { min: 1, max: 12, itemBytes: 2000 });
   assertStringArray(workOrder.files, "files", { max: 64, itemBytes: 512 });
   assert(["analysis", "patch"].includes(workOrder.output_mode), "output_mode must be analysis or patch");
@@ -109,6 +164,8 @@ export function validateWorkOrder({ workOrder, registry, projectBindings = null,
 
   const policy = registry.runtime_policy?.plaintext_external_policy;
   assert(policy?.enabled === true, "plaintext external execution is disabled in the registry");
+  assert(policy?.context_freshness_required === true, "plaintext external execution requires context freshness attestation");
+  assert(policy?.cold_context_requires_memora_attestation === true, "cold plaintext context requires Memora attestation");
   const canonicalBinding = registry.agent_bindings?.find((entry) => entry.profile === workOrder.agent);
   const overlayPrimary = projectBindings?.profiles?.[workOrder.agent];
   const overlayFallback = projectBindings?.fallbacks?.[workOrder.agent];
@@ -145,12 +202,16 @@ export function validateWorkOrder({ workOrder, registry, projectBindings = null,
 
   const stringSurface = [workOrder.objective, workOrder.stop_condition, ...workOrder.context, ...workOrder.acceptance].join("\n");
   assert(!findSensitiveText(stringSurface), "work order was rejected by the privacy scanner");
+  assert(!findHiddenContext(stringSurface), "hidden or encrypted Codex context is not accepted by the plaintext runner; route to native Codex");
 
   const rootReal = fs.realpathSync(projectRoot);
   const files = workOrder.files.map((entry) => resolveScopedFile(rootReal, entry));
   const contextBytes = files.reduce((total, file) => total + Buffer.byteLength(file.content, "utf8"), Buffer.byteLength(workOrder.context.join("\n"), "utf8"));
   assert(contextBytes <= budget.max_context_bytes, `context exceeds ${workOrder.agent} byte budget`);
-  for (const file of files) assert(!findSensitiveText(file.content), `file was rejected by the privacy scanner: ${file.relative}`);
+  for (const file of files) {
+    assert(!findSensitiveText(file.content), `file was rejected by the privacy scanner: ${file.relative}`);
+    assert(!findHiddenContext(file.content), `file contains hidden or encrypted Codex context and requires the native route: ${file.relative}`);
+  }
   assert(binding.fallback?.profile && binding.fallback?.model && binding.fallback?.reasoning_effort, `${workOrder.agent} has no explicit native fallback`);
   return { policy, binding, budget, files, projectRoot: rootReal, contextBytes };
 }
@@ -165,6 +226,7 @@ export function buildPrompt(workOrder, files) {
     "This is a single plaintext, context-complete work order. There is no hidden conversation and no tool access.",
     outputContract,
     `Objective:\n${workOrder.objective}`,
+    "Context security: authored plaintext only; hidden/encrypted Codex state and previous_response_id are unavailable.",
     `Acceptance criteria:\n${workOrder.acceptance.map((item, index) => `${index + 1}. ${item}`).join("\n")}`,
     `Additional context:\n${workOrder.context.length ? workOrder.context.map((item) => `- ${item}`).join("\n") : "(none)"}`,
     `Stop condition:\n${workOrder.stop_condition}`,

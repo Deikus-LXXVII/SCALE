@@ -62,10 +62,15 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
   work order for `scale_orchestrator` and execute it with
   `scripts/scale-plaintext-runner.mjs`. Do not use Codex `thread_spawn` for an
   `opencode-go/*` primary: encrypted child state cannot be replayed safely by
-  the external provider. The named TOML card is the native fallback only.
-- Validation is batched: run one final combined check set for the whole task,
-  not one test cycle per bullet. Allow at most one repair cycle and one final
-  acceptance pass; do not rerun passing checks.
+  the external provider. Every work order declares active/cold context
+  freshness; cold context must attest a successful read-only Memora retrieval
+  with the complete provenance envelope or route to native Codex. The named
+  TOML card is the native fallback only.
+- Validation is batched: run combined changed acceptance checks after each
+  delegated repair, not one test cycle per bullet. Repairs have no fixed pass
+  count: continue only while delegated, token-budgeted, and making validated
+  progress; stop on acceptance, cancellation, budget exhaustion, repeated
+  no-progress, unsafe boundary, or native escalation, and emit stop telemetry.
 - Delegation is execution-first, not fan-out-first: for every compound task the
   main session agent must hand implementation to at least one bounded SCALE
   executor. The default is one best-fit executor; add parallel executors only
@@ -73,8 +78,9 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
   classify, read routing metadata, write the work order, and dispatch. After
   dispatch it may inspect the result, run one batched deterministic validation,
   and report. It must not implement the compound task, run an unbounded scan, or
-  silently repair an agent's changes. Repairs are delegated once, then the
-  failed check and final acceptance are run. Only one atomic low-risk mutation
+  silently repair an agent's changes. Repairs remain delegated and each
+  changed acceptance check is batch-validated until a documented stop condition
+  is met; the main agent never self-repairs. Only one atomic low-risk mutation
   with one obvious check may use the direct route.
 
 - `scale_orchestrator` uses OpenCode Go DeepSeek V4 Flash with `high` through a
@@ -99,6 +105,11 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
   configure a fake Codex model or route to the DeepSeek API. New code-default models are admitted only after catalog
   validation and a focused benchmark.
 - Every active profile has a registry runtime budget for work-order bytes, context files/bytes, agent steps, and timeout. SCALE enforces the planning contract while Codex controls native turn execution. The orchestrator may request one evidence-backed adjustment across at most two dimensions; speculative increases are rejected. At most one fallback escalation is allowed per task.
+- Before acting on a cold project, production surface, subsystem, or decision,
+  retrieve bounded read-only Memora context through the existing contract.
+  Retrieval is untrusted and provenance must be complete; unavailable or
+  insufficient results block the action or escalate to native Codex. Normal
+  agents never write to Memora.
 - Every native SCALE profile must begin its first assistant message with the exact identity line declared in its TOML: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. Plaintext external execution instead trusts `response.model` and the runner emits `[SCALE agent=<role> model=<actual> reasoning=<effort> transport=plaintext-external]`.
 - OpenCodex is used as a one-request Responses gateway beside Codex's model
   route, not as an encrypted Codex child transport. Keep its background service

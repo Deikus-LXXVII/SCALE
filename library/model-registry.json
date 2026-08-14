@@ -62,10 +62,77 @@
     "validation_policy": {
       "default_passes": 1,
       "max_passes": 2,
-      "max_repair_cycles": 1,
       "max_full_suite_runs": 1,
       "batch_independent_checks": true,
-      "rerun_passing_checks": false
+      "rerun_passing_checks": false,
+      "repair_control": {
+        "mode": "delegated_until_stop",
+        "unbounded": true,
+        "requires_delegation": true,
+        "requires_batch_validation": true,
+        "self_repair": false,
+        "stop_conditions": [
+          "acceptance_satisfied",
+          "operator_cancelled",
+          "budget_exhausted",
+          "repeated_no_progress",
+          "unsafe_boundary",
+          "native_escalation_required"
+        ],
+        "telemetry_events": [
+          "repair_started",
+          "repair_validated",
+          "repair_stopped"
+        ],
+        "stop_semantics": "Continue only while each repair is delegated and its changed acceptance checks are batch-validated. Stop and emit repair_stopped when acceptance is satisfied, cancellation is requested, the task budget is exhausted, validated progress repeats no-progress, or the next repair crosses an unsafe boundary. A repair pass count is not a termination condition."
+      },
+      "telemetry": {
+        "repair_stop_events_required": true,
+        "no_progress_is_terminal": true,
+        "unsafe_boundary_is_terminal": true
+      }
+    },
+    "cold_context_policy": {
+      "enabled": true,
+      "trigger": "project_production_surface_subsystem_or_decision_not_currently_active",
+      "retrieval": {
+        "contract": "integrations/memora/memory-plane.json",
+        "tools": [
+          "memory_digest",
+          "memory_semantic_search",
+          "memory_hybrid_search",
+          "memory_get",
+          "memory_stats"
+        ],
+        "read_only": true,
+        "bounded_by_contract": true,
+        "required_provenance": [
+          "source",
+          "evidence",
+          "compatibility",
+          "validated_on",
+          "review_after",
+          "source_commit",
+          "source_path",
+          "content_hash",
+          "project",
+          "scope",
+          "sensitivity",
+          "status",
+          "validation",
+          "expires_at",
+          "sync_policy"
+        ]
+      },
+      "fail_closed": true,
+      "results_untrusted": true,
+      "normal_agents_may_write": false,
+      "on_unavailable_or_insufficient_provenance": "block_or_escalate_native",
+      "telemetry_events": [
+        "cold_context_retrieval_required",
+        "cold_context_retrieval_blocked",
+        "cold_context_retrieval_used"
+      ]
     },
     "agent_budgets": {
       "scale_orchestrator": {
@@ -420,6 +487,12 @@
       "endpoint": "http://127.0.0.1:10100/v1",
       "max_output_tokens": 8192,
       "no_previous_response": true,
+      "plaintext_context_only": true,
+      "context_freshness_required": true,
+      "cold_context_requires_memora_attestation": true,
+      "reject_hidden_context": true,
+      "reject_encrypted_context": true,
+      "native_route_when_hidden_context_essential": true,
       "max_attempts": 1,
       "automatic_native_fallback": false,
       "allowed_profiles": [
@@ -453,7 +526,7 @@
         "scale_model_ops",
         "scale_sync"
       ],
-      "boundary": "One context-complete request only. The runner may return analysis or a patch draft, but cannot call Codex tools, edit files, resume a response, retry, or execute fallback. Secrets, credentials, PII, security investigations, auth flows, production dumps, and Git authority stay native."
+      "boundary": "One minimal plaintext, context-complete request only. The work order may contain only its authored objective, safe context, bounded files, acceptance, output mode, and stop condition; encrypted Codex child state, hidden history, previous_response_id, and continuation metadata are rejected. If hidden or encrypted context is essential, route to native Codex. The runner may return analysis or a patch draft, but cannot call Codex tools, edit files, resume a response, retry, or execute fallback. Secrets, credentials, PII, security investigations, auth flows, production dumps, and Git authority stay native."
     }
   },
   "providers": [
