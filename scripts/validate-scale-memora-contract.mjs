@@ -263,6 +263,7 @@ if (contract !== undefined) {
     }
     if (!sameArray(runtimeGateway.read_tools, EXPECTED.read)) fail("runtime_gateway.read_tools must preserve the normal read allowlist");
     if (!sameArray(runtimeGateway.candidate_write_tools, EXPECTED.write)) fail("runtime_gateway.candidate_write_tools must match the curator write allowlist");
+    if (!isObject(runtimeGateway.upstream_tag_translation) || runtimeGateway.upstream_tag_translation.technical_tag !== "note" || runtimeGateway.upstream_tag_translation.preserve_original_scale_tags_in_metadata !== true) fail("runtime_gateway must preserve SCALE tags in metadata and use the safe upstream note tag");
     if (!sameArray(runtimeGateway.closed_until_candidate_semantics_proven, ["memory_absorb", "memory_store_document"])) fail("runtime_gateway must close absorb/store_document until candidate semantics are proven");
     if (runtimeGateway.read_only_gateway_unchanged !== true) fail("runtime_gateway must keep the normal read-only gateway separate");
     if (!sameArray(runtimeGateway.forbidden, ["direct_sqlite", "direct_http", "destructive_tools", "promotion", "git_mutation"])) fail("runtime_gateway forbidden boundary drifted");
