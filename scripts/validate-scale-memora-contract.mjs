@@ -250,6 +250,21 @@ if (contract !== undefined) {
     if (contract.model_policy.native_fallback !== "scale-orchestrator") fail("model_policy.native_fallback must be scale-orchestrator");
   }
 
+  const readCompatibility = contract.read_compatibility;
+  if (!isObject(readCompatibility) || readCompatibility.memora_version !== "0.3.3") {
+    fail("read_compatibility must pin Memora 0.3.3");
+  } else {
+    const normalRead = readCompatibility.normal_read_gateway;
+    if (!isObject(normalRead)
+      || normalRead.memory_get?.follow !== "latest"
+      || !sameArray(normalRead.memory_get?.reject_follow, ["active"])
+      || normalRead.memory_digest?.follow !== "active_allowed"
+      || normalRead.memory_semantic_search?.follow !== "active_allowed"
+      || normalRead.memory_hybrid_search?.follow !== "active_allowed") {
+      fail("normal read compatibility must use memory_get follow=latest and reject active");
+    }
+  }
+
   const runtimeGateway = contract.runtime_gateway;
   if (!isObject(runtimeGateway)) {
     fail("runtime_gateway must define the separate curator-only MCP boundary");
@@ -341,7 +356,10 @@ if (skill !== undefined) {
     "verified evidence",
     "8 KiB",
     "credential-free",
-    "promotion attempts"
+    "promotion attempts",
+    "Memora 0.3.3",
+    "follow=latest",
+    "follow=active"
   ];
   const lower = skill.toLowerCase();
   for (const phrase of requiredPhrases) {

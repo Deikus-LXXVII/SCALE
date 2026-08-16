@@ -256,6 +256,24 @@
     "route": "scale-opencode-dispatcher",
     "native_fallback": "scale-orchestrator"
   },
+  "read_compatibility": {
+    "memora_version": "0.3.3",
+    "normal_read_gateway": {
+      "memory_get": {
+        "follow": "latest",
+        "reject_follow": ["active"]
+      },
+      "memory_digest": {
+        "follow": "active_allowed"
+      },
+      "memory_semantic_search": {
+        "follow": "active_allowed"
+      },
+      "memory_hybrid_search": {
+        "follow": "active_allowed"
+      }
+    }
+  },
   "runtime_gateway": {
     "server_name": "scale_memora_curator",
     "source": "scripts/scale-memora-curator-gateway.mjs",

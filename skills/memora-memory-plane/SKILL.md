@@ -54,6 +54,9 @@ registration and it must stay disabled until a source revision is pinned.
   gateway forwards only the safe technical tag `note`. The exact validated
   SCALE tags are preserved in the reserved `scale_memora_curator` metadata
   marker and remain recoverable; `MEMORA_ALLOW_ANY_TAG` stays forbidden.
+- Memora 0.3.3 compatibility: the normal read-only gateway must send
+  `follow=latest` for `memory_get`; upstream rejects `follow=active` there.
+  Search and digest reads may continue using active-follow semantics.
 - `scale_knowledge_eval` and `scale_qa` validate candidate evidence. `scale_git`
   alone promotes validated knowledge to Git SCALE. Promotion is manual and
   explicit; there is no automatic sync or auto-promotion.
