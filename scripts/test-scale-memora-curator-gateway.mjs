@@ -1,12 +1,27 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
-import { advertisedToolSchemas, createCuratorGateway } from "./scale-memora-curator-gateway.mjs";
+import { advertisedToolSchemas, createCuratorGateway, createSerializedQueue } from "./scale-memora-curator-gateway.mjs";
 
 const advertised = advertisedToolSchemas();
 assert.deepEqual(advertised.map(({ name }) => name).slice(-2), ["memory_create", "memory_update"]);
 assert.equal(advertised.some(({ name }) => name === "memory_absorb" || name === "memory_store_document"), false);
 assert.equal(advertised.find(({ name }) => name === "memory_create").inputSchema.properties.candidate.properties.id.type, "integer");
 assert.match(advertised.find(({ name }) => name === "memory_create").inputSchema.properties.candidate.description, /UTF-8/);
+
+const queue = createSerializedQueue();
+const ordering = [];
+let releaseFirst;
+const first = queue(async () => {
+  ordering.push("initialize:start");
+  await new Promise((resolve) => { releaseFirst = resolve; });
+  ordering.push("initialize:end");
+});
+const following = queue(async () => { ordering.push("tools:list"); });
+await Promise.resolve();
+assert.deepEqual(ordering, ["initialize:start"], "following JSON-RPC work must wait for initialize");
+releaseFirst();
+await Promise.all([first, following]);
+assert.deepEqual(ordering, ["initialize:start", "initialize:end", "tools:list"]);
 
 const now = Date.parse("2026-08-16T00:00:00Z");
 const provenanceFields = [

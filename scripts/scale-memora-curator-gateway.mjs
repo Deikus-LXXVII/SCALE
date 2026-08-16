@@ -350,6 +350,17 @@ const toolSchema = (name) => ({
 });
 export const advertisedToolSchemas = () => [...READ_TOOLS, ...ADVERTISED_WRITE_TOOLS].map(toolSchema);
 
+// JSON-RPC messages must be handled in arrival order: initialize has to finish
+// before a following tools/list or tools/call is observed.
+export function createSerializedQueue() {
+  let tail = Promise.resolve();
+  return (task) => {
+    const result = tail.then(task);
+    tail = result.catch(() => {});
+    return result;
+  };
+}
+
 async function runStdioServer() {
   if (CONTRACT.source_revision === null || process.env.SCALE_MEMORA_SOURCE_REVISION !== CONTRACT.source_revision || process.env.SCALE_MEMORA_CURATOR_ENABLE !== "1") {
     throw new Error("Memora curator gateway is fail-closed: pin the contract source revision, match SCALE_MEMORA_SOURCE_REVISION, and set explicit enablement");
@@ -370,7 +381,7 @@ async function runStdioServer() {
   const gateway = createCuratorGateway({ upstreamCall: (name, args) => client.call("tools/call", { name, arguments: args }) });
   const respond = (message) => process.stdout.write(`${JSON.stringify(message)}\n`);
   const rl = readline.createInterface({ input: process.stdin });
-  rl.on("line", async (line) => {
+  const handleLine = async (line) => {
     if (!line.trim()) return;
     let request;
     try { request = JSON.parse(line); } catch { return; }
@@ -396,7 +407,9 @@ async function runStdioServer() {
     } catch (error) {
       respond({ jsonrpc: "2.0", id: request.id, result: { isError: true, content: [{ type: "text", text: error.message }] } });
     }
-  });
+  };
+  const enqueue = createSerializedQueue();
+  rl.on("line", (line) => { enqueue(() => handleLine(line)).catch((error) => console.error(`scale_memora_curator: ${error.message}`)); });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
