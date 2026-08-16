@@ -166,6 +166,7 @@ function reservedMetadata(gate, candidate) {
       task_id: gate.task_id,
       status: candidate.status,
       validation: candidate.validation,
+      tags: [...candidate.tags],
       provenance: clone(candidate.provenance)
     }
   };
@@ -177,7 +178,9 @@ function translateCreate(gate, candidate) {
   return {
     content: candidate.content,
     metadata: reservedMetadata(gate, candidate),
-    tags: [...candidate.tags],
+    // Memora 0.3.3 accepts only its generic technical tags; SCALE tags stay
+    // recoverable in the reserved metadata marker above.
+    tags: ["note"],
     suggest_similar: false,
     similarity_threshold: 0,
     response_mode: "full"
@@ -189,10 +192,11 @@ function translateUpdate(gate, target, patch) {
   // tags are mutable here; metadata is replaced with the complete gate marker.
   const translated = { memory_id: target.id };
   if (patch.content !== undefined) translated.content = patch.content;
-  if (patch.tags !== undefined) translated.tags = [...patch.tags];
+  translated.tags = ["note"];
   translated.metadata = reservedMetadata(gate, {
     status: "candidate",
     validation: "unvalidated",
+    tags: [...(patch.tags ?? [])],
     provenance: gate.provenance
   });
   translated.replace_metadata = true;
@@ -226,7 +230,7 @@ export function createCuratorGateway({ upstreamCall, now = () => Date.now() } = 
         const candidate = validateCandidate({
           id: args.memory_id,
           content: args.patch.content ?? existing.content,
-          tags: args.patch.tags ?? existing.tags,
+          tags: args.patch.tags ?? existingMarker.tags ?? existing.tags,
           provenance: gate.provenance,
           status: "candidate",
           validation: "unvalidated"

@@ -93,6 +93,8 @@ assert.equal(forwarded[0].args.scale_gate, undefined, "scale_gate must never rea
 assert.deepEqual(Object.keys(forwarded[0].args).sort(), ["content", "metadata", "response_mode", "similarity_threshold", "suggest_similar", "tags"]);
 assert.equal(forwarded[0].args.metadata.scale_memora_curator.role, "scale_memora_curator");
 assert.equal(forwarded[0].args.metadata.scale_memora_curator.task_id, "task-001");
+assert.deepEqual(forwarded[0].args.tags, ["note"]);
+assert.deepEqual(forwarded[0].args.metadata.scale_memora_curator.tags, candidate.tags);
 assert.equal(forwarded[0].args.suggest_similar, false);
 
 await gateway.call("memory_create", {
@@ -106,7 +108,7 @@ const updateGateway = createCuratorGateway({
   now: () => now,
   upstreamCall: async (name, args) => {
     updateCalls.push({ name, args });
-    if (name === "memory_get") return { structuredContent: { memory: { id: candidate.id, content: candidate.content, tags: candidate.tags, metadata: { scale_memora_curator: { role: "scale_memora_curator", task_id: "task-001", status: "candidate", validation: "unvalidated", provenance } } } } };
+    if (name === "memory_get") return { structuredContent: { memory: { id: candidate.id, content: candidate.content, tags: ["note"], metadata: { scale_memora_curator: { role: "scale_memora_curator", task_id: "task-001", status: "candidate", validation: "unvalidated", tags: candidate.tags, provenance } } } } };
     return { ok: true };
   }
 });
@@ -119,6 +121,8 @@ assert.deepEqual(updateCalls.map(({ name }) => name), ["memory_get", "memory_upd
 assert.equal(updateCalls[1].args.scale_gate, undefined);
 assert.deepEqual(updateCalls[0].args, { memory_id: candidate.id });
 assert.deepEqual(Object.keys(updateCalls[1].args).sort(), ["content", "memory_id", "metadata", "replace_metadata", "tags"]);
+assert.deepEqual(updateCalls[1].args.tags, ["note"]);
+assert.deepEqual(updateCalls[1].args.metadata.scale_memora_curator.tags, candidate.tags);
 
 const rejects = [
   [{ ...base, scale_gate: undefined }, /scale_gate/],

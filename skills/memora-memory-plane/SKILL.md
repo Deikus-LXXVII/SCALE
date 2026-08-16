@@ -50,6 +50,10 @@ registration and it must stay disabled until a source revision is pinned.
   Candidates remain `candidate`/`unvalidated`; acceptance by Memora is not
   validation or Git promotion. Telemetry is credential-free and may contain
   only the decision, reason, task ID, candidate ID, curator role, and binding.
+- Memora 0.3.3's default upstream tag allowlist is generic, so the curator
+  gateway forwards only the safe technical tag `note`. The exact validated
+  SCALE tags are preserved in the reserved `scale_memora_curator` metadata
+  marker and remain recoverable; `MEMORA_ALLOW_ANY_TAG` stays forbidden.
 - `scale_knowledge_eval` and `scale_qa` validate candidate evidence. `scale_git`
   alone promotes validated knowledge to Git SCALE. Promotion is manual and
   explicit; there is no automatic sync or auto-promotion.

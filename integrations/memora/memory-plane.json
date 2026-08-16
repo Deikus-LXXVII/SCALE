@@ -286,6 +286,10 @@
       "memory_absorb",
       "memory_store_document"
     ],
+    "upstream_tag_translation": {
+      "technical_tag": "note",
+      "preserve_original_scale_tags_in_metadata": true
+    },
     "closed_until_candidate_semantics_proven": [
       "memory_absorb",
       "memory_store_document"
