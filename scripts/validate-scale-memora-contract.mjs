@@ -9,6 +9,7 @@ const SKILL_PATH = path.join(ROOT, "skills", "memora-memory-plane", "SKILL.md");
 const CONFIG_PATH = path.join(ROOT, ".codex", "config.toml");
 const REGISTRY_PATH = path.join(ROOT, "library", "model-registry.json");
 const CURATOR_PROFILE_PATH = path.join(ROOT, ".codex", "agents", "scale_memora_curator.toml");
+const GATEWAY_PATH = path.join(ROOT, "scripts", "scale-memora-curator-gateway.mjs");
 
 const failures = [];
 const fail = (message) => failures.push(message);
@@ -249,6 +250,25 @@ if (contract !== undefined) {
     if (contract.model_policy.native_fallback !== "scale-orchestrator") fail("model_policy.native_fallback must be scale-orchestrator");
   }
 
+  const runtimeGateway = contract.runtime_gateway;
+  if (!isObject(runtimeGateway)) {
+    fail("runtime_gateway must define the separate curator-only MCP boundary");
+  } else {
+    if (runtimeGateway.server_name !== "scale_memora_curator") fail("runtime_gateway.server_name must be scale_memora_curator");
+    if (runtimeGateway.source !== "scripts/scale-memora-curator-gateway.mjs") fail("runtime_gateway.source must name the curator gateway source");
+    if (runtimeGateway.transport !== "stdio" || runtimeGateway.activation !== "explicit_invocation_only" || runtimeGateway.source_revision_env !== "SCALE_MEMORA_SOURCE_REVISION" || runtimeGateway.enable_env !== "SCALE_MEMORA_CURATOR_ENABLE" || runtimeGateway.requires_source_revision_match !== true) fail("runtime_gateway must require explicit pinned source revision and enablement");
+    const upstream = runtimeGateway.upstream;
+    if (!isObject(upstream) || upstream.entry !== "memora-server" || !sameArray(upstream.args, ["--no-graph"]) || upstream.entry_env !== "SCALE_MEMORA_ENTRY" || upstream.args_env !== "SCALE_MEMORA_ARGS" || upstream.transport !== "stdio" || upstream.local_only !== true || upstream.requires_pinned_source_revision !== true) {
+      fail("runtime_gateway.upstream must be the pinned local memora-server stdio command");
+    }
+    if (!sameArray(runtimeGateway.read_tools, EXPECTED.read)) fail("runtime_gateway.read_tools must preserve the normal read allowlist");
+    if (!sameArray(runtimeGateway.candidate_write_tools, EXPECTED.write)) fail("runtime_gateway.candidate_write_tools must match the curator write allowlist");
+    if (!sameArray(runtimeGateway.closed_until_candidate_semantics_proven, ["memory_absorb", "memory_store_document"])) fail("runtime_gateway must close absorb/store_document until candidate semantics are proven");
+    if (runtimeGateway.read_only_gateway_unchanged !== true) fail("runtime_gateway must keep the normal read-only gateway separate");
+    if (!sameArray(runtimeGateway.forbidden, ["direct_sqlite", "direct_http", "destructive_tools", "promotion", "git_mutation"])) fail("runtime_gateway forbidden boundary drifted");
+    if (!fs.existsSync(GATEWAY_PATH)) fail("runtime_gateway source file is missing");
+  }
+
   const credentialKey = /(?:api[_-]?key|access[_-]?token|authorization|bearer|client[_-]?secret|password|private[_-]?key|secret)/i;
   const directApiPattern = /(?:deepseek\s*(?:api|endpoint)|(?:api|endpoint)\s*deepseek|deepseek\.com|\/v\d+\/(?:chat|responses))/i;
   const visit = (value, key = "") => {
@@ -358,6 +378,8 @@ if (curatorProfile !== undefined) {
   if (!/^model = "gpt-5\.6-sol"$/m.test(curatorProfile) || !/^model_reasoning_effort = "high"$/m.test(curatorProfile) || !/^sandbox_mode = "read-only"$/m.test(curatorProfile)) fail("curator profile must be native Sol/high/read-only");
   if (!curatorProfile.includes("memory_create") || !curatorProfile.includes("memory_update") || !curatorProfile.includes("memory_absorb") || !curatorProfile.includes("memory_store_document")) fail("curator profile must name all candidate-write tools");
   if (!curatorProfile.includes("memory_delete") || !curatorProfile.includes("automatic") || !curatorProfile.includes("scale_git")) fail("curator profile must document its negative boundaries");
+  if (!curatorProfile.includes("scale_memora_curator") || !curatorProfile.includes("MCP server")) fail("curator profile must name the separate runtime MCP server");
+  if (!curatorProfile.includes("scale-memora-curator-gateway.mjs") || !curatorProfile.includes("pinned")) fail("curator profile must document explicit pinned gateway invocation");
 }
 
 let config;

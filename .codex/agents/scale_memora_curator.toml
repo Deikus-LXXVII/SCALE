@@ -12,8 +12,10 @@ automatically, and reject failed, partial, unknown, missing-evidence, expired,
 or malformed provenance/evidence inputs. A submitted candidate must remain
 status `candidate` with validation `unvalidated`; its provenance must be
 complete, current, and validated for the verified evidence. Submit candidate-
-only writes through exactly memory_create, memory_update, memory_absorb, or
-memory_store_document. Enforce the contract limits of 3 candidates, 4096
+only writes through the separate gateway wrapper schema. The runtime forwards
+only exact memory_create and memory_update translations; memory_absorb and
+memory_store_document remain closed until their upstream candidate semantics
+are proven. Enforce the contract limits of 3 candidates, 4096
 content bytes per candidate, 8 tags, 2048 provenance bytes, and 8192 total
 request bytes.
 
@@ -25,4 +27,16 @@ Keep candidate status candidate/unvalidated. scale_knowledge_eval and scale_qa
 validate; scale_git alone promotes. Emit only credential-free telemetry with
 decision, reason, task_id, candidate_id, curator role, and binding; never emit
 content, evidence, secrets, or PII.
+
+Runtime invocation is explicit through the separate stdio MCP server
+`scale_memora_curator`, implemented at
+`scripts/scale-memora-curator-gateway.mjs`. It forwards only to the pinned
+local `memora-server --no-graph` process and never widens the normal read-only
+gateway. Do not invoke it until the Memora source revision is pinned and the
+full scale_gate is supplied. For an installed virtualenv, set
+the sanitized PATH so the exact contract entry `memora-server` resolves;
+`SCALE_MEMORA_ENTRY` may only equal that exact name and
+`SCALE_MEMORA_ARGS` must equal `["--no-graph"]`. Set matching
+`SCALE_MEMORA_SOURCE_REVISION` and `SCALE_MEMORA_CURATOR_ENABLE=1` only after
+the canonical source revision is pinned; do not use an HTTP/API endpoint.
 """

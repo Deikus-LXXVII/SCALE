@@ -20,3 +20,11 @@ The role may submit at most three unvalidated candidates through the four
 declared candidate-write tools, subject to the exact provenance/tag allowlist
 and payload limits. It never deletes, merges, imports, bulk-writes, promotes,
 mutates Git, or handles secrets, credentials, PII, audio, or transcripts.
+
+Runtime candidate calls use the separate explicit stdio MCP server
+`scale_memora_curator` (`scripts/scale-memora-curator-gateway.mjs`), which
+forwards only to a pinned local `memora-server --no-graph` process. The normal
+read-only gateway remains separate and unchanged. The runtime requires the
+exact contract entry `memora-server`, exact args `["--no-graph"]`, and matching
+source-revision enablement. It keeps absorb and store-document wrappers closed
+until their candidate-only semantics are proven.

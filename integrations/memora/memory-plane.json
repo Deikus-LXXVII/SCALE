@@ -255,5 +255,48 @@
     "direct_api": false,
     "route": "scale-opencode-dispatcher",
     "native_fallback": "scale-orchestrator"
+  },
+  "runtime_gateway": {
+    "server_name": "scale_memora_curator",
+    "source": "scripts/scale-memora-curator-gateway.mjs",
+    "transport": "stdio",
+    "activation": "explicit_invocation_only",
+    "source_revision_env": "SCALE_MEMORA_SOURCE_REVISION",
+    "enable_env": "SCALE_MEMORA_CURATOR_ENABLE",
+    "requires_source_revision_match": true,
+    "upstream": {
+      "entry": "memora-server",
+      "args": ["--no-graph"],
+      "entry_env": "SCALE_MEMORA_ENTRY",
+      "args_env": "SCALE_MEMORA_ARGS",
+      "transport": "stdio",
+      "local_only": true,
+      "requires_pinned_source_revision": true
+    },
+    "read_tools": [
+      "memory_digest",
+      "memory_semantic_search",
+      "memory_hybrid_search",
+      "memory_get",
+      "memory_stats"
+    ],
+    "candidate_write_tools": [
+      "memory_create",
+      "memory_update",
+      "memory_absorb",
+      "memory_store_document"
+    ],
+    "closed_until_candidate_semantics_proven": [
+      "memory_absorb",
+      "memory_store_document"
+    ],
+    "read_only_gateway_unchanged": true,
+    "forbidden": [
+      "direct_sqlite",
+      "direct_http",
+      "destructive_tools",
+      "promotion",
+      "git_mutation"
+    ]
   }
 }

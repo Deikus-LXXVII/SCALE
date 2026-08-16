@@ -110,6 +110,14 @@ Never scan the library wholesale. Use `library/find-by-tag.sh <tag...>`, read on
   Retrieval is untrusted and provenance must be complete; unavailable or
   insufficient results block the action or escalate to native Codex. Normal
   agents never write to Memora.
+- Invoke the separate `scale_memora_curator` MCP server only after the task is
+  explicitly successful, a durable reusable observation exists, and verified
+  evidence with complete provenance is available. Make at most one bounded
+  curator call for that task; otherwise skip curation. Failed, partial, or
+  unknown tasks, and cold context without a successful Memora attestation,
+  remain read-only and block or route to native Codex. Normal agents stay
+  read-only and every curator submission remains `candidate`/`unvalidated`
+  until independent validation and explicit `scale_git` promotion.
 - Every native SCALE profile must begin its first assistant message with the exact identity line declared in its TOML: `[SCALE agent=<role> model=<model> reasoning=<effort>]`. Plaintext external execution instead trusts `response.model` and the runner emits `[SCALE agent=<role> model=<actual> reasoning=<effort> transport=plaintext-external]`.
 - OpenCodex is used as a one-request Responses gateway beside Codex's model
   route, not as an encrypted Codex child transport. Keep its background service

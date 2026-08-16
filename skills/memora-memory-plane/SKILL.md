@@ -31,6 +31,20 @@ registration and it must stay disabled until a source revision is pinned.
   automatically. Invoke it only after a task is explicitly successful and a
   durable observation plus verified evidence are present; failed, partial, or
   unknown tasks cannot produce a candidate.
+- Candidate runtime calls use the separate `scale_memora_curator` MCP server,
+  implemented by `scripts/scale-memora-curator-gateway.mjs`. Invoke that stdio
+  server explicitly only after the source revision is pinned and the curator
+  gate is present. It forwards to the local pinned `memora-server --no-graph`
+  process; it does not replace or widen the normal read-only gateway. The
+  executable must be the contract entry `memora-server` on the sanitized PATH;
+  any `SCALE_MEMORA_ENTRY` override must equal that exact name, and
+  `SCALE_MEMORA_ARGS` must equal `["--no-graph"]`. The gateway fails closed
+  while the canonical `source_revision` is null; after pinning, set matching
+  `SCALE_MEMORA_SOURCE_REVISION` and `SCALE_MEMORA_CURATOR_ENABLE=1`.
+- The wrapper schema declares all four contract write names, but the runtime
+  currently fails closed for `memory_absorb` and `memory_store_document`: their
+  upstream schemas cannot yet prove candidate-only semantics. Only
+  `memory_create` and `memory_update` are forwarded after exact translation.
 - Candidate writes are bounded to at most 3 candidates, 4 KiB content per
   candidate, 8 tags, 2 KiB provenance, and 8 KiB for the complete request.
   Candidates remain `candidate`/`unvalidated`; acceptance by Memora is not

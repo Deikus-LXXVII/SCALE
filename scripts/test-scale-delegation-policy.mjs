@@ -78,6 +78,7 @@ for (const [field, expected] of [
 }
 
 const agents = read("AGENTS.md");
+const agentsNormalized = agents.replace(/\s+/g, " ");
 const orchestratorSkill = read("skills/scale-orchestrator/SKILL.md");
 const brief = read("skills/scale-orchestrator/references/task-brief.md");
 const twitchSkill = read("integrations/twitchbot/skills/twitchbot-scale-orchestration/SKILL.md");
@@ -92,6 +93,18 @@ for (const [label, source] of [
   requireValue(/repair|исправ/i.test(source), `${label} does not describe delegated repair`);
 }
 requireValue(/OpenCode Go|OpenCode/i.test(orchestratorSkill), "orchestrator skill lost OpenCode boundary reference");
+for (const phrase of [
+  "separate `scale_memora_curator` MCP server",
+  "explicitly successful",
+  "durable reusable observation",
+  "verified evidence with complete provenance",
+  "at most one bounded",
+  "failed, partial, or",
+  "cold context without a successful Memora attestation",
+  "candidate`/`unvalidated"
+]) {
+  requireValue(agentsNormalized.toLowerCase().includes(phrase.toLowerCase()), `AGENTS.md lost Memora curator gate phrase: ${phrase}`);
+}
 
 if (failures.length > 0) {
   failures.forEach((failure) => console.error(`S.C.A.L.E. delegation policy: ${failure}`));
