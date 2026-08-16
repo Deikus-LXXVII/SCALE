@@ -7,6 +7,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CONTRACT_PATH = path.join(ROOT, "integrations", "memora", "memory-plane.json");
 const SKILL_PATH = path.join(ROOT, "skills", "memora-memory-plane", "SKILL.md");
 const CONFIG_PATH = path.join(ROOT, ".codex", "config.toml");
+const REGISTRY_PATH = path.join(ROOT, "library", "model-registry.json");
+const CURATOR_PROFILE_PATH = path.join(ROOT, ".codex", "agents", "scale_memora_curator.toml");
 
 const failures = [];
 const fail = (message) => failures.push(message);
@@ -154,6 +156,8 @@ if (contract !== undefined) {
       ["limits.curator_writes.max_candidates", limits.curator_writes.max_candidates, 50],
       ["limits.curator_writes.max_content_bytes", limits.curator_writes.max_content_bytes, 1048576],
       ["limits.curator_writes.max_tags", limits.curator_writes.max_tags, 32],
+      ["limits.curator_writes.max_provenance_bytes", limits.curator_writes.max_provenance_bytes, 1048576],
+      ["limits.curator_writes.max_total_request_bytes", limits.curator_writes.max_total_request_bytes, 1048576],
       ["limits.call_timeout_ms", limits.call_timeout_ms, 30000]
     ];
     for (const [name, value, ceiling] of positive) {
@@ -161,6 +165,11 @@ if (contract !== undefined) {
         fail(`${name} must be an integer from 1 to ${ceiling}`);
       }
     }
+    if (limits.curator_writes.max_candidates !== 3) fail("curator max_candidates must be exactly 3");
+    if (limits.curator_writes.max_content_bytes !== 4096) fail("curator max_content_bytes must be exactly 4096");
+    if (limits.curator_writes.max_tags !== 8) fail("curator max_tags must be exactly 8");
+    if (limits.curator_writes.max_provenance_bytes !== 2048) fail("curator max_provenance_bytes must be exactly 2048");
+    if (limits.curator_writes.max_total_request_bytes !== 8192) fail("curator max_total_request_bytes must be exactly 8192");
   }
 
   const capabilities = contract.capabilities;
@@ -194,6 +203,37 @@ if (contract !== undefined) {
 
   if (!isObject(contract.provenance) || !sameArray(contract.provenance.required_fields, EXPECTED.provenance)) {
     fail("provenance.required_fields must contain the exact SCALE provenance envelope");
+  }
+
+  const curatorPolicy = contract.curator_policy;
+  if (!isObject(curatorPolicy)) {
+    fail("curator_policy must define the explicit native candidate-write gate");
+  } else {
+    if (curatorPolicy.role !== "scale_memora_curator") fail("curator_policy.role must be scale_memora_curator");
+    if (curatorPolicy.activation !== "explicit_invocation_only") fail("curator_policy.activation must require explicit invocation");
+    if (curatorPolicy.automatic_activation !== false) fail("curator_policy.automatic_activation must be false");
+    if (curatorPolicy.route !== "codex-native") fail("curator_policy.route must be codex-native");
+    const binding = curatorPolicy.binding;
+    if (!isObject(binding) || binding.model !== "gpt-5.6-sol" || binding.reasoning_effort !== "high" || binding.sandbox_mode !== "read-only") {
+      fail("curator_policy.binding must be gpt-5.6-sol/high/read-only");
+    }
+    const gate = curatorPolicy.task_gate;
+    if (!isObject(gate) || gate.required_task_status !== "success" || gate.requires_durable_observation !== true || gate.requires_verified_evidence !== true || !sameArray(gate.forbidden_task_status, ["failed", "partial", "unknown"])) {
+      fail("curator_policy.task_gate must require success, durable observation, and verified evidence");
+    }
+    if (curatorPolicy.candidate_status !== "candidate") fail("curator candidates must stay candidate");
+    if (curatorPolicy.validation_status !== "unvalidated") fail("curator candidates must stay unvalidated");
+    if (curatorPolicy.promotion !== "manual_scale_git_only") fail("curator promotion must be manual scale_git only");
+    if (!isObject(curatorPolicy.provenance_gate) || curatorPolicy.provenance_gate.required_validation !== "passed" || !sameArray(curatorPolicy.provenance_gate.allowed_status, ["candidate", "curated"])) fail("curator provenance gate must require passed validation and a governed status");
+    if (!sameArray(curatorPolicy.required_provenance, EXPECTED.provenance)) fail("curator_policy provenance envelope drifted");
+    if (!sameArray(curatorPolicy.tag_allowlist, EXPECTED.tags)) fail("curator_policy tag allowlist drifted");
+    if (!sameArray(curatorPolicy.candidate_write_tools, EXPECTED.write)) fail("curator_policy candidate tools drifted");
+    if (!sameArray(curatorPolicy.forbidden_operations, [...EXPECTED.forbidden, "promotion", "git_mutation", "direct_sqlite_write", "direct_api_write"])) fail("curator_policy forbidden operations drifted");
+    if (!sameArray(curatorPolicy.forbidden_content, ["secrets", "credentials", "pii", "audio", "transcripts"])) fail("curator_policy forbidden content drifted");
+    const telemetry = curatorPolicy.telemetry;
+    if (!isObject(telemetry) || !sameArray(telemetry.fields, ["decision", "reason", "task_id", "candidate_id", "curator_role", "binding"]) || telemetry.content_free !== true || telemetry.evidence_free !== true) {
+      fail("curator telemetry must be credential-free and content/evidence-free");
+    }
   }
   if (!isObject(contract.tags) || !sameArray(contract.tags.allowlist, EXPECTED.tags)) {
     fail("tags.allowlist does not match the exact SCALE allowlist");
@@ -273,12 +313,51 @@ if (skill !== undefined) {
     "chat",
     "No direct DeepSeek API",
     "S.C.A.L.E./OpenCode dispatcher",
-    "Destructive tools are forbidden"
+    "Destructive tools are forbidden",
+    "scale_memora_curator",
+    "explicitly successful",
+    "durable observation",
+    "verified evidence",
+    "8 KiB",
+    "credential-free",
+    "promotion attempts"
   ];
   const lower = skill.toLowerCase();
   for (const phrase of requiredPhrases) {
     if (!lower.includes(phrase.toLowerCase())) fail(`Memora skill is missing safety phrase: ${phrase}`);
   }
+}
+
+let registry;
+try {
+  registry = JSON.parse(fs.readFileSync(REGISTRY_PATH, "utf8"));
+} catch (error) {
+  fail(`cannot parse model registry: ${error.message}`);
+}
+if (registry !== undefined) {
+  const binding = registry.agent_bindings?.find((entry) => entry?.profile === "scale_memora_curator");
+  if (!binding || binding.primary?.execution !== "codex-native" || binding.primary?.model !== "gpt-5.6-sol" || binding.primary?.reasoning_effort !== "high" || binding.fallback) {
+    fail("model registry must bind scale_memora_curator to native Sol/high without a fallback");
+  }
+  const route = registry.routes?.find((entry) => entry?.id === "memora-curator");
+  if (!route || route.profile !== "scale_memora_curator" || route.execution !== "codex-native" || route.model !== "gpt-5.6-sol" || route.reasoning_effort !== "high") {
+    fail("model registry must define the native memora-curator Sol/high route");
+  }
+  const budget = registry.runtime_policy?.agent_budgets?.scale_memora_curator;
+  if (!budget || Object.values(budget).some((value) => !Number.isInteger(value) || value < 1)) fail("model registry must define a positive curator runtime budget");
+}
+
+let curatorProfile;
+try {
+  curatorProfile = fs.readFileSync(CURATOR_PROFILE_PATH, "utf8");
+} catch (error) {
+  fail(`cannot read curator profile: ${error.message}`);
+}
+if (curatorProfile !== undefined) {
+  if (!/^name = "scale_memora_curator"$/m.test(curatorProfile)) fail("curator profile name is missing");
+  if (!/^model = "gpt-5\.6-sol"$/m.test(curatorProfile) || !/^model_reasoning_effort = "high"$/m.test(curatorProfile) || !/^sandbox_mode = "read-only"$/m.test(curatorProfile)) fail("curator profile must be native Sol/high/read-only");
+  if (!curatorProfile.includes("memory_create") || !curatorProfile.includes("memory_update") || !curatorProfile.includes("memory_absorb") || !curatorProfile.includes("memory_store_document")) fail("curator profile must name all candidate-write tools");
+  if (!curatorProfile.includes("memory_delete") || !curatorProfile.includes("automatic") || !curatorProfile.includes("scale_git")) fail("curator profile must document its negative boundaries");
 }
 
 let config;

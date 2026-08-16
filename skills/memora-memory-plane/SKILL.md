@@ -26,6 +26,16 @@ registration and it must stay disabled until a source revision is pinned.
   `memory_update`, `memory_absorb`, and `memory_store_document`. A candidate is
   not promoted merely because Memora accepted it. Validators use the same
   read-only `memory_*` retrieval tools.
+- The curator role is the explicit native `scale_memora_curator` route
+  (`gpt-5.6-sol`, high reasoning, read-only workspace). It is never activated
+  automatically. Invoke it only after a task is explicitly successful and a
+  durable observation plus verified evidence are present; failed, partial, or
+  unknown tasks cannot produce a candidate.
+- Candidate writes are bounded to at most 3 candidates, 4 KiB content per
+  candidate, 8 tags, 2 KiB provenance, and 8 KiB for the complete request.
+  Candidates remain `candidate`/`unvalidated`; acceptance by Memora is not
+  validation or Git promotion. Telemetry is credential-free and may contain
+  only the decision, reason, task ID, candidate ID, curator role, and binding.
 - `scale_knowledge_eval` and `scale_qa` validate candidate evidence. `scale_git`
   alone promotes validated knowledge to Git SCALE. Promotion is manual and
   explicit; there is no automatic sync or auto-promotion.
@@ -98,3 +108,8 @@ scale:status:candidate|curated|deprecated
 scale:validation:unvalidated|passed|failed|stale
 scale:source:git|operator
 ```
+
+Curator requests reject unknown tags, missing or expired/unvalidated
+provenance, secrets, credentials, PII, audio, transcripts, oversized payloads,
+destructive operations, and promotion attempts. `scale_knowledge_eval` and
+`scale_qa` validate candidates; `scale_git` alone promotes validated knowledge.

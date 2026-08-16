@@ -275,6 +275,13 @@
         "max_agent_steps": 16,
         "max_dispatch_ms": 900000
       },
+      "scale_memora_curator": {
+        "max_work_order_bytes": 24000,
+        "max_context_files": 8,
+        "max_context_bytes": 80000,
+        "max_agent_steps": 16,
+        "max_dispatch_ms": 900000
+      },
       "scale_sync": {
         "max_work_order_bytes": 20000,
         "max_context_files": 12,
@@ -953,6 +960,14 @@
       "boundary": "Default and final authority for critical changes. OpenCode may provide a read-only draft, never final authority."
     },
     {
+      "id": "memora-curator",
+      "profile": "scale_memora_curator",
+      "execution": "codex-native",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "boundary": "Explicit invocation only after successful task status, verified durable observation, and verified evidence; candidate-only Memora writes through the declared capability boundary."
+    },
+    {
       "id": "web-design",
       "profile": "scale_webdesign",
       "execution": "plaintext-external",
@@ -1274,6 +1289,14 @@
       "primary": {
         "execution": "codex-native",
         "model": "gpt-5.6-luna",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "profile": "scale_memora_curator",
+      "primary": {
+        "execution": "codex-native",
+        "model": "gpt-5.6-sol",
         "reasoning_effort": "high"
       }
     },

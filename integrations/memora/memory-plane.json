@@ -80,9 +80,11 @@
       "max_payload_bytes": 32768
     },
     "curator_writes": {
-      "max_candidates": 5,
-      "max_content_bytes": 65536,
-      "max_tags": 8
+      "max_candidates": 3,
+      "max_content_bytes": 4096,
+      "max_tags": 8,
+      "max_provenance_bytes": 2048,
+      "max_total_request_bytes": 8192
     },
     "call_timeout_ms": 3000
   },
@@ -126,6 +128,98 @@
       "import": "forbidden",
       "bulk": "forbidden",
       "filesystem": "forbidden"
+    }
+  },
+  "curator_policy": {
+    "role": "scale_memora_curator",
+    "activation": "explicit_invocation_only",
+    "automatic_activation": false,
+    "route": "codex-native",
+    "binding": {
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "sandbox_mode": "read-only"
+    },
+    "task_gate": {
+      "required_task_status": "success",
+      "requires_durable_observation": true,
+      "requires_verified_evidence": true,
+      "forbidden_task_status": [
+        "failed",
+        "partial",
+        "unknown"
+      ]
+    },
+    "candidate_status": "candidate",
+    "validation_status": "unvalidated",
+    "promotion": "manual_scale_git_only",
+    "provenance_gate": {
+      "required_validation": "passed",
+      "allowed_status": [
+        "candidate",
+        "curated"
+      ]
+    },
+    "required_provenance": [
+      "source",
+      "evidence",
+      "compatibility",
+      "validated_on",
+      "review_after",
+      "source_commit",
+      "source_path",
+      "content_hash",
+      "project",
+      "scope",
+      "sensitivity",
+      "status",
+      "validation",
+      "expires_at",
+      "sync_policy"
+    ],
+    "tag_allowlist": [
+      "scale:project:<slug>",
+      "scale:scope:global|project|agent|session",
+      "scale:sensitivity:public|internal|confidential|restricted",
+      "scale:status:candidate|curated|deprecated",
+      "scale:validation:unvalidated|passed|failed|stale",
+      "scale:source:git|operator"
+    ],
+    "candidate_write_tools": [
+      "memory_create",
+      "memory_update",
+      "memory_absorb",
+      "memory_store_document"
+    ],
+    "forbidden_operations": [
+      "memory_delete",
+      "memory_delete_batch",
+      "memory_merge",
+      "memory_import",
+      "memory_create_batch",
+      "promotion",
+      "git_mutation",
+      "direct_sqlite_write",
+      "direct_api_write"
+    ],
+    "forbidden_content": [
+      "secrets",
+      "credentials",
+      "pii",
+      "audio",
+      "transcripts"
+    ],
+    "telemetry": {
+      "fields": [
+        "decision",
+        "reason",
+        "task_id",
+        "candidate_id",
+        "curator_role",
+        "binding"
+      ],
+      "content_free": true,
+      "evidence_free": true
     }
   },
   "provenance": {
